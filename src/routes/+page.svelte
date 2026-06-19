@@ -684,125 +684,102 @@
 		</div>
 	{/if}
 
-	<div class="controls">
-		<div class="search-box">
-			<div class="search-input-wrap">
-				<div class="search-input-inner">
-					<input
-						type="text"
-						placeholder="Пошук у словах (г=ґ, у=ў, и=і, е=ё)"
-						bind:this={searchInput}
-						bind:value={search}
-						oninput={() => {
-							clearTimeout(debounceTimer);
-							debounceTimer = setTimeout(doSearch, 300);
-						}}
-						onkeydown={(e) => {
-							if (e.key === 'Enter') doSearch();
-							else if (e.key === 'Escape') clearSearch();
-						}}
-					/>
-					{#if search}
-						<button class="search-clear" onclick={clearSearch} aria-label="Clear search">×</button>
-					{/if}
+	<div role="table" class="table-container">
+		<div class="controls">
+			<div class="search-box">
+				<div class="search-input-wrap">
+					<div class="search-input-inner">
+						<input
+							type="text"
+							placeholder="Пошук у словах (г=ґ, у=ў, и=і, е=ё)"
+							bind:this={searchInput}
+							bind:value={search}
+							oninput={() => {
+								clearTimeout(debounceTimer);
+								debounceTimer = setTimeout(doSearch, 300);
+							}}
+							onkeydown={(e) => {
+								if (e.key === 'Enter') doSearch();
+								else if (e.key === 'Escape') clearSearch();
+							}}
+						/>
+						{#if search}
+							<button class="search-clear" onclick={clearSearch} aria-label="Clear search">×</button>
+						{/if}
+					</div>
+					<span class="word-counter">{total}</span>
 				</div>
-				<span class="word-counter">{total}</span>
-			</div>
-			<button
-				class="copy-search-btn"
-				onclick={copySearchLink}
-				aria-label="Copy link to current search"
-				title="Скапіяваць спасылку на гэты вынік"
-				><svg
-					viewBox="0 0 24 24"
-					width="16"
-					height="16"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-					<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-				</svg>
-			</button>
-		</div>
-
-		<div class="tags-row" role="group" aria-label="Фільтр водле тэґаў">
-			{#each tags as tag (tag.name)}
 				<button
-					class="tag-chip"
-					class:active={selectedTags.includes(tag.name)}
-					onclick={() => handleTagFilter(tag.name)}
-					aria-pressed={selectedTags.includes(tag.name)}
-				>
-					{tag.name}
-				</button>
-			{/each}
-		</div>
-
-		<div class="grid-header" role="row">
-			<div class="col-word" role="columnheader">
-				<button class="sort-btn" class:active={sort === 'word'} onclick={() => handleSort('word')}>
-					Слова {getSortIcon('word')}
-				</button>
-				<button class="sort-btn" class:active={sort === 'importance'} onclick={() => handleSort('importance')}>
-					⚑ {getSortIcon('importance')}
-				</button>
-			</div>
-			<div class="col-trans" role="columnheader">Пераклад</div>
-			<div class="col-likes" role="columnheader" aria-sort={ariaSortLikes}>
-				<button class="sort-btn" class:active={sort === 'likes'} onclick={() => handleSort('likes')}>
-					❤️ {getSortIcon('likes')}
+					class="copy-search-btn"
+					onclick={copySearchLink}
+					aria-label="Copy link to current search"
+					title="Скапіяваць спасылку на гэты вынік"
+					><svg
+						viewBox="0 0 24 24"
+						width="16"
+						height="16"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+						<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+					</svg>
 				</button>
 			</div>
-		</div>
-	</div>
 
-	<div class="table-wrap">
-		{#if loading && words.length === 0}
-			<div class="loading">Ладаваньне...</div>
-		{:else if !loading && words.length === 0}
-			<div class="empty">{showFavorites ? 'Няма ўпадабаньняў' : 'Словы ня знойдзеныя'}</div>
-		{:else}
-			<div class="grid-table" role="table">
-				{#each words as word, i (word.id)}
-					<div class="grid-row" role="row" data-trigger={i === triggerIndex ? '' : undefined}>
-						<div class="col-word" role="cell">
-							<button
-								class="icon-btn"
-								onclick={() => openWord(word.id, word)}
-								aria-label="Open word details"
-								><svg
-									viewBox="0 0 24 24"
-									width="14"
-									height="14"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline
-										points="15 3 21 3 21 9"
-									/><line x1="10" y1="14" x2="21" y2="3" /></svg
-								></button
-							>
-							<Tooltip content={showComments ? word.comment : null}>
-								<span class="word-text" class:has-note={showComments && word.comment !== null}
-									>{@html highlightText(word.id, latToCyr(search))}</span
-								>
-							</Tooltip>
-							{#if devMode}
+			<div class="tags-row" role="group" aria-label="Фільтр водле тэґаў">
+				{#each tags as tag (tag.name)}
+					<button
+						class="tag-chip"
+						class:active={selectedTags.includes(tag.name)}
+						onclick={() => handleTagFilter(tag.name)}
+						aria-pressed={selectedTags.includes(tag.name)}
+					>
+						{tag.name}
+					</button>
+				{/each}
+			</div>
+
+			<div class="grid-header" role="row">
+				<div class="col-word" role="columnheader">
+					<button class="sort-btn" class:active={sort === 'word'} onclick={() => handleSort('word')}>
+						Слова {getSortIcon('word')}
+					</button>
+					<button
+						class="sort-btn"
+						class:active={sort === 'importance'}
+						onclick={() => handleSort('importance')}
+					>
+						⚑ {getSortIcon('importance')}
+					</button>
+				</div>
+				<div class="col-trans" role="columnheader">Пераклад</div>
+				<div class="col-likes" role="columnheader" aria-sort={ariaSortLikes}>
+					<button class="sort-btn" class:active={sort === 'likes'} onclick={() => handleSort('likes')}>
+						❤️ {getSortIcon('likes')}
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="table-wrap">
+			{#if loading && words.length === 0}
+				<div class="loading">Ладаваньне...</div>
+			{:else if !loading && words.length === 0}
+				<div class="empty">{showFavorites ? 'Няма ўпадабаньняў' : 'Словы ня знойдзеныя'}</div>
+			{:else}
+				<div class="grid-table" role="presentation">
+					{#each words as word, i (word.id)}
+						<div class="grid-row" role="row" data-trigger={i === triggerIndex ? '' : undefined}>
+							<div class="col-word" role="cell">
 								<button
 									class="icon-btn"
-									class:warning={word.hidden}
-									onclick={() => toggleHiddenFlag(word.id, !word.hidden)}
-									aria-label={word.hidden
-										? 'Паказаць слова карыстальнікам'
-										: 'Схаваць слова ад карыстальнікаў'}
-								>
-									<svg
+									onclick={() => openWord(word.id, word)}
+									aria-label="Open word details"
+									><svg
 										viewBox="0 0 24 24"
 										width="14"
 										height="14"
@@ -811,109 +788,138 @@
 										stroke-width="2"
 										stroke-linecap="round"
 										stroke-linejoin="round"
-									>
-										{#if word.hidden}
-											<path
-												d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
-											/>
-											<path
-												d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
-											/>
-											<line x1="1" y1="1" x2="23" y2="23" />
-										{:else}
-											<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-											<circle cx="12" cy="12" r="3" />
-										{/if}
-									</svg>
-								</button>
-								<EditWord {word} onWordEdited={() => fetchWords()} />
-								<button
-									class="delete-btn-sm"
-									onclick={() => deleteWord(word.id)}
-									aria-label="Delete word">×</button
+										><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline
+											points="15 3 21 3 21 9"
+										/><line x1="10" y1="14" x2="21" y2="3" /></svg
+									></button
 								>
-							{/if}
-							<div class="meta-row">
-								{#if word.importance.name}
-									<ImportanceBadge name={word.importance.name} level={word.importance.level} />
+								<Tooltip content={showComments ? word.comment : null}>
+									<span class="word-text" class:has-note={showComments && word.comment !== null}
+										>{@html highlightText(word.id, latToCyr(search))}</span
+									>
+								</Tooltip>
+								{#if devMode}
+									<button
+										class="icon-btn"
+										class:warning={word.hidden}
+										onclick={() => toggleHiddenFlag(word.id, !word.hidden)}
+										aria-label={word.hidden
+											? 'Паказаць слова карыстальнікам'
+											: 'Схаваць слова ад карыстальнікаў'}
+									>
+										<svg
+											viewBox="0 0 24 24"
+											width="14"
+											height="14"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										>
+											{#if word.hidden}
+												<path
+													d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
+												/>
+												<path
+													d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
+												/>
+												<line x1="1" y1="1" x2="23" y2="23" />
+											{:else}
+												<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+												<circle cx="12" cy="12" r="3" />
+											{/if}
+										</svg>
+									</button>
+									<EditWord {word} onWordEdited={() => fetchWords()} />
+									<button
+										class="delete-btn-sm"
+										onclick={() => deleteWord(word.id)}
+										aria-label="Delete word">×</button
+									>
 								{/if}
-								<TagList tags={word.tags} />
+								<div class="meta-row">
+									{#if word.importance.name}
+										<ImportanceBadge name={word.importance.name} level={word.importance.level} />
+									{/if}
+									<TagList tags={word.tags} />
+								</div>
+							</div>
+							<div class="col-trans" role="cell">
+								{#each word.translations as tr, j (j)}
+									<div
+										class="translation-item"
+										class:dragging={devMode && draggedTransId === tr.id}
+										class:draggable-hover={devMode &&
+											draggedTransId !== null &&
+											draggedTransId !== tr.id}
+										{...devMode
+											? {
+													ondragover: handleDragOver,
+													ondrop: (e: DragEvent) => handleDrop(e, word.id, tr.id),
+												}
+											: {}}
+									>
+										{#if devMode}
+											<!-- svelte-ignore a11y_no_static_element_interactions -->
+											<span
+												class="drag-handle"
+												draggable="true"
+												ondragstart={(e: DragEvent) => handleDragStart(e, tr.id)}>⠿</span
+											>
+										{/if}
+										<TranslationDisplay
+											translation={tr.translation}
+											comment={tr.comment}
+											showLatin={settings.showLatin}
+											{showComments}
+											searchQuery={search}
+											onWordLink={openWord}
+										/>
+										<LikeButton
+											liked={!!likes.translations[tr.id]}
+											count={tr.likes}
+											onclick={() => onToggleTranslationLike(tr.id)}
+											label="Like translation"
+											small
+										/>
+										{#if devMode}
+											<TranslationForm translation={tr} onDone={() => fetchWords()} />
+											<button
+												class="delete-btn-sm"
+												onclick={() => deleteTranslation(tr.id)}
+												aria-label="Delete translation">×</button
+											>
+										{/if}
+									</div>
+								{/each}
+								{#if word.translations.length === 0}
+									<span class="muted">Не перакладзена</span>
+								{/if}
+								{#if devMode}
+									<TranslationForm wordId={word.id} onDone={() => fetchWords()} />
+								{/if}
+							</div>
+							<div class="col-likes" role="cell">
+								<LikeButton
+									liked={!!likes.words[word.id]}
+									count={word.likes}
+									onclick={() => onToggleWordLike(word.id)}
+									label="Like word"
+								/>
 							</div>
 						</div>
-						<div class="col-trans" role="cell">
-							{#each word.translations as tr, j (j)}
-								<div
-									class="translation-item"
-									class:dragging={devMode && draggedTransId === tr.id}
-									class:draggable-hover={devMode &&
-										draggedTransId !== null &&
-										draggedTransId !== tr.id}
-									{...devMode
-										? {
-												ondragover: handleDragOver,
-												ondrop: (e: DragEvent) => handleDrop(e, word.id, tr.id),
-											}
-										: {}}
-								>
-									{#if devMode}
-										<!-- svelte-ignore a11y_no_static_element_interactions -->
-										<span
-											class="drag-handle"
-											draggable="true"
-											ondragstart={(e: DragEvent) => handleDragStart(e, tr.id)}>⠿</span
-										>
-									{/if}
-									<TranslationDisplay
-										translation={tr.translation}
-										comment={tr.comment}
-										showLatin={settings.showLatin}
-										{showComments}
-										searchQuery={search}
-										onWordLink={openWord}
-									/>
-									<LikeButton
-										liked={!!likes.translations[tr.id]}
-										count={tr.likes}
-										onclick={() => onToggleTranslationLike(tr.id)}
-										label="Like translation"
-										small
-									/>
-									{#if devMode}
-										<TranslationForm translation={tr} onDone={() => fetchWords()} />
-										<button
-											class="delete-btn-sm"
-											onclick={() => deleteTranslation(tr.id)}
-											aria-label="Delete translation">×</button
-										>
-									{/if}
-								</div>
-							{/each}
-							{#if word.translations.length === 0}
-								<span class="muted">Не перакладзена</span>
-							{/if}
-							{#if devMode}
-								<TranslationForm wordId={word.id} onDone={() => fetchWords()} />
-							{/if}
-						</div>
-						<div class="col-likes" role="cell">
-							<LikeButton
-								liked={!!likes.words[word.id]}
-								count={word.likes}
-								onclick={() => onToggleWordLike(word.id)}
-								label="Like word"
-							/>
-						</div>
-					</div>
-				{/each}
-			</div>
-			<div class="table-footer">
-				{#if prefetching}
-					<div class="footer-loading">Ладаваньне...</div>
-				{:else}
-					<ContactModal userToken={likes.userToken} {devMode} />
-				{/if}
-			</div>
-		{/if}
+					{/each}
+				</div>
+				<div class="table-footer">
+					{#if prefetching}
+						<div class="footer-loading">Ладаваньне...</div>
+					{:else}
+						<ContactModal userToken={likes.userToken} {devMode} />
+					{/if}
+				</div>
+			{/if}
+		</div>
 	</div>
 	{#if copiedSearch}
 		<div class="copy-toast">Спасылка скапіяваная</div>
@@ -1089,6 +1095,10 @@
 			border-color: var(--c-primary);
 			color: var(--c-primary);
 		}
+	}
+
+	.table-container {
+		display: contents;
 	}
 
 	.controls {
