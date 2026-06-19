@@ -594,7 +594,11 @@
 					{/if}
 				</svg>
 			</button>
-			<button class="header-btn btn-icon" onclick={() => settings.toggleLatin()}>
+			<button
+				class="header-btn btn-icon"
+				onclick={() => settings.toggleLatin()}
+				aria-label="Перамыкач паміж лацінкай і кірыліцай"
+			>
 				<svg
 					viewBox="0 0 24 24"
 					width="16"
