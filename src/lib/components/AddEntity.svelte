@@ -248,9 +248,6 @@
 		flex: 2;
 		min-width: 0;
 	}
-	.translation-row > input {
-		flex: 1;
-	}
 
 	.remove-btn {
 		flex-shrink: 0;

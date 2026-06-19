@@ -1,4 +1,11 @@
+import { resolve } from '$app/paths';
+
 export const PAGE_SIZE = 20;
+
+export function r(path: string): string {
+	// @ts-expect-error - dynamic path, not literal route
+	return resolve(path);
+}
 
 export const SITE_URL = 'https://slounia.vercel.app';
 export const SITE_NAME = 'Слоўня — слоўнік жывой мовы';

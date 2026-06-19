@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { formatDate } from '$lib/constants';
+	import { formatDate, r } from '$lib/constants';
 	import type { Post } from '$lib/types';
 	import { fetchBlogPost } from '$lib/fetch-blog';
-	import { resolve } from '$app/paths';
 
 	let {
 		post,
@@ -19,7 +18,8 @@
 
 <article class="post-card card" class:pinned={post.is_pinned}>
 	{#if href}
-		<a href={resolve(href)} class="post-card-link">
+		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+		<a href={r(href)} class="post-card-link">
 			{@render cardContent()}
 		</a>
 	{:else if clickHandler}

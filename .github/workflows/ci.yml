@@ -15,6 +15,6 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
-      - run: bun run check
+      - run: PUBLIC_SUPABASE_URL=x PUBLIC_SUPABASE_ANON_KEY=x bun run check
       - run: bun run test
       - run: bun run lint

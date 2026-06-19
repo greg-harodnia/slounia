@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { supabase } from '$lib/server/db';
 import { requireDev, apiError } from '$lib/server/utils';
 
-export const PUT: RequestHandler = async ({ params, request }) => {
+export const PUT: RequestHandler = async ({ params: _params, request }) => {
 	const devBlock = requireDev();
 	if (devBlock) return devBlock;
 

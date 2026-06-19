@@ -2,7 +2,7 @@
 	import { cyrToLat, latToCyr } from '$lib/lacinka';
 	import { highlightText } from '$lib/highlight';
 	import { fetchWord, getCachedWord } from '$lib/fetch-word';
-	import { resolve } from '$app/paths';
+	import { r } from '$lib/constants';
 	import Tooltip from './Tooltip.svelte';
 	import WordDetailContent from './WordDetailContent.svelte';
 	import type { WordData } from '$lib/types';
@@ -122,15 +122,15 @@
 					class="crossref-link">{crossRefTarget}</button
 				>
 			{:else}
-				<a href={resolve('/word/' + encodeURIComponent(crossRefTarget))} class="crossref-link"
-					>{crossRefTarget}</a
-				>
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+				<a href={r('/word/' + encodeURIComponent(crossRefTarget))} class="crossref-link">{crossRefTarget}</a>
 			{/if}
 		</span>
 	</Tooltip>
 	{#if showPopup && popupWord}
 		<div
 			class="word-popup"
+			role="tooltip"
 			style="left: {popupX}px; {popupAbove
 				? 'bottom: ' + (window.innerHeight - popupY) + 'px'
 				: 'top: ' + popupY + 'px'}; max-height: {popupMaxHeight};"

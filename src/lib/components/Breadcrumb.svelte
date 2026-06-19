@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Crumb } from '$lib/types';
-	import { resolve } from '$app/paths';
+	import { r } from '$lib/constants';
 
 	const labels: Record<string, string> = {
 		'/': 'Галоўная',
@@ -30,7 +30,8 @@
 				{/if}
 			</button>
 		{:else if item.href}
-			<a href={resolve(item.href)} class="crumb">
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+			<a href={r(item.href)} class="crumb">
 				{#if isHome}
 					<svg class="home-icon" viewBox="0 0 20 20" width="16" height="16" fill="currentColor"
 						><path d="M3 4c2-1 5-2 7 0s5-1 7 0v12c-2-1-5-2-7 0s-5-1-7 0V4z" /></svg

@@ -15,21 +15,43 @@
 	let error = $state('');
 	let done = $state(false);
 
-	let myMessages = $state<any[]>([]);
+	interface MessageData {
+		id: number;
+		user_token: string | null;
+		name: string | null;
+		telegram: string | null;
+		message: string;
+		reply: string | null;
+		created_at: string;
+		ip_address: string | null;
+		is_read: boolean;
+	}
+
+	interface BanData {
+		id: number;
+		user_token: string | null;
+		name: string | null;
+		telegram: string | null;
+		reason: string | null;
+		created_at: string;
+		messages?: { message: string };
+	}
+
+	let myMessages = $state<MessageData[]>([]);
 	let unreadReplies = $state(0);
 	let lastSeenReplyId = $state(0);
 
-	let adminMessages = $state<any[]>([]);
+	let adminMessages = $state<MessageData[]>([]);
 	let replyDraft = $state<Record<number, string>>({});
 	let replyLoading = $state<Record<number, boolean>>({});
 
-	let bannedList = $state<any[]>([]);
+	let bannedList = $state<BanData[]>([]);
 	let banLoading = $state(false);
 	let banMsg = $state('');
 	let banEditDraft = $state<Record<number, string>>({});
 
 	let bannedLookup = $derived.by(() => {
-		const map: Record<string, any> = {};
+		const map: Record<string, BanData> = {};
 		for (const ban of bannedList) {
 			if (ban.user_token) map[ban.user_token] = ban;
 		}
@@ -101,7 +123,7 @@
 		return el?.value?.trim() || '';
 	}
 
-	async function handleBan(msg: any) {
+	async function handleBan(msg: MessageData) {
 		banLoading = true;
 		banMsg = '';
 		const reason = banReasonValue(msg.id);
@@ -325,8 +347,9 @@
 						<div class="admin-msg-text">Паведамленьне: {ban.messages.message}</div>
 					{/if}
 					<div class="admin-reply-form">
-						<label class="ban-edit-label">Паведамленьне для карыстача:</label>
+						<label class="ban-edit-label" for="ban-reason-{ban.id}">Паведамленьне для карыстача:</label>
 						<textarea
+							id="ban-reason-{ban.id}"
 							value={banEditDraft[ban.id] ?? ban.reason ?? ''}
 							oninput={(e) => {
 								banEditDraft = { ...banEditDraft, [ban.id]: e.currentTarget.value };

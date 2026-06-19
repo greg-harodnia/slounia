@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { supabase } from '$lib/server/db';
 import { apiError, requireDev } from '$lib/server/utils';
 
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ url: _url }) => {
 	const devErr = requireDev();
 	if (devErr) return devErr;
 
@@ -35,7 +35,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 	}
 
-	const updateData: Record<string, any> = {
+	const updateData: Record<string, unknown> = {
 		name: name || null,
 		telegram: telegram || null,
 		reason: reason || null,

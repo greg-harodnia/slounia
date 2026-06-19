@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import ContactModal from '$lib/components/ContactModal.svelte';
 	import AddEntity from '$lib/components/AddEntity.svelte';
 	import EditWord from '$lib/components/EditWord.svelte';
 	import TranslationForm from '$lib/components/TranslationForm.svelte';
@@ -20,7 +21,6 @@
 	import { theme } from '$lib/stores/theme.svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { replaceState } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import BlogOverlay from '$lib/components/BlogOverlay.svelte';
 	import WordOverlay from '$lib/components/WordOverlay.svelte';
 
@@ -46,12 +46,6 @@
 	let triggerIndex = $state(data.triggerIndex);
 
 	let devMode = $state(false);
-	let ContactModalComponent = $state<any>(null);
-	$effect(() => {
-		import('$lib/components/ContactModal.svelte').then((m) => {
-			ContactModalComponent = m.default;
-		});
-	});
 	let draggedTransId = $state<number | null>(null);
 	let copiedSearch = $state(false);
 	let showWelcome = $state(false);
@@ -66,7 +60,8 @@
 	);
 
 	let overlay = $state<string | null>(null);
-	let overlayProps = $state<any>(null);
+	type OverlayProps = { slug?: string; wordId?: string; word?: WordData } | null;
+	let overlayProps = $state<OverlayProps>(null);
 	let overlayDepth = $state(0);
 
 	function preloadBlogList() {
@@ -236,7 +231,8 @@
 		sort = import.meta.env.PROD ? 'word' : 'created_at';
 		order = import.meta.env.PROD ? 'asc' : 'desc';
 		selectedTags = tags.map((t) => t.name);
-		replaceState(resolve(window.location.pathname), {});
+		/* eslint-disable-next-line svelte/no-navigation-without-resolve */
+		replaceState(window.location.pathname, {});
 		showFavorites = false;
 		doSearch();
 	}
@@ -913,12 +909,8 @@
 			<div class="table-footer">
 				{#if prefetching}
 					<div class="footer-loading">Ладаваньне...</div>
-				{:else if ContactModalComponent}
-					<svelte:component this={ContactModalComponent} userToken={likes.userToken} {devMode} />
 				{:else}
-					<div class="contact-links">
-						<button class="contact-link" disabled>Напісаць творцу</button>
-					</div>
+					<ContactModal userToken={likes.userToken} {devMode} />
 				{/if}
 			</div>
 		{/if}
@@ -961,8 +953,9 @@
 		Таксама вельмі дапамогуць публічныя спасылкі, будзь тое ў X, Instagram, VK ці дзе яшчэ. Калі вы маеце заўвагі ці
 		прапановы, можаце адсылаць іх праз форму "Напісаць творцу". Шчыра дзякуем!<br /><br />
 		Спасылка для капіяваньня:
+		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 		<a
-			href={resolve(SITE_URL + '/?ref=voluntary')}
+			href={SITE_URL + '/?ref=voluntary'}
 			onclick={(e) => {
 				e.preventDefault();
 				navigator.clipboard.writeText(`${SITE_URL}/?ref=voluntary`);

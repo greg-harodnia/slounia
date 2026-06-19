@@ -13,6 +13,7 @@
 			.slice(0, 160),
 	);
 
+	/* svelte-ignore state_referenced_locally */
 	const blogLd = JSON.stringify({
 		'@context': 'https://schema.org',
 		'@type': 'BlogPosting',

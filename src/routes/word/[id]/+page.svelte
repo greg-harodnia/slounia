@@ -11,6 +11,7 @@
 
 	onMount(() => settings.load());
 
+	/* svelte-ignore state_referenced_locally */
 	const wordLd = JSON.stringify({
 		'@context': 'https://schema.org',
 		'@type': 'DefinedTerm',
