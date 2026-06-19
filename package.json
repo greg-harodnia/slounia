@@ -39,6 +39,7 @@
 	"dependencies": {
 		"@supabase/supabase-js": "^2.106.1",
 		"@vercel/analytics": "^2.0.1",
-		"@vercel/speed-insights": "^2.0.0"
+		"@vercel/speed-insights": "^2.0.0",
+		"estree-walker": "2.0.2"
 	}
 }
