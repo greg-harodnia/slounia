@@ -953,7 +953,7 @@
 		Таксама вельмі дапамогуць публічныя спасылкі, будзь тое ў X, Instagram, VK ці дзе яшчэ. Калі вы маеце заўвагі ці
 		прапановы, можаце адсылаць іх праз форму "Напісаць творцу". Шчыра дзякуем!<br /><br />
 		Спасылка для капіяваньня:
-		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+		<!-- eslint-disable svelte/no-navigation-without-resolve -->
 		<a
 			href={SITE_URL + '/?ref=voluntary'}
 			onclick={(e) => {
@@ -963,6 +963,7 @@
 				setTimeout(() => (copiedSearch = false), 1500);
 			}}>{SITE_URL}/?ref=voluntary</a
 		>
+		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 	</p>
 </Modal>
 
