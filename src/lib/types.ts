@@ -1,0 +1,42 @@
+export interface Importance {
+	id: number | null;
+	name: string | null;
+	level: number | null;
+}
+
+export interface Translation {
+	id: number;
+	translation: string;
+	comment: string | null;
+	likes: number;
+}
+
+export interface WordData {
+	id: string;
+	importance: Importance;
+	comment: string | null;
+	likes: number;
+	hidden: boolean;
+	translations: Translation[];
+	tags: string[];
+}
+
+export interface TagData {
+	id: number;
+	name: string;
+}
+
+export type Crumb = { label?: string; href?: string; go?: number };
+
+export interface Post {
+	id: number;
+	slug: string;
+	title: string;
+	content: string;
+	hashtags: string[];
+	is_pinned: boolean;
+	likes: number;
+	published_at: string;
+	created_at: string;
+	updated_at: string;
+}

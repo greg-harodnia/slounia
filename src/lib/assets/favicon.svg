@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="7" fill="#0f172a"/>
+  <path d="M6 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v19l-5-3.5L16 26l-5-3.5L6 26V7z" fill="none" stroke="#e2e8f0" stroke-width="1.5" stroke-linejoin="round"/>
+  <text x="16" y="20" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#e2e8f0" text-anchor="middle">Ў</text>
+</svg>
