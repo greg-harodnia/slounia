@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cyrToLat, latToCyr } from '../lacinka';
+import { cyrToLat, latToCyr, propagateSoftness } from '../lacinka';
 
 // Round-trip helper: cyr → lat → cyr (stress and apostrophe may diverge)
 function roundtrip(cyr: string): string {
@@ -321,6 +321,81 @@ describe('latToCyr', () => {
 	it('concrete words', () => {
 		expect(latToCyr('kava')).toBe('кава');
 		expect(latToCyr('pryvitannie')).toBe('прывітанне');
+	});
+
+	it('nnie → ньне (post-latToCyr replacement)', () => {
+		expect(latToCyr('abviaszczennie').replace(/нне/g, 'ньне')).toBe('абвяшченне'.replace(/нне/g, 'ньне'));
+		expect(latToCyr('abviaszczenie').replace(/нне/g, 'ньне')).toBe('абвяшчене');
+		expect(latToCyr('pryvitannie').replace(/нне/g, 'ньне')).toBe('прывітанне'.replace(/нне/g, 'ньне'));
+	});
+
+	it('replace does nothing when no нне in latToCyr output', () => {
+		expect(latToCyr('kava').replace(/нне/g, 'ньне')).toBe('кава');
+	});
+});
+
+describe('propagateSoftness', () => {
+	it('s + labial + soft vowel: dasviedczany → дасьведчаны', () => {
+		expect(propagateSoftness(latToCyr('dasviedczany'))).toBe('дасьведчаны');
+	});
+
+	it('z + labial + soft vowel: zviazny → зьвязны', () => {
+		expect(propagateSoftness(latToCyr('zviazny'))).toBe('зьвязны');
+	});
+
+	it('c + labial + soft vowel: svietacz → сьветач', () => {
+		expect(propagateSoftness(latToCyr('svietacz'))).toBe('сьветач');
+	});
+
+	it('handles nnie: abviaszczennie → абвяшченьне', () => {
+		expect(propagateSoftness(latToCyr('abviaszczennie'))).toBe('абвяшченьне');
+	});
+
+	it('handles pryvitannie → прывітаньне', () => {
+		expect(propagateSoftness(latToCyr('pryvitannie'))).toBe('прывітаньне');
+	});
+
+	it('does not affect words without soft context', () => {
+		expect(propagateSoftness(latToCyr('kava'))).toBe('кава');
+		expect(propagateSoftness(latToCyr('stol'))).toBe('стол');
+	});
+
+	it('does not over-soften when consonant is directly before soft vowel', () => {
+		expect(propagateSoftness(latToCyr('dzieci'))).toBe('дзеці');
+		expect(propagateSoftness(latToCyr('cienisty'))).toBe('ценісты');
+		expect(propagateSoftness(latToCyr('siena'))).toBe('сена');
+	});
+
+	it('с/з before н/л + soft vowel: snieh → сьнег', () => {
+		expect(propagateSoftness(latToCyr('snieh'))).toBe('сьнег');
+	});
+
+	it('с/з before н/л + soft vowel: zlenny → зьленны', () => {
+		expect(propagateSoftness(latToCyr('zlenny'))).toBe('зьленны');
+	});
+
+	it('с/з before ц + soft vowel: sciana → сьцяна', () => {
+		expect(propagateSoftness(latToCyr('sciana'))).toBe('сьцяна');
+	});
+
+	it('с/з before ц + soft vowel: zcialny → зьцяльны', () => {
+		expect(propagateSoftness(latToCyr('zcialny'))).toBe('зьцяльны');
+	});
+
+	it('does not affect words without soft context', () => {
+		expect(propagateSoftness(latToCyr('kava'))).toBe('кава');
+		expect(propagateSoftness(latToCyr('stol'))).toBe('стол');
+	});
+
+	it('does not over-soften when consonant is directly before soft vowel', () => {
+		expect(propagateSoftness(latToCyr('dzieci'))).toBe('дзеці');
+		expect(propagateSoftness(latToCyr('cienisty'))).toBe('ценісты');
+		expect(propagateSoftness(latToCyr('siena'))).toBe('сена');
+	});
+
+	it('idempotent — applying twice is the same', () => {
+		const once = propagateSoftness(latToCyr('dasviedczany'));
+		expect(propagateSoftness(once)).toBe(once);
 	});
 });
 

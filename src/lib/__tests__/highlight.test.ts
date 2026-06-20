@@ -164,4 +164,9 @@ describe('highlightText', () => {
 			expect(latHL('зямля́', 'зямля')).toBe('<mark>ziamla\u0301</mark>');
 		});
 	});
+
+	it('nnie→ньне via highlightQuery pipeline', () => {
+		const query = latToCyr('abviaszczennie').replace(/нне/g, 'ньне');
+		expect(highlightText('абвяшчэньне', query)).toBe('<mark>абвяшчэньне</mark>');
+	});
 });

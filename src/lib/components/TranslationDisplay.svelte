@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cyrToLat, latToCyr } from '$lib/lacinka';
+	import { cyrToLat, latToCyr, propagateSoftness } from '$lib/lacinka';
 	import { highlightText } from '$lib/highlight';
 	import { fetchWord, getCachedWord } from '$lib/fetch-word';
 	import { r } from '$lib/constants';
@@ -31,7 +31,11 @@
 	// displayText: visual text — with correct Łacinka (ё→jo/io, ў→ŭ, etc.) + stress.
 	const displayText = $derived(showLatin ? cyrToLat(translation) : translation);
 	// displayQuery: the search query, also script-converted for visual highlighting.
-	const displayQuery = $derived(showLatin ? cyrToLat(cyrNorm(latToCyr(searchQuery))) : latToCyr(searchQuery));
+	const displayQuery = $derived(
+		showLatin
+			? cyrToLat(cyrNorm(propagateSoftness(latToCyr(searchQuery))))
+			: propagateSoftness(latToCyr(searchQuery)),
+	);
 	// searchForm: same length as displayText, but with cyrNorm applied first
 	// so cyrToLat produces consistent output (e vs je vs ie) that matches
 	// the cyrNorm'd query. Only used as 3rd arg to highlightText (matchText).
