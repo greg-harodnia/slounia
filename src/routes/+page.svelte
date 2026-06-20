@@ -1892,7 +1892,7 @@
 
 	.grid-row--pinned > .col-word,
 	.grid-row--pinned > .col-trans {
-		padding-top: 0.5rem;
+		padding-top: 0.3rem;
 	}
 
 	.grid-table--pinned .grid-row:last-child {
