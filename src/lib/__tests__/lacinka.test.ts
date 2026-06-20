@@ -347,14 +347,6 @@ describe('propagateSoftness', () => {
 		expect(propagateSoftness(latToCyr('svietacz'))).toBe('сьветач');
 	});
 
-	it('handles nnie: abviaszczennie → абвяшченьне', () => {
-		expect(propagateSoftness(latToCyr('abviaszczennie'))).toBe('абвяшченьне');
-	});
-
-	it('handles pryvitannie → прывітаньне', () => {
-		expect(propagateSoftness(latToCyr('pryvitannie'))).toBe('прывітаньне');
-	});
-
 	it('does not affect words without soft context', () => {
 		expect(propagateSoftness(latToCyr('kava'))).toBe('кава');
 		expect(propagateSoftness(latToCyr('stol'))).toBe('стол');

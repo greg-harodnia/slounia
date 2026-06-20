@@ -581,8 +581,6 @@ export function latToCyr(text: string): string {
 }
 
 export function propagateSoftness(s: string): string {
-	// нне → ньне: ńń before ie is always ньн before е (no ń key)
-	s = s.replace(/нне/g, 'ньне');
 	// с/з/ц + labial + soft vowel: ś/sź/sć before labial needs ь (no diacritic key)
 	s = s.replace(/([сзц])([бпвмфр])([еёіяю])/g, (m, cons, labial) => {
 		return `${cons}ь${labial}${m[m.length - 1]}`;
