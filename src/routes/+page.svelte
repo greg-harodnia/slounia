@@ -20,7 +20,7 @@
 	import { settings } from '$lib/stores/settings.svelte';
 	import { theme } from '$lib/stores/theme.svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
-	import { replaceState } from '$app/navigation';
+	import { replaceState, pushState } from '$app/navigation';
 	import BlogOverlay from '$lib/components/BlogOverlay.svelte';
 	import WordOverlay from '$lib/components/WordOverlay.svelte';
 	import PinButton from '$lib/components/PinButton.svelte';
@@ -71,21 +71,21 @@
 		overlay = 'blog';
 		overlayProps = null;
 		overlayDepth++;
-		history.pushState({ overlay: 'blog' }, '', '/blog');
+		pushState('/blog', { overlay: 'blog' });
 	}
 
 	function openWord(wordId: string, wordData?: WordData) {
 		overlay = 'word';
 		overlayProps = { wordId, word: wordData ?? getCachedWord(wordId) };
 		overlayDepth++;
-		history.pushState({ overlay: 'word', wordId }, '', `/word/${encodeURIComponent(wordId)}`);
+		pushState(`/word/${encodeURIComponent(wordId)}`, { overlay: 'word', wordId });
 	}
 
 	function openBlogPost(slug: string) {
 		overlay = 'post';
 		overlayProps = { slug };
 		overlayDepth++;
-		history.pushState({ overlay: 'post', slug }, '', `/blog/${slug}`);
+		pushState(`/blog/${slug}`, { overlay: 'post', slug });
 	}
 
 	function handlePopstate(e: PopStateEvent) {

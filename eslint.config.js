@@ -14,6 +14,7 @@ export default [
 			'@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
 			'@typescript-eslint/no-explicit-any': 'warn',
 			'svelte/no-at-html-tags': 'off',
+			'svelte/no-navigation-without-resolve': ['error', { ignorePushState: true }],
 		},
 	},
 	{
