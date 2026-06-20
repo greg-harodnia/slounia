@@ -101,7 +101,8 @@
 }
 
 button,
-.chip {
+.chip,
+.app-logo {
 	user-select: none;
 	-webkit-user-select: none;
 }
