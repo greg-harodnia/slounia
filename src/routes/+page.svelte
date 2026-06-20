@@ -29,6 +29,8 @@
 	/* svelte-ignore state_referenced_locally */
 	let words = $state<WordData[]>(data.words);
 	/* svelte-ignore state_referenced_locally */
+	let pinnedWords = $state<WordData[]>(data.pinnedWords);
+	/* svelte-ignore state_referenced_locally */
 	let tags = $state<TagData[]>(data.tags);
 	/* svelte-ignore state_referenced_locally */
 	let total = $state(data.total);
@@ -131,6 +133,24 @@
 		doSearch();
 	}
 
+	async function togglePin(word: WordData) {
+		if (!devMode) return;
+		try {
+			const res = await fetch(`/api/words/${encodeURIComponent(word.id)}/pin`, { method: 'PUT' });
+			if (res.ok) {
+				const result = await res.json();
+				word.is_pinned = result.is_pinned;
+				if (result.is_pinned) {
+					pinnedWords = [word, ...pinnedWords];
+				} else {
+					pinnedWords = pinnedWords.filter((w) => w.id !== word.id);
+				}
+			}
+		} catch (e) {
+			console.error(e);
+		}
+	}
+
 	async function toggleHiddenFlag(wordId: string, hidden: boolean) {
 		try {
 			await fetch(`/api/words/${encodeURIComponent(wordId)}/edit`, {
@@ -161,6 +181,16 @@
 			}
 		}
 		if (devMode) params.set('include_hidden', 'true');
+		if (
+			offset === 0 &&
+			!search &&
+			!showFavorites &&
+			selectedTags.length === tags.length &&
+			sort === (import.meta.env.PROD ? 'word' : 'created_at') &&
+			order === (import.meta.env.PROD ? 'asc' : 'desc')
+		) {
+			params.set('include_pinned', 'true');
+		}
 		params.set('offset', String(offset));
 		params.set('limit', String(PAGE_SIZE));
 		const res = await fetch(`/api/words?${params}`);
@@ -178,6 +208,7 @@
 			}
 			words = data.words;
 			total = data.total;
+			pinnedWords = data.pinnedWords ?? [];
 		} catch (e) {
 			console.error(e);
 			words = [];
@@ -766,6 +797,122 @@
 		{:else if !loading && words.length === 0}
 			<div class="empty">{showFavorites ? 'Няма ўпадабаньняў' : 'Словы ня знойдзеныя'}</div>
 		{:else}
+			{#if pinnedWords.length > 0}
+				<div class="grid-table grid-table--pinned" role="table">
+					<div role="row" class="sr-only">
+						<div role="columnheader">Слова тыдня</div>
+						<div role="columnheader">Пераклад</div>
+						<div role="columnheader">Лайкі</div>
+					</div>
+					{#each pinnedWords as word (word.id)}
+						<div class="grid-row grid-row--pinned" role="row">
+							<span class="pinned-badge">
+								<svg
+									viewBox="0 0 24 24"
+									width="12"
+									height="12"
+									fill="currentColor"
+									stroke="currentColor"
+									stroke-width="1"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								>
+									<path
+										d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+									/>
+								</svg>
+								Слова тыдня
+							</span>
+							<div class="col-word" role="cell">
+								<button
+									class="icon-btn"
+									onclick={() => openWord(word.id, word)}
+									aria-label="Open word details"
+									><svg
+										viewBox="0 0 24 24"
+										width="14"
+										height="14"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline
+											points="15 3 21 3 21 9"
+										/><line x1="10" y1="14" x2="21" y2="3" /></svg
+									></button
+								>
+								<Tooltip content={showComments ? word.comment : null}>
+									<span class="word-text" class:has-note={showComments && word.comment !== null}
+										>{@html highlightText(word.id, latToCyr(search))}</span
+									>
+								</Tooltip>
+								{#if devMode}
+									<button
+										class="icon-btn"
+										class:active={word.is_pinned}
+										onclick={() => togglePin(word)}
+										aria-label={word.is_pinned ? 'Адмацаваць' : 'Замацаваць'}
+									>
+										<svg
+											viewBox="0 0 24 24"
+											width="14"
+											height="14"
+											fill={word.is_pinned ? 'currentColor' : 'none'}
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										>
+											<path
+												d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+											/>
+										</svg>
+									</button>
+								{/if}
+								<div class="meta-row">
+									{#if word.importance.name}
+										<ImportanceBadge name={word.importance.name} level={word.importance.level} />
+									{/if}
+									<TagList tags={word.tags} />
+								</div>
+							</div>
+							<div class="col-trans" role="cell">
+								{#each word.translations as tr, j (j)}
+									<div class="translation-item">
+										<TranslationDisplay
+											translation={tr.translation}
+											comment={tr.comment}
+											showLatin={settings.showLatin}
+											{showComments}
+											searchQuery={search}
+											onWordLink={openWord}
+										/>
+										<LikeButton
+											liked={!!likes.translations[tr.id]}
+											count={tr.likes}
+											onclick={() => onToggleTranslationLike(tr.id)}
+											label="Like translation"
+											small
+										/>
+									</div>
+								{/each}
+								{#if word.translations.length === 0}
+									<span class="muted">Не перакладзена</span>
+								{/if}
+							</div>
+							<div class="col-likes" role="cell">
+								<LikeButton
+									liked={!!likes.words[word.id]}
+									count={word.likes}
+									onclick={() => onToggleWordLike(word.id)}
+									label="Like word"
+								/>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
 			<div class="grid-table" role="table">
 				<div role="row" class="sr-only">
 					<div role="columnheader">Слова</div>
@@ -832,6 +979,27 @@
 									</svg>
 								</button>
 								<EditWord {word} onWordEdited={() => fetchWords()} />
+								<button
+									class="icon-btn"
+									class:active={word.is_pinned}
+									onclick={() => togglePin(word)}
+									aria-label={word.is_pinned ? 'Адмацаваць' : 'Замацаваць'}
+								>
+									<svg
+										viewBox="0 0 24 24"
+										width="14"
+										height="14"
+										fill={word.is_pinned ? 'currentColor' : 'none'}
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									>
+										<path
+											d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+										/>
+									</svg>
+								</button>
 								<button
 									class="delete-btn-sm"
 									onclick={() => deleteWord(word.id)}
@@ -1743,6 +1911,53 @@
 			right: 1rem;
 			width: 40px;
 			height: 40px;
+		}
+	}
+
+	.grid-row > .pinned-badge {
+		grid-column: 1 / -1;
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: #eab308;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		padding: 0.875rem 0 0 1rem;
+	}
+
+	.grid-row--pinned > .col-word,
+	.grid-row--pinned > .col-trans {
+		padding-top: 0.5rem;
+	}
+
+	@media (width <= 640px) {
+		.grid-row > .pinned-badge {
+			padding: 0;
+		}
+
+		.grid-row--pinned > .col-word,
+		.grid-row--pinned > .col-trans {
+			padding-top: 0;
+		}
+
+		.grid-table--pinned {
+			margin-bottom: 0.75rem;
+		}
+	}
+
+	.grid-table--pinned .grid-row:last-child {
+		border-bottom: 1px solid var(--c-border);
+	}
+
+	.icon-btn.active {
+		color: var(--c-primary);
+		opacity: 1;
+	}
+	@media (hover: hover) {
+		.icon-btn.active:hover {
+			background: var(--c-primary-light);
 		}
 	}
 </style>

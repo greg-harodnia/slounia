@@ -17,6 +17,7 @@ export interface WordData {
 	comment: string | null;
 	likes: number;
 	hidden: boolean;
+	is_pinned: boolean;
 	translations: Translation[];
 	tags: string[];
 }

@@ -8,6 +8,12 @@ export async function load({ url, fetch }) {
 	const tagsParam = url.searchParams.get('tags') || '';
 	const ids = url.searchParams.getAll('ids').filter(Boolean);
 
+	const isCleanLoad =
+		!url.searchParams.has('search') &&
+		!url.searchParams.has('tags') &&
+		!url.searchParams.has('sort') &&
+		!url.searchParams.has('order');
+
 	const params = new URLSearchParams();
 	params.set('search', search);
 	params.set('sort', sort);
@@ -16,6 +22,7 @@ export async function load({ url, fetch }) {
 	params.set('offset', '0');
 	params.set('limit', String(PAGE_SIZE));
 	for (const id of ids) params.append('ids', id);
+	if (isCleanLoad) params.set('include_pinned', 'true');
 
 	const [wordsRes, tagsRes] = await Promise.all([fetch(`/api/words?${params}`), fetch('/api/tags')]);
 
@@ -35,6 +42,7 @@ export async function load({ url, fetch }) {
 	return {
 		words: wordsData.words ?? [],
 		total: wordsData.total ?? 0,
+		pinnedWords: wordsData.pinnedWords ?? [],
 		tags,
 		search,
 		sort,

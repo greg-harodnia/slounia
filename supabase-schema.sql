@@ -179,6 +179,8 @@ BEGIN
 			w.likes,
 			w.created_at,
 			w.hidden,
+			w.is_pinned,
+			w.pinned_at,
 			i.id AS imp_id,
 			i.name AS imp_name,
 			i.level AS imp_level,
@@ -186,6 +188,7 @@ BEGIN
 				WHEN sort_field = 'importance' THEN COALESCE(i.level::text, '0')
 				WHEN sort_field = 'likes' THEN LPAD(w.likes::text, 10, '0')
 				WHEN sort_field = 'created_at' THEN COALESCE(to_char(w.created_at, 'YYYYMMDDHH24MISS'), '0')
+				WHEN sort_field = 'pinned_at' THEN COALESCE(to_char(w.pinned_at, 'YYYYMMDDHH24MISS'), '0')
 				ELSE LOWER(w.id)
 			END AS sort_expr,
 			CASE
@@ -249,6 +252,7 @@ BEGIN
 				s.comment,
 				s.likes,
 				s.hidden,
+				s.is_pinned,
 				json_build_object('id', s.imp_id, 'name', s.imp_name, 'level', s.imp_level) AS importance,
 				COALESCE(
 					(SELECT json_agg(
@@ -297,6 +301,10 @@ WHERE NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'blog-images');
 CREATE INDEX IF NOT EXISTS idx_posts_published_at ON posts(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_slug ON posts(slug);
 CREATE INDEX IF NOT EXISTS idx_posts_pinned ON posts(is_pinned DESC);
+
+ALTER TABLE words ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT false;
+ALTER TABLE words ADD COLUMN IF NOT EXISTS pinned_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_words_pinned ON words(is_pinned DESC) WHERE is_pinned = true;
 
 CREATE OR REPLACE FUNCTION increment_post_likes(post_slug TEXT)
 RETURNS INTEGER
