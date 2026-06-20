@@ -579,15 +579,3 @@ export function latToCyr(text: string): string {
 
 	return out.join('');
 }
-
-export function propagateSoftness(s: string): string {
-	// с/з/ц + labial + soft vowel: ś/sź/sć before labial needs ь (no diacritic key)
-	s = s.replace(/([сзц])([бпвмфр])([еёіяю])/g, (m, cons, labial) => {
-		return `${cons}ь${labial}${m[m.length - 1]}`;
-	});
-	// с/з before [н,л,ц] + soft vowel: ś/ź softens preceding consonant through
-	// the voiced consonant (н,л,ц are always soft before a soft vowel).
-	return s.replace(/([сз])([нлц])([еёіяю])/g, (m, cons, next) => {
-		return `${cons}ь${next}${m[m.length - 1]}`;
-	});
-}

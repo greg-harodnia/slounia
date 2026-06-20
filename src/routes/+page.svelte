@@ -13,7 +13,7 @@
 	import type { WordData, TagData } from '$lib/types';
 	import { PAGE_SIZE, SITE_NAME, SITE_URL, SITE_DESCRIPTION } from '$lib/constants';
 	import { highlightText } from '$lib/highlight';
-	import { latToCyr, propagateSoftness } from '$lib/lacinka';
+	import { latToCyr } from '$lib/lacinka';
 	import { getCachedWord } from '$lib/fetch-word';
 	import { fetchBlogList } from '$lib/fetch-blog';
 	import { likes } from '$lib/stores/likes.svelte';
@@ -122,11 +122,6 @@
 	function toggleDevMode() {
 		devMode = !devMode;
 		localStorage.setItem('dev_mode', String(devMode));
-	}
-
-	function highlightQuery(q: string): string {
-		const cyr = latToCyr(q);
-		return propagateSoftness(cyr);
 	}
 
 	function toggleComments() {
@@ -850,7 +845,7 @@
 								>
 								<Tooltip content={showComments ? word.comment : null}>
 									<span class="word-text" class:has-note={showComments && word.comment !== null}
-										>{@html highlightText(word.id, highlightQuery(search))}</span
+										>{@html highlightText(word.id, latToCyr(search))}</span
 									>
 								</Tooltip>
 								{#if devMode}
@@ -928,7 +923,7 @@
 							>
 							<Tooltip content={showComments ? word.comment : null}>
 								<span class="word-text" class:has-note={showComments && word.comment !== null}
-									>{@html highlightText(word.id, highlightQuery(search))}</span
+									>{@html highlightText(word.id, latToCyr(search))}</span
 								>
 							</Tooltip>
 							{#if devMode}

@@ -3,12 +3,11 @@ import type { RequestHandler } from './$types';
 import { supabase } from '$lib/server/db';
 import { apiError } from '$lib/server/utils';
 import { PAGE_SIZE } from '$lib/constants';
-import { latToCyr, propagateSoftness } from '$lib/lacinka';
+import { latToCyr } from '$lib/lacinka';
 
 export const GET: RequestHandler = async ({ url }) => {
 	const raw = url.searchParams.get('search') || '';
-	const cyr = latToCyr(raw);
-	const search = propagateSoftness(cyr);
+	const search = latToCyr(raw);
 	const sort = url.searchParams.get('sort') || 'word';
 	const order = url.searchParams.get('order') || 'desc';
 	const tags = url.searchParams.get('tags') || '';
