@@ -42,6 +42,25 @@
 
 	let textareaEl: HTMLTextAreaElement | undefined = $state();
 
+	function insertLink() {
+		if (!textareaEl) return;
+		const start = textareaEl.selectionStart;
+		const end = textareaEl.selectionEnd;
+		const selected = content.slice(start, end);
+		const url = prompt('URL:', 'https://')?.trim();
+		if (!url) return;
+		const text = prompt('Link text:', selected || '')?.trim();
+		if (!text) return;
+		const tag = `<a href="${url.replace(/"/g, '&quot;')}">${text}</a>`;
+		const before = content.slice(0, start);
+		const after = content.slice(end);
+		content = before + tag + after;
+		requestAnimationFrame(() => {
+			textareaEl!.selectionStart = textareaEl!.selectionEnd = start + tag.length;
+			textareaEl!.focus();
+		});
+	}
+
 	function insertStress() {
 		if (!textareaEl) return;
 		const start = textareaEl.selectionStart;
@@ -232,6 +251,7 @@
 		Content *
 		<div class="editor-toolbar">
 			<button class="toolbar-btn" onclick={insertStress} title="Націск (Combining Acute Accent)">&#x301;</button>
+			<button class="toolbar-btn" onclick={insertLink} title="Спасылка (Link)">&#x1F517;</button>
 		</div>
 		<textarea
 			bind:value={content}
