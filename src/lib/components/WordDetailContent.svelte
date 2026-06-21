@@ -95,7 +95,7 @@
 	}
 
 	.meta-row {
-		margin-bottom: 1.5rem;
+		margin-bottom: 0.5rem;
 		flex-shrink: 0;
 	}
 
