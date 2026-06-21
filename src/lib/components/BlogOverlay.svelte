@@ -67,7 +67,7 @@
 		{:else if posts.length === 0}
 			<p class="empty">Пакуль няма допісаў.</p>
 		{:else}
-			<div class="posts-list scroll-y">
+			<div class="posts-list">
 				{#each posts as post (post.id)}
 					<BlogCard {post} onclick={onOpenPost} />
 				{/each}
