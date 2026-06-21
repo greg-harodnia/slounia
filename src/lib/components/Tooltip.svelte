@@ -21,10 +21,6 @@
 	let x = $state(0);
 	let y = $state(0);
 
-	function isTouchDevice() {
-		return window.matchMedia('(pointer: coarse)').matches;
-	}
-
 	function show(e: MouseEvent) {
 		if (!content) return;
 		const el = e.currentTarget as HTMLElement;
@@ -39,7 +35,7 @@
 	}
 
 	function togglePin(e: MouseEvent) {
-		if (!content || isTouchDevice()) return;
+		if (!content) return;
 		e.stopPropagation();
 		if (pinned) {
 			pinned = false;
