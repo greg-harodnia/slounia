@@ -89,17 +89,18 @@
 	}
 
 	function handlePopstate(e: PopStateEvent) {
-		if (e.state?.overlay === 'blog') {
+		const s = e.state?.['sveltekit:states'] as Record<string, unknown> | undefined;
+		if (s?.overlay === 'blog') {
 			overlay = 'blog';
 			overlayProps = null;
 			overlayDepth = 1;
-		} else if (e.state?.overlay === 'post' && typeof e.state.slug === 'string') {
+		} else if (s?.overlay === 'post' && typeof s.slug === 'string') {
 			overlay = 'post';
-			overlayProps = { slug: e.state.slug };
+			overlayProps = { slug: s.slug };
 			overlayDepth = 2;
-		} else if (e.state?.overlay === 'word' && typeof e.state.wordId === 'string') {
+		} else if (s?.overlay === 'word' && typeof s.wordId === 'string') {
 			overlay = 'word';
-			overlayProps = { wordId: e.state.wordId };
+			overlayProps = { wordId: s.wordId };
 			overlayDepth = 1;
 		} else {
 			overlay = null;
