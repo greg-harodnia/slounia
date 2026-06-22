@@ -195,16 +195,12 @@
 		font-size: 1.2rem;
 	}
 
-	.word-popup :global(.meta-row) {
-		margin-bottom: 0.75rem;
-	}
-
 	.word-popup :global(.future-note) {
 		display: none;
 	}
 
 	.word-popup :global(.translation-item) {
-		padding: 0.4rem 0;
+		padding: 0.5rem 0;
 	}
 
 	@keyframes popup-in {

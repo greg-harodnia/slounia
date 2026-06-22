@@ -1459,7 +1459,7 @@
 		align-items: center;
 		flex-wrap: nowrap;
 		gap: 0.35rem;
-		padding: 0.485rem 0;
+		padding: 0.5rem 0;
 		transition:
 			background 0.1s,
 			opacity 0.1s;
@@ -1472,11 +1472,11 @@
 		border-radius: 4px;
 	}
 
-	.translation-item:first-child {
+	:global(.translation-item:first-child) {
 		padding-top: 0;
 	}
 
-	.translation-item:last-child {
+	:global(.translation-item:last-child) {
 		padding-bottom: 0;
 	}
 
@@ -1835,7 +1835,7 @@
 		}
 
 		.translation-item {
-			padding: 0.25rem 0;
+			padding: 0.5rem 0;
 		}
 
 		.table-footer {

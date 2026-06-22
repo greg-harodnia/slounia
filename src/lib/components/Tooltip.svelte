@@ -106,7 +106,7 @@
 
 <style>
 	.tooltip-box {
-		line-height: normal;
+		line-height: 1;
 	}
 
 	.tooltip {

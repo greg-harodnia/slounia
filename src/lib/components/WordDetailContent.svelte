@@ -82,7 +82,7 @@
 		display: flex;
 		align-items: center;
 		gap: 1rem;
-		margin-bottom: 0.75rem;
+		margin-bottom: 0.25rem;
 		flex-wrap: wrap;
 		flex-shrink: 0;
 	}
@@ -95,7 +95,6 @@
 	}
 
 	.meta-row {
-		margin-bottom: 0.5rem;
 		flex-shrink: 0;
 	}
 
@@ -105,11 +104,15 @@
 		min-height: 0;
 	}
 
+	.translations {
+		padding-top: 1rem;
+	}
+
 	.translation-item {
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		padding: 0.785rem 0;
+		padding: 0.75rem 0;
 		border-bottom: 1px solid var(--c-border);
 	}
 
@@ -134,7 +137,7 @@
 		}
 		.translation-item {
 			gap: 0.5rem;
-			padding: 0.5rem 0;
+			padding: 0.625rem 0;
 		}
 	}
 
