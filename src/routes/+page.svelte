@@ -1362,7 +1362,7 @@
 	.grid-header,
 	.grid-row {
 		display: grid;
-		grid-template-columns: 33% 1fr 10%;
+		grid-template-columns: 33% 1fr auto;
 	}
 
 	.grid-header {
@@ -1398,7 +1398,7 @@
 		font: inherit;
 		color: inherit;
 		cursor: pointer;
-		padding: 0;
+		padding-right: 1rem;
 		font-size: 0.8rem;
 		font-weight: 600;
 		text-transform: uppercase;
@@ -1677,7 +1677,7 @@
 
 		.grid-header,
 		.grid-row {
-			grid-template-columns: 33% 1fr 14%;
+			grid-template-columns: 33% 1fr auto;
 		}
 	}
 
