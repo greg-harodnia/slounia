@@ -42,7 +42,7 @@
 	<div class="post-card-header">
 		<time datetime={post.published_at}>{published}</time>
 		{#if post.is_pinned}
-			<span class="pinned-badge">Замацавана</span>
+			<span class="pinned-badge">Замацаванае</span>
 		{/if}
 	</div>
 	<h2 class="post-card-title">{post.title}</h2>

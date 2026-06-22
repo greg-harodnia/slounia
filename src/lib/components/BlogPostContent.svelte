@@ -13,7 +13,7 @@
 		<div class="post-meta">
 			<time datetime={post.published_at} class="post-date">{published}</time>
 			{#if post.is_pinned}
-				<span class="pinned-badge">Замацавана</span>
+				<span class="pinned-badge">Замацаванае</span>
 			{/if}
 			{#if post.hashtags.length > 0}
 				<div class="post-tags">
