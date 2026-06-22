@@ -1902,6 +1902,10 @@
 		padding-top: 0.3rem;
 	}
 
+	.grid-row--pinned > .col-likes :global(.like-btn) {
+		margin-top: 0.15rem;
+	}
+
 	.grid-table--pinned .grid-row:last-child {
 		border-bottom: 1px solid var(--c-border);
 	}
