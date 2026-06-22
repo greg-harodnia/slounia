@@ -1476,14 +1476,6 @@
 		border-radius: 4px;
 	}
 
-	:global(.translation-item:first-child) {
-		padding-top: 0;
-	}
-
-	:global(.translation-item:last-child) {
-		padding-bottom: 0;
-	}
-
 	.drag-handle {
 		cursor: grab;
 		color: var(--c-text-muted);
@@ -1830,6 +1822,7 @@
 		}
 
 		.col-trans {
+			padding-top: 0.25rem;
 			grid-column: 1 / -1;
 		}
 
@@ -1845,6 +1838,14 @@
 		.table-footer {
 			margin-top: 0.75rem;
 		}
+	}
+
+	:global(.translation-item:first-child) {
+		padding-top: 0;
+	}
+
+	:global(.translation-item:last-child) {
+		padding-bottom: 0;
 	}
 
 	.scroll-top {

@@ -95,6 +95,7 @@
 	}
 
 	.meta-row {
+		margin-bottom: 0.5rem;
 		flex-shrink: 0;
 	}
 
@@ -105,7 +106,7 @@
 	}
 
 	.translations {
-		padding-top: 1rem;
+		padding-top: 0.5rem;
 	}
 
 	.translation-item {
@@ -114,14 +115,6 @@
 		gap: 0.75rem;
 		padding: 0.75rem 0;
 		border-bottom: 1px solid var(--c-border);
-	}
-
-	:global(.translation-item:first-child) {
-		padding-top: 0;
-	}
-
-	:global(.translation-item:last-child) {
-		padding-bottom: 0;
 	}
 
 	.translation-item:last-child {
@@ -147,6 +140,14 @@
 			gap: 0.5rem;
 			padding: 0.625rem 0;
 		}
+	}
+
+	:global(.translation-item:first-child) {
+		padding-top: 0;
+	}
+
+	:global(.translation-item:last-child) {
+		padding-bottom: 0;
 	}
 
 	.hidden-badge {
