@@ -471,18 +471,6 @@
 		a.click();
 	}
 
-	function copySearchLink() {
-		const params = new SvelteURLSearchParams();
-		if (search) params.set('search', search);
-		if (sort) params.set('sort', sort);
-		if (order) params.set('order', order);
-		if (selectedTags.length > 0) params.set('tags', selectedTags.join(','));
-		const url = `${window.location.origin}/?${params}`;
-		navigator.clipboard.writeText(url);
-		copiedSearch = true;
-		setTimeout(() => (copiedSearch = false), 1500);
-	}
-
 	$effect(() => {
 		const el = appEl;
 		if (!el) return;
@@ -780,25 +768,6 @@
 				</div>
 				<span class="word-counter">{total}</span>
 			</div>
-			<button
-				class="copy-search-btn"
-				onclick={copySearchLink}
-				aria-label="Copy link to current search"
-				title="Скапіяваць спасылку на гэты вынік"
-				><svg
-					viewBox="0 0 24 24"
-					width="16"
-					height="16"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-					<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-				</svg>
-			</button>
 		</div>
 
 		<div class="tags-row" role="group" aria-label="Фільтр водле тэґаў">
@@ -1227,7 +1196,7 @@
 		flex-shrink: 0;
 	}
 
-	:where(.header-btn, .copy-search-btn) {
+	.header-btn {
 		padding: 0.5rem 0.75rem;
 		border: 1.5px solid var(--c-border);
 		border-radius: var(--radius-sm);
@@ -1237,9 +1206,6 @@
 		cursor: pointer;
 		transition: all 0.15s;
 		line-height: 1;
-	}
-
-	.header-btn {
 		font-size: 0.8rem;
 		font-weight: 600;
 		white-space: nowrap;
@@ -1660,21 +1626,6 @@
 		}
 	}
 
-	.copy-search-btn {
-		height: 100%;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 1rem;
-		flex-shrink: 0;
-	}
-	@media (hover: hover) {
-		.copy-search-btn:hover {
-			border-color: var(--c-primary);
-			background: var(--c-primary-light);
-		}
-	}
-
 	.table-footer {
 		padding: 0.75rem 1rem;
 		font-size: 0.8rem;
@@ -1753,8 +1704,7 @@
 			gap: 0.5rem;
 		}
 
-		.header-btn,
-		.copy-search-btn {
+		.header-btn {
 			padding: 0.4rem 0.5rem;
 			font-size: 0.7rem;
 		}
