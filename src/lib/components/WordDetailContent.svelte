@@ -116,6 +116,14 @@
 		border-bottom: 1px solid var(--c-border);
 	}
 
+	:global(.translation-item:first-child) {
+		padding-top: 0;
+	}
+
+	:global(.translation-item:last-child) {
+		padding-bottom: 0;
+	}
+
 	.translation-item:last-child {
 		border-bottom: none;
 	}
