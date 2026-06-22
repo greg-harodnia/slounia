@@ -64,7 +64,7 @@
 			{/if}
 		</div>
 	</div>
-	<p class="future-note">Потым тут можа нешта зьявіцца</p>
+	<p class="future-note">Гэтае месца пакуль пустуе, таму яго заняў кот 🐈</p>
 </div>
 
 <style>
@@ -95,7 +95,7 @@
 	}
 
 	.meta-row {
-		margin-bottom: 0.5rem;
+		margin-bottom: 1rem;
 		flex-shrink: 0;
 	}
 
@@ -139,6 +139,9 @@
 		.translation-item {
 			gap: 0.5rem;
 			padding: 0.625rem 0;
+		}
+		.meta-row {
+			margin-bottom: 0.5rem;
 		}
 	}
 

@@ -1189,6 +1189,11 @@
 		--logo-fg: #0f172a;
 	}
 
+	:global([data-theme='national']) .app-logo {
+		--logo-bg: var(--c-primary);
+		--logo-fg: var(--c-bg);
+	}
+
 	.header-right,
 	.search-box {
 		display: flex;
