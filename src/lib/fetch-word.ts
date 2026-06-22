@@ -7,6 +7,10 @@ export function getCachedWord(id: string): WordData | undefined {
 	return cache.get(id);
 }
 
+export function setCachedWord(id: string, data: WordData): void {
+	cache.set(id, data);
+}
+
 export function fetchWord(id: string): Promise<void> {
 	const cached = cache.get(id);
 	if (cached) return Promise.resolve();

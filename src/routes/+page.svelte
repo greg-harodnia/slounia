@@ -14,7 +14,7 @@
 	import { PAGE_SIZE, SITE_NAME, SITE_URL, SITE_DESCRIPTION } from '$lib/constants';
 	import { highlightText } from '$lib/highlight';
 	import { latToCyr } from '$lib/lacinka';
-	import { getCachedWord } from '$lib/fetch-word';
+	import { getCachedWord, setCachedWord } from '$lib/fetch-word';
 	import { fetchBlogList } from '$lib/fetch-blog';
 	import { likes } from '$lib/stores/likes.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
@@ -105,6 +105,7 @@
 	}
 
 	function openWord(wordId: string, wordData?: WordData) {
+		if (wordData) setCachedWord(wordId, wordData);
 		overlay = 'word';
 		overlayProps = { wordId, word: wordData ?? getCachedWord(wordId) };
 		pushState(`/word/${encodeURIComponent(wordId)}`, { overlay: 'word', wordId });
@@ -126,7 +127,7 @@
 			overlayProps = { slug: s.slug };
 		} else if (s?.overlay === 'word' && typeof s.wordId === 'string') {
 			overlay = 'word';
-			overlayProps = { wordId: s.wordId };
+			overlayProps = { wordId: s.wordId, word: getCachedWord(s.wordId) };
 		} else {
 			restoreOverlayFromURL();
 		}
