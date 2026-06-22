@@ -102,7 +102,12 @@
 
 button,
 .chip,
-.app-logo {
+.app-logo,
+.search-input-inner,
+.word-counter,
+.grid-header .col-word,
+.grid-header .col-trans,
+.grid-header .col-likes {
 	user-select: none;
 	-webkit-user-select: none;
 }

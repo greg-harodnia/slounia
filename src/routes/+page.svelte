@@ -1183,20 +1183,23 @@
 		flex-shrink: 0;
 	}
 
-	.header-btn {
+	:where(.header-btn, .copy-search-btn) {
 		padding: 0.5rem 0.75rem;
 		border: 1.5px solid var(--c-border);
 		border-radius: var(--radius-sm);
 		background: var(--c-surface);
 		color: var(--c-text-muted);
-		font-size: 0.8rem;
-		font-weight: 600;
 		font-family: inherit;
 		cursor: pointer;
 		transition: all 0.15s;
+		line-height: 1;
+	}
+
+	.header-btn {
+		font-size: 0.8rem;
+		font-weight: 600;
 		white-space: nowrap;
 		letter-spacing: 0.03em;
-		line-height: 1;
 	}
 
 	.btn-icon {
@@ -1622,17 +1625,8 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 2.25rem;
-		border: 1.5px solid var(--c-border);
-		border-radius: var(--radius-sm);
-		background: var(--c-surface);
-		color: var(--c-text-muted);
 		font-size: 1rem;
-		cursor: pointer;
-		line-height: 1;
-		transition: all 0.15s;
 		flex-shrink: 0;
-		font-family: inherit;
 	}
 	@media (hover: hover) {
 		.copy-search-btn:hover {
