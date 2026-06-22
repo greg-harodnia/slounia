@@ -81,7 +81,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
-<span onmouseenter={show} onmouseleave={onLeave} onclick={togglePin}>
+<span class="tooltip-box" onmouseenter={show} onmouseleave={onLeave} onclick={togglePin}>
 	{@render children()}
 </span>
 
@@ -105,6 +105,10 @@
 {/if}
 
 <style>
+	.tooltip-box {
+		line-height: normal;
+	}
+
 	.tooltip {
 		position: fixed;
 		z-index: 9999;

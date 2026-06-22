@@ -109,7 +109,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		padding: 0.6rem 0;
+		padding: 0.785rem 0;
 		border-bottom: 1px solid var(--c-border);
 	}
 

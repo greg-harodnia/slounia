@@ -1456,7 +1456,7 @@
 		align-items: center;
 		flex-wrap: nowrap;
 		gap: 0.35rem;
-		padding: 0.3rem 0;
+		padding: 0.485rem 0;
 		transition:
 			background 0.1s,
 			opacity 0.1s;
@@ -1467,6 +1467,14 @@
 	.translation-item.draggable-hover {
 		background: var(--c-primary-light);
 		border-radius: 4px;
+	}
+
+	.translation-item:first-child {
+		padding-top: 0;
+	}
+
+	.translation-item:last-child {
+		padding-bottom: 0;
 	}
 
 	.drag-handle {
