@@ -1427,7 +1427,7 @@
 	}
 
 	.grid-row > * {
-		padding: 0.875rem 1rem;
+		padding: 1rem;
 		overflow-wrap: break-word;
 	}
 
@@ -1440,6 +1440,10 @@
 
 	.col-word .icon-btn {
 		float: right;
+	}
+
+	.col-likes :global(.like-btn) {
+		margin-top: 0.9rem;
 	}
 
 	@media (width > 640px) {
