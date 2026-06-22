@@ -1693,7 +1693,7 @@
 		.header-left {
 			flex-direction: column;
 			align-items: center;
-			gap: 0;
+			gap: 0.25rem;
 		}
 
 		h1 {
@@ -1709,7 +1709,8 @@
 			gap: 0.5rem;
 		}
 
-		.header-btn {
+		.header-btn,
+		.copy-search-btn {
 			padding: 0.4rem 0.5rem;
 			font-size: 0.7rem;
 		}
@@ -1829,6 +1830,10 @@
 		.col-likes {
 			grid-column: 1 / -1;
 			justify-self: end;
+		}
+
+		.col-likes :global(.like-btn) {
+			margin-top: 0;
 		}
 
 		.translation-item {

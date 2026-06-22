@@ -127,4 +127,10 @@
 		background: var(--c-tag-bg);
 		color: var(--c-tag-text);
 	}
+
+	@media (max-width: 600px) {
+		.post-card-link {
+			padding: 1rem;
+		}
+	}
 </style>
