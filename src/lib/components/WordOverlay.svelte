@@ -9,8 +9,8 @@
 		initialWordId,
 		initialWord,
 		onWordLink,
-		overlayDepth,
-	}: { initialWordId?: string; initialWord?: WordData; onWordLink?: (wordId: string) => void; overlayDepth: number } =
+		onclose,
+	}: { initialWordId?: string; initialWord?: WordData; onWordLink?: (wordId: string) => void; onclose: () => void } =
 		$props();
 
 	/* svelte-ignore state_referenced_locally */
@@ -19,11 +19,11 @@
 	let fetchingId = $state<string | null>(null);
 
 	let breadcrumbs = $derived.by(() => {
-		const entries: Crumb[] = [{ href: '/', go: overlayDepth }];
+		const entries: Crumb[] = [{ label: 'Галоўная', onclick: onclose }];
 		if (word) {
-			entries.push({ label: word.id, go: 0 });
+			entries.push({ label: word.id });
 		} else {
-			entries.push({ label: loading ? 'Ладаваньне...' : '...', go: 0 });
+			entries.push({ label: loading ? 'Ладаваньне...' : '...' });
 		}
 		return entries;
 	});
@@ -57,7 +57,7 @@
 	<Breadcrumb items={breadcrumbs} />
 {/snippet}
 
-<OverlayShell {header}>
+<OverlayShell {header} {onclose}>
 	{#if loading}
 		<p class="msg">Ладаваньне...</p>
 	{:else if word}

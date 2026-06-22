@@ -27,7 +27,7 @@ export interface TagData {
 	name: string;
 }
 
-export type Crumb = { label?: string; href?: string; go?: number };
+export type Crumb = { label?: string; href?: string; onclick?: () => void };
 
 export interface Post {
 	id: number;

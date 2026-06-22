@@ -6,7 +6,13 @@
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 	import { fetchBlogList, fetchBlogPost, getCachedBlogList, getCachedBlogPost } from '$lib/fetch-blog';
 
-	let { onOpenPost, initialSlug }: { onOpenPost: (slug: string) => void; initialSlug?: string } = $props();
+	let {
+		onOpenPost,
+		initialSlug,
+		onclose,
+		onBackToBlog,
+	}: { onOpenPost: (slug: string) => void; initialSlug?: string; onclose: () => void; onBackToBlog?: () => void } =
+		$props();
 
 	let posts = $state<Post[]>([]);
 	let currentPost = $state<Post | null>(null);
@@ -16,12 +22,12 @@
 	let breadcrumbs = $derived.by(() => {
 		if (currentPost) {
 			return [
-				{ href: '/', go: 2 } as Crumb,
-				{ href: '/blog', go: 1 } as Crumb,
-				{ label: currentPost.title, go: 0 },
+				{ label: 'Галоўная', onclick: onclose } as Crumb,
+				{ label: 'Блёґ', onclick: onBackToBlog } as Crumb,
+				{ label: currentPost.title },
 			];
 		}
-		return [{ href: '/', go: 1 } as Crumb, { label: 'Блёґ', go: 0 }];
+		return [{ label: 'Галоўная', onclick: onclose } as Crumb, { label: 'Блёґ' }];
 	});
 
 	$effect(() => {
@@ -58,7 +64,7 @@
 	<Breadcrumb items={breadcrumbs} />
 {/snippet}
 
-<OverlayShell {header}>
+<OverlayShell {header} {onclose}>
 	{#if !currentPost}
 		<h1 class="page-title">Блёґ</h1>
 

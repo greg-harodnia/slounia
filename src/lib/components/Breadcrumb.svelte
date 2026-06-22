@@ -17,10 +17,10 @@
 <nav class="breadcrumb">
 	{#each items as item, i (i)}
 		{@const crumbLabel = breadcrumbLabel(item)}
-		{@const isHome = item.href === '/'}
+		{@const isHome = item.href === '/' || crumbLabel === 'Галоўная'}
 		{#if i > 0}<span class="sep">›</span>{/if}
-		{#if item.go}
-			<button class="crumb" onclick={() => history.go(-item.go!)}>
+		{#if item.onclick}
+			<button class="crumb" onclick={item.onclick}>
 				{#if isHome}
 					<svg class="home-icon" viewBox="0 0 20 20" width="16" height="16" fill="currentColor"
 						><path d="M3 4c2-1 5-2 7 0s5-1 7 0v12c-2-1-5-2-7 0s-5-1-7 0V4z" /></svg

@@ -61,7 +61,38 @@
 	let overlay = $state<string | null>(null);
 	type OverlayProps = { slug?: string; wordId?: string; word?: WordData } | null;
 	let overlayProps = $state<OverlayProps>(null);
-	let overlayDepth = $state(0);
+
+	function restoreOverlayFromURL() {
+		const path = window.location.pathname;
+		if (path === '/blog') {
+			overlay = 'blog';
+			overlayProps = null;
+		} else if (path.startsWith('/blog/')) {
+			overlay = 'post';
+			overlayProps = { slug: decodeURIComponent(path.slice('/blog/'.length)) };
+		} else if (path.startsWith('/word/')) {
+			const wordId = decodeURIComponent(path.slice('/word/'.length));
+			overlay = 'word';
+			overlayProps = { wordId, word: getCachedWord(wordId) };
+		} else if (path === '/' || path === '') {
+			overlay = null;
+			overlayProps = null;
+		}
+	}
+
+	function closeOverlay() {
+		overlay = null;
+		overlayProps = null;
+		/* eslint-disable-next-line svelte/no-navigation-without-resolve */
+		replaceState('/', {});
+	}
+
+	function backToBlog() {
+		overlay = 'blog';
+		overlayProps = null;
+		/* eslint-disable-next-line svelte/no-navigation-without-resolve */
+		replaceState('/blog', { overlay: 'blog' });
+	}
 
 	function preloadBlogList() {
 		fetchBlogList();
@@ -70,21 +101,18 @@
 	function openBlog() {
 		overlay = 'blog';
 		overlayProps = null;
-		overlayDepth++;
 		pushState('/blog', { overlay: 'blog' });
 	}
 
 	function openWord(wordId: string, wordData?: WordData) {
 		overlay = 'word';
 		overlayProps = { wordId, word: wordData ?? getCachedWord(wordId) };
-		overlayDepth++;
 		pushState(`/word/${encodeURIComponent(wordId)}`, { overlay: 'word', wordId });
 	}
 
 	function openBlogPost(slug: string) {
 		overlay = 'post';
 		overlayProps = { slug };
-		overlayDepth++;
 		pushState(`/blog/${slug}`, { overlay: 'post', slug });
 	}
 
@@ -93,19 +121,14 @@
 		if (s?.overlay === 'blog') {
 			overlay = 'blog';
 			overlayProps = null;
-			overlayDepth = 1;
 		} else if (s?.overlay === 'post' && typeof s.slug === 'string') {
 			overlay = 'post';
 			overlayProps = { slug: s.slug };
-			overlayDepth = 2;
 		} else if (s?.overlay === 'word' && typeof s.wordId === 'string') {
 			overlay = 'word';
 			overlayProps = { wordId: s.wordId };
-			overlayDepth = 1;
 		} else {
-			overlay = null;
-			overlayProps = null;
-			overlayDepth = 0;
+			restoreOverlayFromURL();
 		}
 	}
 
@@ -273,11 +296,25 @@
 		doSearch();
 	}
 
+	function syncUrlParams() {
+		const params = new SvelteURLSearchParams();
+		if (search) params.set('search', search);
+		if (sort !== (import.meta.env.PROD ? 'word' : 'created_at')) params.set('sort', sort);
+		if (order !== (import.meta.env.PROD ? 'asc' : 'desc')) params.set('order', order);
+		if (selectedTags.length > 0 && selectedTags.length < tags.length) {
+			params.set('tags', selectedTags.join(','));
+		}
+		const qs = params.toString();
+		/* eslint-disable-next-line svelte/no-navigation-without-resolve */
+		replaceState(qs ? `/?${qs}` : '/', {});
+	}
+
 	function doSearch() {
 		loading = true;
 		words = [];
 		total = 0;
 		fetchWords();
+		syncUrlParams();
 	}
 
 	function handleSort(field: string) {
@@ -291,6 +328,7 @@
 		total = 0;
 		loading = true;
 		fetchWords();
+		syncUrlParams();
 	}
 
 	function handleTagFilter(tagName: string) {
@@ -497,6 +535,7 @@
 			prefetchNext();
 		}
 		if (!localStorage.getItem('welcome_dismissed')) showWelcome = true;
+		restoreOverlayFromURL();
 		window.addEventListener('popstate', handlePopstate);
 		return () => {
 			window.removeEventListener('popstate', handlePopstate);
@@ -1105,7 +1144,12 @@
 </Modal>
 
 {#if overlay === 'blog' || overlay === 'post'}
-	<BlogOverlay onOpenPost={openBlogPost} initialSlug={overlayProps?.slug} />
+	<BlogOverlay
+		onOpenPost={openBlogPost}
+		initialSlug={overlayProps?.slug}
+		onclose={closeOverlay}
+		onBackToBlog={backToBlog}
+	/>
 {/if}
 
 {#if overlay === 'word'}
@@ -1113,7 +1157,7 @@
 		initialWordId={overlayProps?.wordId}
 		initialWord={overlayProps?.word}
 		onWordLink={openWord}
-		{overlayDepth}
+		onclose={closeOverlay}
 	/>
 {/if}
 
