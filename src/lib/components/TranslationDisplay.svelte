@@ -38,9 +38,9 @@
 	const searchForm = $derived(showLatin ? cyrToLat(cyrNorm(translation)) : undefined);
 	const note = $derived(showComments ? comment : null);
 
-	const crossRefTarget = $derived.by(() => {
-		const m = translation.match(/^гл\.\s+(.+)$/iu);
-		return m ? m[1].trim() : null;
+	const crossRef = $derived.by(() => {
+		const m = translation.match(/^(гл|параўн)\.\s+(.+)$/iu);
+		return m ? { prefix: m[1].toLowerCase() + '. ', target: m[2].trim() } : null;
 	});
 
 	let popupWord = $state<WordData | null>(null);
@@ -54,17 +54,17 @@
 
 	function showWordPopup(e: MouseEvent) {
 		if (popupTimer) clearTimeout(popupTimer);
-		if (!crossRefTarget) return;
+		if (!crossRef) return;
 		const btn = e.currentTarget as HTMLElement;
 		const token = ++popupToken;
-		fetchWord(crossRefTarget);
+		fetchWord(crossRef.target);
 
 		popupTimer = setTimeout(async () => {
-			await fetchWord(crossRefTarget!);
+			await fetchWord(crossRef.target);
 
 			if (token !== popupToken) return;
 
-			popupWord = getCachedWord(crossRefTarget!)!;
+			popupWord = getCachedWord(crossRef.target)!;
 
 			const rect = btn.getBoundingClientRect();
 			popupX = Math.max(8, Math.min(rect.left, window.innerWidth - 328));
@@ -100,7 +100,7 @@
 		if (popupTimer) clearTimeout(popupTimer);
 		popupToken++;
 		showPopup = false;
-		if (crossRefTarget) onWordLink?.(crossRefTarget);
+		if (crossRef) onWordLink?.(crossRef.target);
 	}
 
 	$effect(() => {
@@ -110,20 +110,20 @@
 	});
 </script>
 
-{#if crossRefTarget}
+{#if crossRef}
 	<Tooltip content={note}>
 		<span class="translation-text" class:has-note={note !== null}>
-			<span class="crossref-prefix">гл. </span>
+			<span class="crossref-prefix">{crossRef.prefix}</span>
 			{#if onWordLink}
 				<button
 					onclick={handleCrossRefClick}
 					onmouseenter={showWordPopup}
 					onmouseleave={hideWordPopup}
-					class="crossref-link">{crossRefTarget}</button
+					class="crossref-link">{crossRef.target}</button
 				>
 			{:else}
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-				<a href={r('/word/' + encodeURIComponent(crossRefTarget))} class="crossref-link">{crossRefTarget}</a>
+				<a href={r('/word/' + encodeURIComponent(crossRef.target))} class="crossref-link">{crossRef.target}</a>
 			{/if}
 		</span>
 	</Tooltip>
