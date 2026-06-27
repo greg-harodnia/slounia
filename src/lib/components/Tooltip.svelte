@@ -4,6 +4,7 @@
 
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { computePopupPosition } from '$lib/popup-position';
 
 	let {
 		content,
@@ -18,15 +19,16 @@
 	const id = Symbol();
 	let visible = $state(false);
 	let pinned = $state(false);
-	let x = $state(0);
-	let y = $state(0);
+	let style = $state('');
 
 	function show(e: MouseEvent) {
 		if (!content) return;
-		const el = e.currentTarget as HTMLElement;
-		const rect = el.getBoundingClientRect();
-		x = rect.left;
-		y = rect.bottom;
+		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		const gap = 6;
+		const w = 300;
+		const left = rect.left + gap + w > window.innerWidth ? Math.max(gap, rect.left - w - gap) : rect.left + gap;
+		const pos = computePopupPosition(rect, { gap, minHeight: 50 });
+		style = `left: ${left}px; top: ${pos.top}px; max-width: ${maxWidth}px; max-height: ${pos.maxHeight}px;`;
 		visible = true;
 	}
 
@@ -87,15 +89,7 @@
 
 {#if visible && content}
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-	<div
-		class="tooltip"
-		role="tooltip"
-		onclick={(e) => e.stopPropagation()}
-		style="left: {x + 6 + 300 > window.innerWidth ? Math.max(6, x - 306) : x + 6}px; top: {y + 6 + 50 >
-		window.innerHeight
-			? Math.max(6, y - 56)
-			: y + 6}px; max-width: {maxWidth}px;"
-	>
+	<div class="tooltip" role="tooltip" onclick={(e) => e.stopPropagation()} {style}>
 		{#each content.split('\n') as line, i (i)}
 			{#if i > 0}<br />{/if}
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -124,6 +118,7 @@
 		line-height: 1.4;
 		user-select: text;
 		-webkit-user-select: text;
+		overflow-y: auto;
 	}
 
 	.tooltip :global(a) {
@@ -137,12 +132,5 @@
 
 	.tooltip :global(a:hover) {
 		opacity: 0.85;
-	}
-
-	@media (pointer: coarse) {
-		.tooltip {
-			max-height: 40vh;
-			overflow-y: auto;
-		}
 	}
 </style>

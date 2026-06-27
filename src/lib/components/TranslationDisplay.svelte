@@ -6,6 +6,7 @@
 	import Tooltip from './Tooltip.svelte';
 	import WordDetailContent from './WordDetailContent.svelte';
 	import type { WordData } from '$lib/types';
+	import { computePopupPosition } from '$lib/popup-position';
 
 	let {
 		translation,
@@ -68,17 +69,10 @@
 
 			const rect = btn.getBoundingClientRect();
 			popupX = Math.max(8, Math.min(rect.left, window.innerWidth - 328));
-			const spaceBelow = window.innerHeight - rect.bottom;
-			const spaceAbove = rect.top;
-			if (spaceBelow < 350 && spaceAbove >= 350) {
-				popupY = rect.top - 4;
-				popupAbove = true;
-				popupMaxHeight = Math.max(100, spaceAbove - 12) + 'px';
-			} else {
-				popupY = rect.bottom + 4;
-				popupAbove = false;
-				popupMaxHeight = Math.max(100, spaceBelow - 12) + 'px';
-			}
+			const pos = computePopupPosition(rect, { gap: 4, minHeight: 350 });
+			popupY = pos.top;
+			popupAbove = pos.above;
+			popupMaxHeight = pos.maxHeight + 'px';
 			showPopup = true;
 		}, 150);
 	}
