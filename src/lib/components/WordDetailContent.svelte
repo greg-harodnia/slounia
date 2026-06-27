@@ -99,6 +99,10 @@
 		flex-shrink: 0;
 	}
 
+	:global(.word-popup .meta-row) {
+		margin-bottom: 0rem;
+	}
+
 	.translations-scroll {
 		flex: 1;
 		overflow-y: auto;
