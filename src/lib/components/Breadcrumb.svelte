@@ -23,7 +23,7 @@
 			<button class="crumb" onclick={item.onclick}>
 				{#if isHome}
 					<svg class="home-icon" viewBox="0 0 20 20" width="16" height="16" fill="currentColor"
-						><path d="M3 4c2-1 5-2 7 0s5-1 7 0v12c-2-1-5-2-7 0s-5-1-7 0V4z" /></svg
+						><path d="M10 2L2 10h2v8h5v-5h2v5h5v-8h2L10 2z" /></svg
 					>
 				{:else}
 					{crumbLabel}
@@ -34,7 +34,7 @@
 			<a href={r(item.href)} class="crumb">
 				{#if isHome}
 					<svg class="home-icon" viewBox="0 0 20 20" width="16" height="16" fill="currentColor"
-						><path d="M3 4c2-1 5-2 7 0s5-1 7 0v12c-2-1-5-2-7 0s-5-1-7 0V4z" /></svg
+						><path d="M10 2L2 10h2v8h5v-5h2v5h5v-8h2L10 2z" /></svg
 					>
 				{:else}
 					{crumbLabel}
@@ -44,7 +44,7 @@
 			<span class="crumb crumb-current">
 				{#if isHome}
 					<svg class="home-icon" viewBox="0 0 20 20" width="16" height="16" fill="currentColor"
-						><path d="M3 4c2-1 5-2 7 0s5-1 7 0v12c-2-1-5-2-7 0s-5-1-7 0V4z" /></svg
+						><path d="M10 2L2 10h2v8h5v-5h2v5h5v-8h2L10 2z" /></svg
 					>
 				{:else}
 					{crumbLabel}
