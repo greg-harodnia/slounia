@@ -16,6 +16,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		sort_dir: 'asc',
 		result_offset: 0,
 		result_limit: 100000,
+		word_ids: null,
+		include_hidden: false,
 	});
 
 	if (error) {

@@ -51,6 +51,7 @@
 	let devMode = $state(false);
 	let draggedTransId = $state<number | null>(null);
 	let copiedSearch = $state(false);
+	let exportError = $state<string | null>(null);
 	let showWelcome = $state(false);
 	let appEl: HTMLDivElement | undefined = $state();
 	let showScrollTop = $state(false);
@@ -461,15 +462,27 @@
 		}
 	}
 
-	function exportData() {
+	async function exportData() {
+		exportError = null;
 		const params = new SvelteURLSearchParams();
 		if (search) params.set('search', search);
 		if (selectedTags.length) params.set('tags', selectedTags.join(','));
 
+		const res = await fetch(`/api/words/export?${params}`);
+		if (!res.ok) {
+			const body = await res.json().catch(() => null);
+			exportError = body?.error || `Памылка ${res.status}`;
+			setTimeout(() => (exportError = null), 4000);
+			return;
+		}
+
+		const blob = await res.blob();
+		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
-		a.href = `/api/words/export?${params}`;
+		a.href = url;
 		a.download = SITE_NAME + '.csv';
 		a.click();
+		URL.revokeObjectURL(url);
 	}
 
 	$effect(() => {
@@ -1064,6 +1077,9 @@
 	{#if copiedSearch}
 		<div class="copy-toast">Спасылка скапіяваная</div>
 	{/if}
+	{#if exportError}
+		<div class="copy-toast error" role="alert">{exportError}</div>
+	{/if}
 	{#if showScrollTop}
 		<button
 			class="scroll-top"
@@ -1540,6 +1556,12 @@
 		pointer-events: none;
 		box-shadow: var(--shadow-md);
 		animation: fade-in-out 1.5s ease-in-out;
+	}
+
+	.copy-toast.error {
+		background: var(--c-error, #d32f2f);
+		color: #fff;
+		animation: fade-in-out 4s ease-in-out;
 	}
 
 	@media (width <= 640px) {
