@@ -52,19 +52,25 @@
 	let popupMaxHeight = $state('60vh');
 	let popupTimer: ReturnType<typeof setTimeout> | null = null;
 	let popupToken = 0;
+	let loadingFetch = $state(false);
 
 	function showWordPopup(e: MouseEvent) {
 		if (popupTimer) clearTimeout(popupTimer);
 		if (!crossRef) return;
 		const btn = e.currentTarget as HTMLElement;
 		const token = ++popupToken;
+		if (!getCachedWord(crossRef.target)) loadingFetch = true;
 		fetchWord(crossRef.target);
 
 		popupTimer = setTimeout(async () => {
 			await fetchWord(crossRef.target);
 
-			if (token !== popupToken) return;
+			if (token !== popupToken) {
+				loadingFetch = false;
+				return;
+			}
 
+			loadingFetch = false;
 			popupWord = getCachedWord(crossRef.target)!;
 
 			const rect = btn.getBoundingClientRect();
@@ -80,6 +86,7 @@
 	function hideWordPopup() {
 		if (popupTimer) clearTimeout(popupTimer);
 		++popupToken;
+		loadingFetch = false;
 		popupTimer = setTimeout(() => {
 			showPopup = false;
 		}, 300);
@@ -113,11 +120,17 @@
 					onclick={handleCrossRefClick}
 					onmouseenter={showWordPopup}
 					onmouseleave={hideWordPopup}
-					class="crossref-link">{crossRef.target}</button
+					class="crossref-link"
+					class:loading={loadingFetch}>{crossRef.target}</button
 				>
 			{:else}
-				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-				<a href={r('/word/' + encodeURIComponent(crossRef.target))} class="crossref-link">{crossRef.target}</a>
+				<!-- eslint-disable svelte/no-navigation-without-resolve -->
+				<a
+					href={r('/word/' + encodeURIComponent(crossRef.target))}
+					class="crossref-link"
+					class:loading={loadingFetch}>{crossRef.target}</a
+				>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			{/if}
 		</span>
 	</Tooltip>
@@ -166,6 +179,10 @@
 
 	.crossref-link:hover {
 		text-decoration: underline;
+	}
+
+	.crossref-link.loading {
+		cursor: wait;
 	}
 
 	.word-popup {
