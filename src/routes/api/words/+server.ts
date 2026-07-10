@@ -20,32 +20,21 @@ export const GET: RequestHandler = async ({ url }) => {
 	let pinnedWords: Array<unknown> = [];
 
 	if (includePinned) {
-		const { data: pinnedIds, error: pinnedError } = await supabase
-			.from('words')
-			.select('id')
-			.eq('is_pinned', true)
-			.order('pinned_at', { ascending: false });
+		const { data, error } = await supabase.rpc('get_words', {
+			search: '',
+			tag_filter: '',
+			sort_field: 'pinned_at',
+			sort_dir: 'desc',
+			result_offset: 0,
+			result_limit: 100000,
+			word_ids: null,
+			include_hidden: true,
+			pinned_only: true,
+		});
 
-		if (pinnedError) {
-			return apiError(pinnedError);
-		}
-
-		if (pinnedIds && pinnedIds.length > 0) {
-			const { data, error } = await supabase.rpc('get_words', {
-				search: '',
-				tag_filter: '',
-				sort_field: 'pinned_at',
-				sort_dir: 'desc',
-				result_offset: 0,
-				result_limit: pinnedIds.length,
-				word_ids: pinnedIds.map((w) => w.id),
-				include_hidden: true,
-			});
-
-			if (!error) {
-				const result = data as { words: Array<unknown> };
-				pinnedWords = result.words ?? [];
-			}
+		if (!error) {
+			const result = data as { words: Array<unknown> };
+			pinnedWords = result.words ?? [];
 		}
 	}
 

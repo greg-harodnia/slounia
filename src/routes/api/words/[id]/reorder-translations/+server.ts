@@ -13,12 +13,15 @@ export const PUT: RequestHandler = async ({ params: _params, request }) => {
 		return json({ error: 'translation_ids array is required' }, { status: 400 });
 	}
 
-	for (let i = 0; i < translation_ids.length; i++) {
-		const { error } = await supabase.from('translations').update({ sort_order: i }).eq('id', translation_ids[i]);
+	const sortOrders = translation_ids.map((_: string, i: number) => i);
 
-		if (error) {
-			return apiError(error);
-		}
+	const { error } = await supabase.rpc('reorder_translations', {
+		translation_ids: translation_ids.map(Number),
+		sort_orders: sortOrders,
+	});
+
+	if (error) {
+		return apiError(error);
 	}
 
 	return json({ success: true });

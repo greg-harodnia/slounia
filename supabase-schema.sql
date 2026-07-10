@@ -165,7 +165,8 @@ CREATE OR REPLACE FUNCTION get_words(
 	result_offset INTEGER DEFAULT 0,
 	result_limit INTEGER DEFAULT 100000,
 	word_ids TEXT[] DEFAULT NULL,
-	include_hidden BOOLEAN DEFAULT false
+	include_hidden BOOLEAN DEFAULT false,
+	pinned_only BOOLEAN DEFAULT false
 )
 RETURNS JSON
 LANGUAGE plpgsql AS $$
@@ -234,6 +235,7 @@ BEGIN
 		)
 		AND (word_ids IS NULL OR w.id = ANY(word_ids))
 		AND (include_hidden OR NOT COALESCE(w.hidden, false))
+		AND (NOT pinned_only OR w.is_pinned = true)
 	),
 	sorted AS (
 		SELECT * FROM filtered
@@ -278,6 +280,57 @@ BEGIN
 	) INTO result;
 
 	RETURN result;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION get_word_by_id(word_id TEXT)
+RETURNS JSON
+LANGUAGE plpgsql AS $$
+DECLARE result JSON;
+BEGIN
+	SELECT json_build_object(
+		'id', w.id,
+		'comment', w.comment,
+		'likes', w.likes,
+		'hidden', w.hidden,
+		'is_pinned', w.is_pinned,
+		'importance', json_build_object('id', i.id, 'name', i.name, 'level', i.level),
+		'translations', COALESCE(
+			(SELECT json_agg(
+				json_build_object(
+					'id', t.id,
+					'translation', t.translation,
+					'comment', t.comment,
+					'likes', t.likes
+				) ORDER BY t.sort_order, t.id
+			) FROM translations t WHERE t.word_id = w.id),
+			'[]'::json
+		),
+		'tags', COALESCE(
+			(SELECT json_agg(tg.name)
+			FROM word_tags wt
+			JOIN tags tg ON wt.tag_id = tg.id
+			WHERE wt.word_id = w.id),
+			'[]'::json
+		)
+	)
+	FROM words w
+	LEFT JOIN importance i ON w.importance_id = i.id
+	WHERE w.id = word_id
+	INTO result;
+
+	RETURN result;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION reorder_translations(translation_ids INTEGER[], sort_orders INTEGER[])
+RETURNS VOID
+LANGUAGE plpgsql AS $$
+BEGIN
+	UPDATE translations
+	SET sort_order = new_orders.sort_order
+	FROM unnest(translation_ids, sort_orders) AS new_orders(id, sort_order)
+	WHERE translations.id = new_orders.id;
 END;
 $$;
 

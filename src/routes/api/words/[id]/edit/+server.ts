@@ -44,12 +44,12 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 			return json({ error: 'Word must have at least one tag' }, { status: 400 });
 		}
 
-		for (const tag_id of toRemove) {
+		if (toRemove.length > 0) {
 			const { error: delError } = await supabase
 				.from('word_tags')
 				.delete()
 				.eq('word_id', effectiveId)
-				.eq('tag_id', tag_id);
+				.in('tag_id', toRemove);
 			if (delError) {
 				return apiError(delError);
 			}
