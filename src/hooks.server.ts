@@ -3,6 +3,29 @@ import { supabase } from '$lib/server/db';
 
 const ASSET_RE = /\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|avif|woff2?|ttf|eot|mp4|webm)$/;
 const CACHE_TTL = 43200; // 12 hours, in seconds
+const BAN_REFRESH_MS = 60_000; // refresh ban list every 60s
+
+let bannedTokens = new Map<string, string | null>();
+let bannedIps = new Map<string, string | null>();
+let lastBanRefresh = 0;
+
+async function refreshBanList() {
+	const now = Date.now();
+	if (now - lastBanRefresh < BAN_REFRESH_MS) return;
+	lastBanRefresh = now;
+
+	const { data } = await supabase.from('banned_users').select('user_token, ip_address, reason');
+	if (!data) return;
+
+	const tokens = new Map<string, string | null>();
+	const ips = new Map<string, string | null>();
+	for (const row of data) {
+		if (row.user_token) tokens.set(row.user_token, row.reason ?? null);
+		if (row.ip_address) ips.set(row.ip_address, row.reason ?? null);
+	}
+	bannedTokens = tokens;
+	bannedIps = ips;
+}
 
 export const handle: Handle = async ({ event, resolve }) => {
 	if (ASSET_RE.test(event.url.pathname)) {
@@ -18,23 +41,24 @@ export const handle: Handle = async ({ event, resolve }) => {
 		// client address unavailable (e.g. Vercel dev)
 	}
 
-	const orParts: string[] = [];
-	if (token) orParts.push(`user_token.eq.${token}`);
-	if (ipAddress) orParts.push(`ip_address.eq.${ipAddress}`);
+	await refreshBanList();
 
-	if (orParts.length > 0) {
-		const { data } = await supabase.from('banned_users').select('id, reason').or(orParts.join(',')).limit(1);
+	let reason: string | null = null;
+	if (token && bannedTokens.has(token)) {
+		reason = bannedTokens.get(token) ?? 'Доступ забаронены';
+	} else if (ipAddress && bannedIps.has(ipAddress)) {
+		reason = bannedIps.get(ipAddress) ?? 'Доступ забаронены';
+	}
 
-		if (data && data.length > 0) {
-			if (event.url.pathname.startsWith('/api/')) {
-				return new Response(JSON.stringify({ error: data[0].reason || 'Доступ забаронены' }), {
-					status: 403,
-					headers: { 'Content-Type': 'application/json' },
-				});
-			}
-			event.locals.banned = true;
-			event.locals.banReason = data[0].reason || null;
+	if (reason !== null) {
+		if (event.url.pathname.startsWith('/api/')) {
+			return new Response(JSON.stringify({ error: reason }), {
+				status: 403,
+				headers: { 'Content-Type': 'application/json' },
+			});
 		}
+		event.locals.banned = true;
+		event.locals.banReason = reason;
 	}
 
 	const response = await resolve(event);
