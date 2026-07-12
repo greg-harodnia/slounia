@@ -169,6 +169,7 @@
 
 	.crossref-link {
 		color: inherit;
+		font-style: italic !important;
 		text-decoration: none;
 		cursor: pointer;
 		background: none;
