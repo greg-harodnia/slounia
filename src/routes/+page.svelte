@@ -44,7 +44,7 @@
 	let order = $state(data.order);
 	/* svelte-ignore state_referenced_locally */
 	let selectedTags = $state<string[]>(data.selectedTags);
-	let loading = $state(false);
+	let loading = $state(true);
 	/* svelte-ignore state_referenced_locally */
 	let triggerIndex = $state(data.triggerIndex);
 
@@ -520,22 +520,38 @@
 		loadSettings();
 		likes.load();
 		theme.listen();
-		if (!data._fromCache) {
-			const params = new SvelteURLSearchParams(window.location.search);
-			const searchParam = params.get('search');
-			if (searchParam) search = searchParam;
-			const sortParam = params.get('sort');
-			if (sortParam) sort = sortParam;
-			const orderParam = params.get('order');
-			if (orderParam) order = orderParam;
-			const tagsParam = params.get('tags');
+
+		const params = new SvelteURLSearchParams(window.location.search);
+		const searchParam = params.get('search');
+		if (searchParam) search = searchParam;
+		const sortParam = params.get('sort');
+		if (sortParam) sort = sortParam;
+		const orderParam = params.get('order');
+		if (orderParam) order = orderParam;
+		const tagsParam = params.get('tags');
+
+		(async () => {
+			try {
+				const tagsRes = await fetch('/api/tags');
+				if (tagsRes.ok) {
+					tags = await tagsRes.json();
+				}
+			} catch (e) {
+				console.error(e);
+			}
+
 			if (tagsParam) {
 				selectedTags = tagsParam.split(',');
 			} else if (tags.length > 0) {
 				selectedTags = tags.map((t) => t.name);
 			}
-			prefetchNext();
-		}
+
+			loading = true;
+			words = [];
+			total = 0;
+			fetchWords();
+		})();
+
 		if (!localStorage.getItem('welcome_dismissed')) showWelcome = true;
 		restoreOverlayFromURL();
 		window.addEventListener('popstate', handlePopstate);
@@ -1356,6 +1372,7 @@
 		flex-wrap: wrap;
 		gap: 0.4rem;
 		align-items: center;
+		min-height: 1.8rem;
 	}
 
 	.tag-chip {

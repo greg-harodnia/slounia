@@ -2,16 +2,31 @@
 	import { SITE_URL, SITE_NAME } from '$lib/constants';
 	import BlogAdmin from '$lib/components/BlogAdmin.svelte';
 	import BlogCard from '$lib/components/BlogCard.svelte';
-	import { invalidate } from '$app/navigation';
 	import type { Post } from '$lib/types';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
-	let posts = $derived<Post[]>(data.posts);
+	/* svelte-ignore state_referenced_locally */
+	let posts = $state<Post[]>(data.posts);
+	/* svelte-ignore state_referenced_locally */
+	let total = $state(data.total);
 
 	function reload() {
-		invalidate(() => true);
+		fetch('/api/blog')
+			.then((r) => r.json())
+			.then((d) => {
+				posts = d.posts ?? [];
+				total = d.total ?? 0;
+			})
+			.catch(() => {});
 	}
+
+	onMount(() => {
+		if (posts.length === 0 && total === 0) {
+			reload();
+		}
+	});
 </script>
 
 <svelte:head>
