@@ -9,8 +9,7 @@ export function r(path: string): string {
 
 export const SITE_URL = 'https://slounia.vercel.app';
 export const SITE_NAME = 'Слоўня — слоўнік жывой мовы';
-export const SITE_DESCRIPTION =
-	'Слоўнік з пошукам і перакладамі калек (наркамаўка) на чыстую беларускую мову (тарашкевіца). Антыкалька.';
+export const SITE_DESCRIPTION = 'Слоўнік з пошукам і перакладамі калек і наватвораў на жывую беларускую мову.';
 
 const months = [
 	'студзеня',
