@@ -11,15 +11,21 @@
 	let posts = $state<Post[]>(data.posts);
 	/* svelte-ignore state_referenced_locally */
 	let total = $state(data.total);
+	/* svelte-ignore state_referenced_locally */
+	let loading = $state(data.posts.length === 0 && data.total === 0);
 
 	function reload() {
+		loading = true;
 		fetch('/api/blog')
 			.then((r) => r.json())
 			.then((d) => {
 				posts = d.posts ?? [];
 				total = d.total ?? 0;
 			})
-			.catch(() => {});
+			.catch(() => {})
+			.finally(() => {
+				loading = false;
+			});
 	}
 
 	onMount(() => {
@@ -52,7 +58,9 @@
 		</div>
 	{/if}
 
-	{#if posts.length === 0}
+	{#if loading}
+		<p class="empty shrink-0">Ладаваньне...</p>
+	{:else if posts.length === 0}
 		<p class="empty shrink-0">Пакуль няма допісаў.</p>
 	{/if}
 

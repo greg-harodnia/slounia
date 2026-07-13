@@ -65,7 +65,11 @@
 {/snippet}
 
 <OverlayShell {header} {onclose}>
-	{#if !currentPost}
+	{#if currentPost}
+		<BlogPostContent post={currentPost} />
+	{:else if loadingPost}
+		<p class="empty">Ладаваньне...</p>
+	{:else}
 		<h1 class="page-title">Блёґ</h1>
 
 		{#if loadingPosts}
@@ -79,10 +83,6 @@
 				{/each}
 			</div>
 		{/if}
-	{:else if loadingPost}
-		<p class="empty">Ладаваньне...</p>
-	{:else}
-		<BlogPostContent post={currentPost} />
 	{/if}
 </OverlayShell>
 
