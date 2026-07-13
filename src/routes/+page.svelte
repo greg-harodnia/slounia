@@ -1036,6 +1036,7 @@
 										{showComments}
 										searchQuery={search}
 										onWordLink={openWord}
+										popupAncestorId={word.id}
 									/>
 									<LikeButton
 										liked={!!likes.translations[tr.id]}

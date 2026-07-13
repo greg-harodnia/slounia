@@ -9,7 +9,11 @@
 	import ImportanceBadge from '$lib/components/ImportanceBadge.svelte';
 	import TagList from '$lib/components/TagList.svelte';
 
-	let { word, onWordLink }: { word: WordData; onWordLink?: (wordId: string) => void } = $props();
+	let {
+		word,
+		onWordLink,
+		popupAncestorId,
+	}: { word: WordData; onWordLink?: (wordId: string) => void; popupAncestorId?: string } = $props();
 
 	onMount(() => likes.load());
 
@@ -49,6 +53,7 @@
 						comment={tr.comment}
 						showLatin={settings.showLatin}
 						{onWordLink}
+						popupAncestorId={popupAncestorId ?? word.id}
 					/>
 					<LikeButton
 						liked={!!likes.translations[tr.id]}

@@ -15,6 +15,7 @@
 		showComments = true,
 		searchQuery = '',
 		onWordLink,
+		popupAncestorId,
 	}: {
 		translation: string;
 		comment: string | null;
@@ -22,6 +23,7 @@
 		showComments?: boolean;
 		searchQuery?: string;
 		onWordLink?: (wordId: string) => void;
+		popupAncestorId?: string;
 	} = $props();
 
 	// cyrNorm: normalize Cyrillic before cyrToLat for search matching.
@@ -53,10 +55,26 @@
 	let popupTimer: ReturnType<typeof setTimeout> | null = null;
 	let popupToken = 0;
 	let loadingFetch = $state(false);
+	let showMeme = $state(false);
 
 	function showWordPopup(e: MouseEvent) {
 		if (popupTimer) clearTimeout(popupTimer);
 		if (!crossRef) return;
+
+		if (crossRef.target === popupAncestorId) {
+			const btn = e.currentTarget as HTMLElement;
+			const rect = btn.getBoundingClientRect();
+			popupX = Math.max(8, Math.min(rect.left, window.innerWidth - 328));
+			const pos = computePopupPosition(rect, { gap: 4, minHeight: 350 });
+			popupY = pos.top;
+			popupAbove = pos.above;
+			popupMaxHeight = pos.maxHeight + 'px';
+			popupToken++;
+			showMeme = true;
+			showPopup = true;
+			return;
+		}
+
 		const btn = e.currentTarget as HTMLElement;
 		const token = ++popupToken;
 		if (!getCachedWord(crossRef.target)) loadingFetch = true;
@@ -89,6 +107,7 @@
 		loadingFetch = false;
 		popupTimer = setTimeout(() => {
 			showPopup = false;
+			showMeme = false;
 		}, 300);
 	}
 
@@ -134,7 +153,7 @@
 			{/if}
 		</span>
 	</Tooltip>
-	{#if showPopup && popupWord}
+	{#if showPopup && (showMeme || popupWord)}
 		<div
 			class="word-popup"
 			role="tooltip"
@@ -144,7 +163,11 @@
 			onmouseenter={keepWordPopup}
 			onmouseleave={hideWordPopup}
 		>
-			<WordDetailContent word={popupWord} {onWordLink} />
+			{#if showMeme}
+				<img src="/spiderman.webp" alt="Spider-Man pointing at Spider-Man" class="spiderman-meme" />
+			{:else}
+				<WordDetailContent word={popupWord!} {onWordLink} {popupAncestorId} />
+			{/if}
 		</div>
 	{/if}
 {:else}
@@ -224,5 +247,11 @@
 			opacity: 1;
 			transform: translateY(0);
 		}
+	}
+
+	.spiderman-meme {
+		width: 100%;
+		border-radius: 8px;
+		display: block;
 	}
 </style>
