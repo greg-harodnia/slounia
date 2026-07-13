@@ -1,5 +1,3 @@
-import type { TagData } from '$lib/types';
-
 export function load({ url }) {
 	const search = url.searchParams.get('search') || '';
 	const sort = url.searchParams.get('sort') || (import.meta.env.PROD ? 'word' : 'created_at');
@@ -17,7 +15,6 @@ export function load({ url }) {
 		words: [],
 		total: 0,
 		pinnedWords: [],
-		tags: [] as TagData[],
 		search,
 		sort,
 		order,

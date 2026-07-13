@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
 	import ContactModal from '$lib/components/ContactModal.svelte';
 	import AddEntity from '$lib/components/AddEntity.svelte';
 	import EditWord from '$lib/components/EditWord.svelte';
@@ -31,8 +32,7 @@
 	let words = $state<WordData[]>(data.words);
 	/* svelte-ignore state_referenced_locally */
 	let pinnedWords = $state<WordData[]>(data.pinnedWords);
-	/* svelte-ignore state_referenced_locally */
-	let tags = $state<TagData[]>(data.tags);
+	let tags = $state<TagData[]>($page.data.tags ?? []);
 	/* svelte-ignore state_referenced_locally */
 	let total = $state(data.total);
 	/* svelte-ignore state_referenced_locally */
@@ -530,27 +530,18 @@
 		if (orderParam) order = orderParam;
 		const tagsParam = params.get('tags');
 
-		(async () => {
-			try {
-				const tagsRes = await fetch('/api/tags');
-				if (tagsRes.ok) {
-					tags = await tagsRes.json();
-				}
-			} catch (e) {
-				console.error(e);
-			}
+		tags = $page.data.tags ?? [];
 
-			if (tagsParam) {
-				selectedTags = tagsParam.split(',');
-			} else if (tags.length > 0) {
-				selectedTags = tags.map((t) => t.name);
-			}
+		if (tagsParam) {
+			selectedTags = tagsParam.split(',');
+		} else if (tags.length > 0) {
+			selectedTags = tags.map((t) => t.name);
+		}
 
-			loading = true;
-			words = [];
-			total = 0;
-			fetchWords();
-		})();
+		loading = true;
+		words = [];
+		total = 0;
+		fetchWords();
 
 		if (!localStorage.getItem('welcome_dismissed')) showWelcome = true;
 		restoreOverlayFromURL();
