@@ -2,7 +2,7 @@ import type { Handle } from '@sveltejs/kit';
 import { supabase } from '$lib/server/db';
 
 const ASSET_RE = /\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|avif|woff2?|ttf|eot|mp4|webm)$/;
-const CACHE_TTL = 43200; // 12 hours, in seconds
+const CACHE_TTL = 604800; // 7 days, in seconds
 const BAN_REFRESH_MS = 60_000; // refresh ban list every 60s
 
 let bannedTokens = new Map<string, string | null>();

@@ -10,5 +10,7 @@ export const GET: RequestHandler = async () => {
 		return apiError(error);
 	}
 
-	return json(data);
+	return json(data, {
+		headers: { 'cache-control': 'public, s-maxage=604800, stale-while-revalidate=604800' },
+	});
 };
