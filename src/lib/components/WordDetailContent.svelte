@@ -12,8 +12,8 @@
 	let {
 		word,
 		onWordLink,
-		popupAncestorId,
-	}: { word: WordData; onWordLink?: (wordId: string) => void; popupAncestorId?: string } = $props();
+		popupChain,
+	}: { word: WordData; onWordLink?: (wordId: string) => void; popupChain?: string[] } = $props();
 
 	onMount(() => likes.load());
 
@@ -53,7 +53,7 @@
 						comment={tr.comment}
 						showLatin={settings.showLatin}
 						{onWordLink}
-						popupAncestorId={popupAncestorId ?? word.id}
+						popupChain={[...(popupChain ?? []), word.id]}
 					/>
 					<LikeButton
 						liked={!!likes.translations[tr.id]}

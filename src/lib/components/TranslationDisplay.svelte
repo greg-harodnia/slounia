@@ -15,7 +15,7 @@
 		showComments = true,
 		searchQuery = '',
 		onWordLink,
-		popupAncestorId,
+		popupChain,
 	}: {
 		translation: string;
 		comment: string | null;
@@ -23,7 +23,7 @@
 		showComments?: boolean;
 		searchQuery?: string;
 		onWordLink?: (wordId: string) => void;
-		popupAncestorId?: string;
+		popupChain?: string[];
 	} = $props();
 
 	// cyrNorm: normalize Cyrillic before cyrToLat for search matching.
@@ -61,7 +61,7 @@
 		if (popupTimer) clearTimeout(popupTimer);
 		if (!crossRef) return;
 
-		if (crossRef.target === popupAncestorId) {
+		if (popupChain?.includes(crossRef.target)) {
 			const btn = e.currentTarget as HTMLElement;
 			const rect = btn.getBoundingClientRect();
 			popupX = Math.max(8, Math.min(rect.left, window.innerWidth - 328));
@@ -166,7 +166,7 @@
 			{#if showMeme}
 				<img src="/spiderman.webp" alt="Spider-Man pointing at Spider-Man" class="spiderman-meme" />
 			{:else}
-				<WordDetailContent word={popupWord!} {onWordLink} {popupAncestorId} />
+				<WordDetailContent word={popupWord!} {onWordLink} {popupChain} />
 			{/if}
 		</div>
 	{/if}
