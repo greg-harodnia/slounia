@@ -4,35 +4,11 @@
 	import BlogCard from '$lib/components/BlogCard.svelte';
 	import type { Post } from '$lib/types';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
-	import { onMount } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 
 	let { data } = $props();
 	/* svelte-ignore state_referenced_locally */
 	let posts = $state<Post[]>(data.posts);
-	/* svelte-ignore state_referenced_locally */
-	let total = $state(data.total);
-	/* svelte-ignore state_referenced_locally */
-	let loading = $state(data.posts.length === 0 && data.total === 0);
-
-	function reload() {
-		loading = true;
-		fetch('/api/blog')
-			.then((r) => r.json())
-			.then((d) => {
-				posts = d.posts ?? [];
-				total = d.total ?? 0;
-			})
-			.catch(() => {})
-			.finally(() => {
-				loading = false;
-			});
-	}
-
-	onMount(() => {
-		if (posts.length === 0 && total === 0) {
-			reload();
-		}
-	});
 </script>
 
 <svelte:head>
@@ -54,13 +30,11 @@
 
 	{#if !import.meta.env.PROD}
 		<div class="dev-bar shrink-0">
-			<BlogAdmin {posts} onChange={reload} />
+			<BlogAdmin {posts} onChange={() => invalidateAll()} />
 		</div>
 	{/if}
 
-	{#if loading}
-		<p class="empty shrink-0">Ладаваньне...</p>
-	{:else if posts.length === 0}
+	{#if posts.length === 0}
 		<p class="empty shrink-0">Пакуль няма допісаў.</p>
 	{/if}
 

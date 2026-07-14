@@ -1,10 +1,6 @@
 import type { Post } from '$lib/types';
 
 export async function load({ url }) {
-	if (!import.meta.env.SSR) {
-		return { posts: [] as Post[], total: 0 };
-	}
-
 	const { supabase } = await import('$lib/server/db');
 
 	const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
