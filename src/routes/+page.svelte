@@ -580,7 +580,7 @@
 
 <svelte:window
 	onkeydown={(e) => {
-		if ((e.ctrlKey || e.metaKey) && e.code === 'KeyF') {
+		if ((e.ctrlKey || e.metaKey) && e.code === 'KeyF' && !overlay) {
 			e.preventDefault();
 			searchInput?.focus();
 			searchInput?.select();
