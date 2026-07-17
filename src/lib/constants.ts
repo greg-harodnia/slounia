@@ -1,6 +1,8 @@
 import { resolve } from '$app/paths';
 
 export const PAGE_SIZE = 20;
+export const CACHE_TTL = 900; // 15 minutes, in seconds
+export const CACHE_TTL_LONG = 604800; // 7 days, in seconds
 
 export function r(path: string): string {
 	// @ts-expect-error - dynamic path, not literal route

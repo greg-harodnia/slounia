@@ -4,11 +4,24 @@
 	import BlogCard from '$lib/components/BlogCard.svelte';
 	import type { Post } from '$lib/types';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
-	import { invalidateAll } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
-	/* svelte-ignore state_referenced_locally */
 	let posts = $state<Post[]>(data.posts);
+	let loading = $state(true);
+
+	async function fetchPosts() {
+		const res = await fetch('/api/blog');
+		if (res.ok) {
+			const json = await res.json();
+			posts = json.posts;
+		}
+	}
+
+	onMount(async () => {
+		await fetchPosts();
+		loading = false;
+	});
 </script>
 
 <svelte:head>
@@ -30,19 +43,23 @@
 
 	{#if !import.meta.env.PROD}
 		<div class="dev-bar shrink-0">
-			<BlogAdmin {posts} onChange={() => invalidateAll()} />
+			<BlogAdmin {posts} onChange={() => fetchPosts()} />
 		</div>
 	{/if}
 
-	{#if posts.length === 0}
+	{#if loading}
+		<p class="empty shrink-0">Ладаваньне...</p>
+	{:else if posts.length === 0}
 		<p class="empty shrink-0">Пакуль няма допісаў.</p>
 	{/if}
 
-	<div class="posts-list scroll-y">
-		{#each posts as post (post.id)}
-			<BlogCard {post} href="/blog/{post.slug}" />
-		{/each}
-	</div>
+	{#if !loading}
+		<div class="posts-list scroll-y">
+			{#each posts as post (post.id)}
+				<BlogCard {post} href="/blog/{post.slug}" />
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <style>

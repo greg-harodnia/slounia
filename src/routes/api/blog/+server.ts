@@ -1,5 +1,6 @@
 import { supabase } from '$lib/server/db';
 import { json } from '@sveltejs/kit';
+import { CACHE_TTL } from '$lib/constants';
 import type { Post } from '$lib/types';
 
 export async function GET({ url }) {
@@ -17,5 +18,10 @@ export async function GET({ url }) {
 		return json({ posts: [], total: 0 }, { status: 500 });
 	}
 
-	return json({ posts: data as Post[], total: count ?? 0 });
+	return json(
+		{ posts: data as Post[], total: count ?? 0 },
+		{
+			headers: { 'cache-control': `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL}` },
+		},
+	);
 }

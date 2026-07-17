@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { supabase } from '$lib/server/db';
+import { CACHE_TTL_LONG } from '$lib/constants';
 import { apiError } from '$lib/server/utils';
 
 export const GET: RequestHandler = async () => {
@@ -11,6 +12,6 @@ export const GET: RequestHandler = async () => {
 	}
 
 	return json(data, {
-		headers: { 'cache-control': 'public, s-maxage=604800, stale-while-revalidate=604800' },
+		headers: { 'cache-control': `public, s-maxage=${CACHE_TTL_LONG}, stale-while-revalidate=${CACHE_TTL_LONG}` },
 	});
 };
