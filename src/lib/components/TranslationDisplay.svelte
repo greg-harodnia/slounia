@@ -6,6 +6,7 @@
 	import Tooltip from './Tooltip.svelte';
 	import WordDetailContent from './WordDetailContent.svelte';
 	import type { WordData } from '$lib/types';
+	import { parseCrossref } from '$lib/types';
 	import { computePopupPosition } from '$lib/popup-position';
 
 	let {
@@ -42,7 +43,7 @@
 	const note = $derived(showComments ? comment : null);
 
 	const crossRef = $derived.by(() => {
-		const m = translation.match(/^(гл|параўн)\.\s+(.+)$/iu);
+		const m = parseCrossref(translation);
 		return m ? { prefix: m[1].toLowerCase() + '. ', target: m[2].trim() } : null;
 	});
 

@@ -3,6 +3,7 @@
 	import TranslationDisplay from '$lib/components/TranslationDisplay.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import type { WordData } from '$lib/types';
+	import { parseCrossref } from '$lib/types';
 	import { likes } from '$lib/stores/likes.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
 	import LikeButton from '$lib/components/LikeButton.svelte';
@@ -55,13 +56,15 @@
 						{onWordLink}
 						popupChain={[...(popupChain ?? []), word.id]}
 					/>
-					<LikeButton
-						liked={!!likes.translations[tr.id]}
-						count={tr.likes}
-						onclick={() => onToggleTranslationLike(tr.id, tr)}
-						label="Like translation"
-						small
-					/>
+					{#if !parseCrossref(tr.translation)}
+						<LikeButton
+							liked={!!likes.translations[tr.id]}
+							count={tr.likes}
+							onclick={() => onToggleTranslationLike(tr.id, tr)}
+							label="Like translation"
+							small
+						/>
+					{/if}
 				</div>
 			{/each}
 			{#if word.translations.length === 0}

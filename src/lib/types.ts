@@ -11,6 +11,10 @@ export interface Translation {
 	likes: number;
 }
 
+export function parseCrossref(translation: string) {
+	return translation.match(/^(гл|параўн)\.\s+(.+)$/iu);
+}
+
 export interface WordData {
 	id: string;
 	importance: Importance;

@@ -12,6 +12,7 @@
 	import ImportanceBadge from '$lib/components/ImportanceBadge.svelte';
 	import TagList from '$lib/components/TagList.svelte';
 	import type { WordData, TagData } from '$lib/types';
+	import { parseCrossref } from '$lib/types';
 	import { PAGE_SIZE, SITE_NAME, SITE_URL, SITE_DESCRIPTION } from '$lib/constants';
 	import { highlightText } from '$lib/highlight';
 	import { latToCyr } from '$lib/lacinka';
@@ -899,13 +900,15 @@
 											searchQuery={search}
 											onWordLink={openWord}
 										/>
-										<LikeButton
-											liked={!!likes.translations[tr.id]}
-											count={tr.likes}
-											onclick={() => onToggleTranslationLike(tr.id)}
-											label="Like translation"
-											small
-										/>
+										{#if !parseCrossref(tr.translation)}
+											<LikeButton
+												liked={!!likes.translations[tr.id]}
+												count={tr.likes}
+												onclick={() => onToggleTranslationLike(tr.id)}
+												label="Like translation"
+												small
+											/>
+										{/if}
 									</div>
 								{/each}
 								{#if word.translations.length === 0}
@@ -1038,13 +1041,15 @@
 										onWordLink={openWord}
 										popupChain={[word.id]}
 									/>
-									<LikeButton
-										liked={!!likes.translations[tr.id]}
-										count={tr.likes}
-										onclick={() => onToggleTranslationLike(tr.id)}
-										label="Like translation"
-										small
-									/>
+									{#if !parseCrossref(tr.translation)}
+										<LikeButton
+											liked={!!likes.translations[tr.id]}
+											count={tr.likes}
+											onclick={() => onToggleTranslationLike(tr.id)}
+											label="Like translation"
+											small
+										/>
+									{/if}
 									{#if devMode}
 										<TranslationForm translation={tr} onDone={() => fetchWords()} />
 										<button
