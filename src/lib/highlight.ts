@@ -26,11 +26,11 @@ export function normalizeText(s: string): string {
 }
 
 // matchText: optional separate string to match regex against (e.g. searchForm
-// in Latin mode). Same length as cleanText (both derived from the same
-// Cyrillic source), so match indices map 1:1. Needed because some chars
-// diverge in cyrToLat (ё→o/е→e, ў→ŭ/у→u) — using cleanText directly would miss.
-// Apostrophe: [ʼ'`’]? inserted between each query char so "абя" matches
-// "аб'ява", "аб’ява", "абʼява" without corrupting slice indices.
+// in Latin mode). May differ from cleanText in length when cyrNorm before
+// cyrToLat changes char count (e.g. э→е makes cyrToLat produce "e" vs "ie").
+// When lengths diverge, we map matched indices from matchStr back to text.
+// Apostrophe: [ʼ'`'?] inserted between each query char so "абя" matches
+// "аб'ява", "аб'ява", "абʼява" without corrupting slice indices.
 export function highlightText(text: string, query: string, matchText?: string): string {
 	const cleanText = text.replace(/\u0301/g, '');
 
@@ -44,7 +44,8 @@ export function highlightText(text: string, query: string, matchText?: string): 
 			const normalized = normalizeText(t);
 			return [...normalized].map((c) => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join("[ʼ'`’]?");
 		});
-	const normalized = normalizeText(matchText != null ? matchText.replace(/\u0301/g, '') : cleanText);
+	const matchStr = matchText != null ? matchText.replace(/\u0301/g, '') : cleanText;
+	const normalized = normalizeText(matchStr);
 	const regex = new RegExp(`(${terms.join('|')})`, 'gi');
 
 	const matched = new Set<number>();
@@ -52,6 +53,32 @@ export function highlightText(text: string, query: string, matchText?: string): 
 	while ((m = regex.exec(normalized)) !== null) {
 		for (let j = m.index; j < m.index + m[0].length; j++) {
 			matched.add(j);
+		}
+	}
+
+	// When matchStr differs in length from cleanText (e.g. cyrToLat("э")="e"
+	// vs cyrToLat("е")="ie"), map matched indices from matchStr back to
+	// cleanText positions so highlighting lands on the right characters.
+	let matchedInText = matched;
+	if (matchText != null && matchStr.length !== cleanText.length) {
+		matchedInText = new Set<number>();
+		let ti = 0;
+		let mi = 0;
+		const matchToText = new Map<number, number>();
+		while (ti < cleanText.length && mi < matchStr.length) {
+			if (cleanText[ti] === matchStr[mi]) {
+				matchToText.set(mi, ti);
+				ti++;
+				mi++;
+			} else {
+				mi++;
+			}
+		}
+		for (const idx of matched) {
+			const textIdx = matchToText.get(idx);
+			if (textIdx !== undefined) {
+				matchedInText.add(textIdx);
+			}
 		}
 	}
 
@@ -63,7 +90,7 @@ export function highlightText(text: string, query: string, matchText?: string): 
 			result.push(ch);
 			continue;
 		}
-		const isMatch = matched.has(ci);
+		const isMatch = matchedInText.has(ci);
 		if (isMatch && !inMark) {
 			result.push('<mark>');
 			inMark = true;

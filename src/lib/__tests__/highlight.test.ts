@@ -163,5 +163,20 @@ describe('highlightText', () => {
 			expect(latHL('ка́ва', 'kava')).toBe('<mark>ka\u0301va</mark>');
 			expect(latHL('зямля́', 'зямля')).toBe('<mark>ziamla\u0301</mark>');
 		});
+
+		it('matchText longer than text (э→е length mismatch) highlights correctly', () => {
+			// cyrToLat("рэліг") = "relig" (5), cyrToLat("реліг") = "rielig" (6)
+			// Without the fix, "apa" at indices 9-11 in matchStr would map to "pav" in text
+			expect(highlightText('relig. Zapaviadać', 'apa', 'rielig. Zapaviadać')).toBe(
+				'relig. Z<mark>apa</mark>viadać',
+			);
+		});
+
+		it('matchText longer — match in different word after offset', () => {
+			// After the relig/rielig offset, subsequent positions shift by 1
+			expect(highlightText('relig. zapaviadać', 'viad', 'rielig. zapaviadać')).toBe(
+				'relig. zapa<mark>viad</mark>ać',
+			);
+		});
 	});
 });
