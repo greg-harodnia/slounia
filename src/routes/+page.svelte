@@ -368,7 +368,7 @@
 	});
 
 	function onToggleWordLike(wordId: string) {
-		const word = words.find((w) => w.id === wordId);
+		const word = words.find((w) => w.id === wordId) ?? pinnedWords.find((w) => w.id === wordId);
 		if (word) likes.toggleWord(wordId, word);
 	}
 
