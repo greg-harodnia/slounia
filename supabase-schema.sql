@@ -255,6 +255,7 @@ BEGIN
 				s.likes,
 				s.hidden,
 				s.is_pinned,
+				s.created_at,
 				json_build_object('id', s.imp_id, 'name', s.imp_name, 'level', s.imp_level) AS importance,
 				COALESCE(
 					(SELECT json_agg(
@@ -294,6 +295,7 @@ BEGIN
 		'likes', w.likes,
 		'hidden', w.hidden,
 		'is_pinned', w.is_pinned,
+		'created_at', w.created_at,
 		'importance', json_build_object('id', i.id, 'name', i.name, 'level', i.level),
 		'translations', COALESCE(
 			(SELECT json_agg(

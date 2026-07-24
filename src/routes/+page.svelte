@@ -935,6 +935,9 @@
 				</div>
 				{#each words as word, i (word.id)}
 					<div class="grid-row" role="row" data-trigger={i === triggerIndex ? '' : undefined}>
+						{#if word.created_at && Date.now() - new Date(word.created_at).getTime() < 7 * 24 * 60 * 60 * 1000}
+							<span class="new-badge">Новае</span>
+						{/if}
 						<div class="col-word" role="cell">
 							<button
 								class="icon-btn"
@@ -1460,6 +1463,7 @@
 	.grid-row {
 		border-bottom: 1px solid var(--c-border);
 		transition: background 0.1s;
+		position: relative;
 	}
 
 	.grid-row:last-child {
@@ -1952,6 +1956,22 @@
 		border-bottom: 1px solid var(--c-border);
 	}
 
+	.new-badge {
+		position: absolute;
+		top: 0;
+		left: 0;
+		background: var(--c-importance-2);
+		color: #fff;
+		font-size: 0.65rem;
+		font-weight: 600;
+		letter-spacing: 0.03em;
+		padding: 0.1rem 0.5rem;
+		border-radius: 0 0 var(--radius-sm) 0;
+		line-height: 1.4;
+		pointer-events: none;
+		z-index: 1;
+	}
+
 	@media (width <= 640px) {
 		.grid-row > .pinned-badge {
 			padding: 0;
@@ -1964,6 +1984,12 @@
 
 		.grid-table--pinned {
 			margin-bottom: 0.75rem;
+		}
+
+		.new-badge {
+			border-radius: 0 var(--radius) var(--radius) 0;
+			padding: 0.05rem 0.35rem;
+			line-height: 1.2;
 		}
 	}
 </style>

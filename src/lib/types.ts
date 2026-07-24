@@ -22,6 +22,7 @@ export interface WordData {
 	likes: number;
 	hidden: boolean;
 	is_pinned: boolean;
+	created_at: string | null;
 	translations: Translation[];
 	tags: string[];
 }
