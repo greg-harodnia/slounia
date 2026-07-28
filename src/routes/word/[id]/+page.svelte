@@ -7,8 +7,7 @@
 	import { settings } from '$lib/stores/settings.svelte';
 
 	let { data } = $props();
-	/* svelte-ignore state_referenced_locally */
-	const word = data.word;
+	const word = $derived(data.word);
 
 	onMount(() => {
 		settings.load();
