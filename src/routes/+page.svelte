@@ -456,7 +456,7 @@
 	}
 
 	function onToggleTranslationLike(translationId: number) {
-		for (const word of words) {
+		for (const word of [...pinnedWords, ...words]) {
 			const tr = word.translations.find((t) => t.id === translationId);
 			if (tr) {
 				likes.toggleTranslation(translationId, tr);
