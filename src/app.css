@@ -159,6 +159,43 @@ mark {
 	line-height: 1.4;
 }
 
+.tag-chip {
+	display: block;
+	width: fit-content;
+	padding: 0.3rem 0.75rem;
+	margin-bottom: 1rem;
+	border: 1.5px solid var(--c-border);
+	border-radius: 999px;
+	background: var(--c-surface);
+	color: var(--c-tag-text);
+	font-size: 0.8rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.15s;
+	align-self: flex-start;
+}
+
+@media (hover: hover) {
+	.tag-chip:hover {
+		border-color: var(--c-primary);
+		color: var(--c-primary);
+	}
+}
+
+.tag-chip.active {
+	background: var(--c-tag-active);
+	border-color: var(--c-tag-active);
+	color: var(--c-tag-active-text);
+}
+
+@media (width <= 640px) {
+	.tag-chip {
+		padding: 0.25rem 0.6rem;
+		margin-bottom: 0.75rem;
+		font-size: 0.75rem;
+	}
+}
+
 .card {
 	background: var(--c-surface);
 	border: 1px solid var(--c-border);

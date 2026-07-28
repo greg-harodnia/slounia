@@ -1377,31 +1377,6 @@
 		min-height: 1.8rem;
 	}
 
-	.tag-chip {
-		padding: 0.3rem 0.75rem;
-		border: 1.5px solid var(--c-border);
-		border-radius: 999px;
-		background: var(--c-surface);
-		color: var(--c-tag-text);
-		font-size: 0.8rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.15s;
-	}
-
-	@media (hover: hover) {
-		.tag-chip:hover {
-			border-color: var(--c-primary);
-			color: var(--c-primary);
-		}
-	}
-
-	.tag-chip.active {
-		background: var(--c-tag-active);
-		border-color: var(--c-tag-active);
-		color: var(--c-tag-active-text);
-	}
-
 	.table-wrap {
 		flex: 1;
 		min-height: 0;

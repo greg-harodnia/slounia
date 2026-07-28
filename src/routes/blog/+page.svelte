@@ -47,6 +47,14 @@
 	<div class="breadcrumb-wrap"><Breadcrumb items={[{ href: '/' }, { label: 'Блёґ' }]} /></div>
 	<h1 class="shrink-0">Блёґ</h1>
 
+	<button
+		class="tag-chip"
+		class:active={blogStore.hashtagFilter === 'мовазнаўства'}
+		onclick={() => blogStore.toggleHashtag('мовазнаўства')}
+	>
+		Мовазнаўства
+	</button>
+
 	{#if !import.meta.env.PROD}
 		<div class="dev-bar shrink-0">
 			<BlogAdmin posts={blogStore.posts} onChange={() => blogStore.fetchPage(blogStore.currentPage)} />
@@ -74,7 +82,7 @@
 	h1 {
 		font-size: 2rem;
 		font-weight: 800;
-		margin: 0 0 2rem;
+		margin: 0 0 1.5rem;
 		color: var(--c-text);
 	}
 
@@ -95,5 +103,20 @@
 
 	.breadcrumb-wrap {
 		margin-bottom: 1.5rem;
+	}
+
+	@media (width <= 640px) {
+		h1 {
+			font-size: 1.5rem;
+			margin-bottom: 1rem;
+		}
+
+		.breadcrumb-wrap {
+			margin-bottom: 1rem;
+		}
+
+		.posts-list {
+			gap: 0.75rem;
+		}
 	}
 </style>

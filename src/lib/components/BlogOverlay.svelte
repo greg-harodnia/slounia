@@ -76,6 +76,14 @@
 	{:else}
 		<h1 class="page-title">Блёґ</h1>
 
+		<button
+			class="tag-chip"
+			class:active={blogStore.hashtagFilter === 'мовазнаўства'}
+			onclick={() => blogStore.toggleHashtag('мовазнаўства')}
+		>
+			Мовазнаўства
+		</button>
+
 		{#if blogStore.loading}
 			<p class="empty">Ладаваньне...</p>
 		{:else if blogStore.posts.length === 0}
@@ -100,7 +108,7 @@
 		font-size: 2rem;
 		font-weight: 800;
 		color: var(--c-text);
-		margin: 0 0 2rem;
+		margin: 0 0 1.5rem;
 		flex-shrink: 0;
 	}
 
@@ -113,5 +121,16 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+	}
+
+	@media (width <= 640px) {
+		.page-title {
+			font-size: 1.5rem;
+			margin-bottom: 1rem;
+		}
+
+		.posts-list {
+			gap: 0.75rem;
+		}
 	}
 </style>
