@@ -72,7 +72,6 @@
 			{/if}
 		</div>
 	</div>
-	<p class="future-note">Гэтае месца пакуль пустуе, таму яго заняў кот 🐈</p>
 </div>
 
 <style>
@@ -127,6 +126,10 @@
 		gap: 0.75rem;
 		padding: 0.75rem 0;
 		border-bottom: 1px solid var(--c-border);
+	}
+
+	.translation-item :global(.tooltip-box) {
+		overflow: hidden;
 	}
 
 	.translation-item:last-child {
