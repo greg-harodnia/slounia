@@ -39,4 +39,5 @@ export const importanceLevels = [
 	{ id: 3, name: 'Недарэка' },
 	{ id: 4, name: 'Жах' },
 	{ id: 5, name: '💀' },
+	{ id: 6, name: 'Уважліва' },
 ];

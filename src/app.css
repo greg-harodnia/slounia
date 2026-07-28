@@ -20,6 +20,7 @@
 	--c-importance-3: #dd6b20;
 	--c-importance-4: #e53e3e;
 	--c-importance-5: #1a1a1a;
+	--c-importance-6: #f9a8d4;
 	--radius: 10px;
 	--radius-sm: 6px;
 	--c-tooltip-bg: #334155;
@@ -50,6 +51,7 @@
 	--c-importance-3: #fb923c;
 	--c-importance-4: #f87171;
 	--c-importance-5: #9ca3af;
+	--c-importance-6: #fda4af;
 	--c-tooltip-bg: #e2e8f0;
 	--c-tooltip-text: #0f172a;
 	--shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -80,6 +82,7 @@
 	--c-importance-3: #d97706;
 	--c-importance-4: #8b2020;
 	--c-importance-5: #1a1a1a;
+	--c-importance-6: #d4728e;
 	--shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.08);
 	--shadow-md: 0 4px 6px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
 }

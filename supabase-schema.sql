@@ -6,6 +6,15 @@ CREATE TABLE IF NOT EXISTS importance (
 	level INTEGER NOT NULL UNIQUE
 );
 
+INSERT INTO importance (name, level) VALUES
+	('Можна лепей', 1),
+	('Нязграба', 2),
+	('Недарэка', 3),
+	('Жах', 4),
+	('Паўсюдны жах', 5),
+	('Уважліва', 6)
+ON CONFLICT (name) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS tags (
 	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL UNIQUE

@@ -38,4 +38,9 @@
 		background: color-mix(in srgb, var(--c-importance-5) 15%, transparent);
 		color: var(--c-importance-5);
 	}
+
+	.importance-badge[data-level='6'] {
+		background: color-mix(in srgb, var(--c-importance-6) 15%, transparent);
+		color: var(--c-importance-6);
+	}
 </style>
