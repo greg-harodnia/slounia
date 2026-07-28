@@ -4,7 +4,9 @@
 	import BlogPostContent from '$lib/components/BlogPostContent.svelte';
 	import OverlayShell from '$lib/components/OverlayShell.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
-	import { fetchBlogList, fetchBlogPost, getCachedBlogList, getCachedBlogPost } from '$lib/fetch-blog';
+	import Pagination from '$lib/components/Pagination.svelte';
+	import { fetchBlogPost, getCachedBlogPost } from '$lib/fetch-blog';
+	import { blogStore } from '$lib/stores/blogStore.svelte';
 
 	let {
 		onOpenPost,
@@ -14,9 +16,7 @@
 	}: { onOpenPost: (slug: string) => void; initialSlug?: string; onclose: () => void; onBackToBlog?: () => void } =
 		$props();
 
-	let posts = $state<Post[]>([]);
 	let currentPost = $state<Post | null>(null);
-	let loadingPosts = $state(false);
 	let loadingPost = $state(false);
 
 	let breadcrumbs = $derived.by(() => {
@@ -29,6 +29,17 @@
 		}
 		return [{ label: 'Галоўная', onclick: onclose } as Crumb, { label: 'Блёґ' }];
 	});
+
+	function handlePageChange(page: number) {
+		blogStore.goToPage(page);
+		const url = new URL(window.location.href);
+		if (page === 1) {
+			url.searchParams.delete('page');
+		} else {
+			url.searchParams.set('page', String(page));
+		}
+		history.replaceState(history.state, '', url.pathname + url.search);
+	}
 
 	$effect(() => {
 		if (initialSlug) {
@@ -44,17 +55,10 @@
 			}
 		} else {
 			currentPost = null;
-			if (posts.length === 0) {
-				const cached = getCachedBlogList();
-				if (cached) {
-					posts = cached;
-				} else {
-					loadingPosts = true;
-					fetchBlogList().then(() => {
-						posts = getCachedBlogList() ?? [];
-						loadingPosts = false;
-					});
-				}
+			if (blogStore.posts.length === 0) {
+				const url = new URL(window.location.href);
+				const page = parseInt(url.searchParams.get('page') || '1', 10);
+				blogStore.fetchPage(page);
 			}
 		}
 	});
@@ -72,16 +76,21 @@
 	{:else}
 		<h1 class="page-title">Блёґ</h1>
 
-		{#if loadingPosts}
+		{#if blogStore.loading}
 			<p class="empty">Ладаваньне...</p>
-		{:else if posts.length === 0}
+		{:else if blogStore.posts.length === 0}
 			<p class="empty">Пакуль няма допісаў.</p>
 		{:else}
 			<div class="posts-list">
-				{#each posts as post (post.id)}
+				{#each blogStore.posts as post (post.id)}
 					<BlogCard {post} onclick={onOpenPost} />
 				{/each}
 			</div>
+			<Pagination
+				currentPage={blogStore.currentPage}
+				totalPages={blogStore.totalPages}
+				onPageChange={handlePageChange}
+			/>
 		{/if}
 	{/if}
 </OverlayShell>

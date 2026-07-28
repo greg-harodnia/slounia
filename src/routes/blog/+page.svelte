@@ -2,25 +2,31 @@
 	import { SITE_URL, SITE_NAME } from '$lib/constants';
 	import BlogAdmin from '$lib/components/BlogAdmin.svelte';
 	import BlogCard from '$lib/components/BlogCard.svelte';
-	import type { Post } from '$lib/types';
+	import Pagination from '$lib/components/Pagination.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 	import { onMount } from 'svelte';
+	import { blogStore } from '$lib/stores/blogStore.svelte';
+	import { replaceState } from '$app/navigation';
 
-	let { data } = $props();
-	let posts = $state<Post[]>(data.posts);
-	let loading = $state(true);
+	let _data = $props();
 
-	async function fetchPosts() {
-		const res = await fetch('/api/blog');
-		if (res.ok) {
-			const json = await res.json();
-			posts = json.posts;
+	function handlePageChange(page: number) {
+		blogStore.goToPage(page);
+		const url = new URL(window.location.href);
+		if (page === 1) {
+			url.searchParams.delete('page');
+		} else {
+			url.searchParams.set('page', String(page));
 		}
+		/* eslint-disable-next-line svelte/no-navigation-without-resolve */
+		replaceState(url.pathname + url.search, {});
+		window.scrollTo({ top: 0, behavior: 'smooth' });
 	}
 
 	onMount(async () => {
-		await fetchPosts();
-		loading = false;
+		const url = new URL(window.location.href);
+		const page = parseInt(url.searchParams.get('page') || '1', 10);
+		await blogStore.fetchPage(page);
 	});
 </script>
 
@@ -43,23 +49,25 @@
 
 	{#if !import.meta.env.PROD}
 		<div class="dev-bar shrink-0">
-			<BlogAdmin {posts} onChange={() => fetchPosts()} />
+			<BlogAdmin posts={blogStore.posts} onChange={() => blogStore.fetchPage(blogStore.currentPage)} />
 		</div>
 	{/if}
 
-	{#if loading}
+	{#if blogStore.loading}
 		<p class="empty shrink-0">Ладаваньне...</p>
-	{:else if posts.length === 0}
+	{:else if blogStore.posts.length === 0}
 		<p class="empty shrink-0">Пакуль няма допісаў.</p>
 	{/if}
 
-	{#if !loading}
+	{#if !blogStore.loading}
 		<div class="posts-list scroll-y">
-			{#each posts as post (post.id)}
+			{#each blogStore.posts as post (post.id)}
 				<BlogCard {post} href="/blog/{post.slug}" />
 			{/each}
 		</div>
 	{/if}
+
+	<Pagination currentPage={blogStore.currentPage} totalPages={blogStore.totalPages} onPageChange={handlePageChange} />
 </div>
 
 <style>

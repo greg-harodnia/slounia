@@ -17,7 +17,7 @@
 	import { highlightText } from '$lib/highlight';
 	import { latToCyr } from '$lib/lacinka';
 	import { getCachedWord, setCachedWord } from '$lib/fetch-word';
-	import { fetchBlogList } from '$lib/fetch-blog';
+	import { blogStore } from '$lib/stores/blogStore.svelte';
 	import { likes } from '$lib/stores/likes.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
 	import { theme } from '$lib/stores/theme.svelte';
@@ -97,7 +97,9 @@
 	}
 
 	function preloadBlogList() {
-		fetchBlogList();
+		if (blogStore.posts.length === 0) {
+			blogStore.fetchPage(1);
+		}
 	}
 
 	function openBlog() {
