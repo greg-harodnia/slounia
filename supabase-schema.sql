@@ -7,12 +7,13 @@ CREATE TABLE IF NOT EXISTS importance (
 );
 
 INSERT INTO importance (name, level) VALUES
+	('Трасянка', -1),
+	('Уважліва', 0),
 	('Можна лепей', 1),
 	('Нязграба', 2),
 	('Недарэка', 3),
 	('Жах', 4),
-	('Паўсюдны жах', 5),
-	('Уважліва', 6)
+	('Паўсюдны жах', 5)
 ON CONFLICT (name) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS tags (

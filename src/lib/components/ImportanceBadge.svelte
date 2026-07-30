@@ -14,6 +14,16 @@
 		color: var(--c-importance-4);
 	}
 
+	.importance-badge[data-level='-1'] {
+		background: color-mix(in srgb, var(--c-importance--1) 15%, transparent);
+		color: var(--c-importance--1);
+	}
+
+	.importance-badge[data-level='0'] {
+		background: color-mix(in srgb, var(--c-importance-0) 15%, transparent);
+		color: var(--c-importance-0);
+	}
+
 	.importance-badge[data-level='1'] {
 		background: color-mix(in srgb, var(--c-importance-1) 15%, transparent);
 		color: var(--c-importance-1);
@@ -37,10 +47,5 @@
 	.importance-badge[data-level='5'] {
 		background: color-mix(in srgb, var(--c-importance-5) 15%, transparent);
 		color: var(--c-importance-5);
-	}
-
-	.importance-badge[data-level='6'] {
-		background: color-mix(in srgb, var(--c-importance-6) 15%, transparent);
-		color: var(--c-importance-6);
 	}
 </style>
