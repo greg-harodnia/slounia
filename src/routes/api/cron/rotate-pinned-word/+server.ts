@@ -1,0 +1,44 @@
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import { getStorageClient } from '$lib/server/storage';
+
+export const GET: RequestHandler = async ({ request }) => {
+	const isVercelCron = request.headers.get('x-vercel-cron') !== null;
+	if (!isVercelCron) {
+		return json({ error: 'Unauthorized' }, { status: 401 });
+	}
+
+	const supabase = getStorageClient();
+
+	const { error: unpinError } = await supabase
+		.from('words')
+		.update({ is_pinned: false, pinned_at: null })
+		.eq('is_pinned', true);
+
+	if (unpinError) {
+		return json({ error: unpinError.message }, { status: 500 });
+	}
+
+	const { data: words, error: fetchError } = await supabase.from('words').select('id').eq('importance_id', 5);
+
+	if (fetchError) {
+		return json({ error: fetchError.message }, { status: 500 });
+	}
+
+	if (!words || words.length === 0) {
+		return json({ message: 'No words with importance level 5 found', pinned: null });
+	}
+
+	const randomWord = words[Math.floor(Math.random() * words.length)];
+
+	const { error: pinError } = await supabase
+		.from('words')
+		.update({ is_pinned: true, pinned_at: new Date().toISOString() })
+		.eq('id', randomWord.id);
+
+	if (pinError) {
+		return json({ error: pinError.message }, { status: 500 });
+	}
+
+	return json({ success: true, pinned: randomWord.id });
+};
