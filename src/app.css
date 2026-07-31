@@ -15,6 +15,7 @@
 	--c-tag-active: #5b6abf;
 	--c-tag-text: #4a5568;
 	--c-tag-active-text: #ffffff;
+	--c-importance--2: #8bc34a;
 	--c-importance--1: #3b82f6;
 	--c-importance-0: #f9a8d4;
 	--c-importance-1: #38a169;
@@ -47,6 +48,7 @@
 	--c-tag-active: #818cf8;
 	--c-tag-text: #cbd5e1;
 	--c-tag-active-text: #ffffff;
+	--c-importance--2: #aed581;
 	--c-importance--1: #60a5fa;
 	--c-importance-0: #fda4af;
 	--c-importance-1: #4ade80;
@@ -79,6 +81,7 @@
 	--c-tag-active-text: #ffffff;
 	--c-tooltip-bg: #4a3028;
 	--c-tooltip-text: #f0ebe3;
+	--c-importance--2: #9bb168;
 	--c-importance--1: #4a7fb5;
 	--c-importance-0: #d4728e;
 	--c-importance-1: #4a8c3f;

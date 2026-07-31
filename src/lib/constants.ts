@@ -34,6 +34,7 @@ export function formatDate(iso: string): string {
 }
 
 export const importanceLevels = [
+	{ id: 8, name: 'Сынонімы' },
 	{ id: 7, name: 'Трасянка' },
 	{ id: 6, name: 'Уважліва' },
 	{ id: 1, name: 'Можна лепей' },

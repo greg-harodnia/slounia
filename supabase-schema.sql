@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS importance (
 );
 
 INSERT INTO importance (name, level) VALUES
+	('Сынонімы', -2),
 	('Трасянка', -1),
 	('Уважліва', 0),
 	('Можна лепей', 1),
