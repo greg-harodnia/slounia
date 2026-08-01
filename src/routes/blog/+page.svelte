@@ -5,14 +5,11 @@
 	import Pagination from '$lib/components/Pagination.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 	import ToDict from '$lib/components/ToDict.svelte';
-	import ListLoading from '$lib/components/ListLoading.svelte';
 	import { onMount } from 'svelte';
 	import { blogStore } from '$lib/stores/blogStore.svelte';
 	import { replaceState } from '$app/navigation';
 
 	let _data = $props();
-
-	let listEl: HTMLDivElement | undefined = $state();
 
 	function handlePageChange(page: number) {
 		blogStore.goToPage(page);
@@ -24,7 +21,6 @@
 		}
 		/* eslint-disable-next-line svelte/no-navigation-without-resolve */
 		replaceState(url.pathname + url.search, {});
-		listEl?.scrollTo({ top: 0, behavior: 'smooth' });
 	}
 
 	onMount(async () => {
@@ -65,20 +61,16 @@
 		</div>
 	{/if}
 
-	{#if blogStore.loading && blogStore.posts.length === 0}
-		<p class="empty shrink-0">Ладаваньне...</p>
+	{#if blogStore.loading}
+		<p class="empty">Ладаваньне...</p>
 	{:else if blogStore.posts.length === 0}
-		<p class="empty shrink-0">Пакуль няма допісаў.</p>
+		<p class="empty">Пакуль няма допісаў.</p>
 	{:else}
-		<div class="posts-list scroll-y" bind:this={listEl}>
+		<div class="posts-list scroll-y">
 			{#each blogStore.posts as post (post.id)}
 				<BlogCard {post} href="/blog/{post.slug}" />
 			{/each}
 		</div>
-	{/if}
-
-	{#if blogStore.loading && blogStore.posts.length > 0}
-		<ListLoading />
 	{/if}
 
 	<Pagination currentPage={blogStore.currentPage} totalPages={blogStore.totalPages} onPageChange={handlePageChange} />
@@ -93,6 +85,9 @@
 	}
 
 	.empty {
+		flex: 1;
+		display: grid;
+		place-items: center;
 		color: var(--c-text-muted);
 		font-size: 1rem;
 	}

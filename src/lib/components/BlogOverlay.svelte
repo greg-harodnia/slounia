@@ -5,7 +5,6 @@
 	import OverlayShell from '$lib/components/OverlayShell.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 	import Pagination from '$lib/components/Pagination.svelte';
-	import ListLoading from '$lib/components/ListLoading.svelte';
 	import { fetchBlogPost, getCachedBlogPost } from '$lib/fetch-blog';
 	import { blogStore } from '$lib/stores/blogStore.svelte';
 
@@ -19,7 +18,6 @@
 
 	let currentPost = $state<Post | null>(null);
 	let loadingPost = $state(false);
-	let listEl: HTMLDivElement | undefined = $state();
 
 	let breadcrumbs = $derived.by(() => {
 		if (currentPost) {
@@ -41,7 +39,6 @@
 			url.searchParams.set('page', String(page));
 		}
 		history.replaceState(history.state, '', url.pathname + url.search);
-		listEl?.scrollTo({ top: 0, behavior: 'smooth' });
 	}
 
 	$effect(() => {
@@ -88,20 +85,16 @@
 				Мовазнаўства
 			</button>
 
-			{#if blogStore.loading && blogStore.posts.length === 0}
+			{#if blogStore.loading}
 				<p class="empty">Ладаваньне...</p>
 			{:else if blogStore.posts.length === 0}
 				<p class="empty">Пакуль няма допісаў.</p>
 			{:else}
-				<div class="posts-list scroll-y" bind:this={listEl}>
+				<div class="posts-list scroll-y">
 					{#each blogStore.posts as post (post.id)}
 						<BlogCard {post} onclick={onOpenPost} />
 					{/each}
 				</div>
-			{/if}
-
-			{#if blogStore.loading && blogStore.posts.length > 0}
-				<ListLoading />
 			{/if}
 
 			<Pagination
@@ -123,6 +116,9 @@
 	}
 
 	.empty {
+		flex: 1;
+		display: grid;
+		place-items: center;
 		color: var(--c-text-muted);
 		font-size: 1rem;
 	}
