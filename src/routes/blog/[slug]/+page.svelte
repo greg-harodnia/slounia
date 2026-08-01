@@ -3,6 +3,7 @@
 	import type { Post } from '$lib/types';
 	import BlogPostContent from '$lib/components/BlogPostContent.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+	import ToDict from '$lib/components/ToDict.svelte';
 
 	let { data } = $props();
 	/* svelte-ignore state_referenced_locally */
@@ -59,6 +60,7 @@
 <div class="page-wrapper page-full">
 	<div class="breadcrumb-wrap">
 		<Breadcrumb items={[{ href: '/' }, { href: '/blog' }, { label: post.title }]} />
+		<ToDict />
 	</div>
 	<div class="page-scroll">
 		<BlogPostContent {post} />
@@ -73,5 +75,8 @@
 	}
 	.breadcrumb-wrap {
 		margin-bottom: 1.5rem;
+		display: flex;
+		align-items: center;
+		gap: 1rem;
 	}
 </style>

@@ -3,6 +3,7 @@
 	import type { WordData } from '$lib/types';
 	import WordDetailContent from '$lib/components/WordDetailContent.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+	import ToDict from '$lib/components/ToDict.svelte';
 	import { onMount } from 'svelte';
 	import { settings } from '$lib/stores/settings.svelte';
 
@@ -40,6 +41,7 @@
 <div class="word-page page-wrapper page-full">
 	<div class="breadcrumb-wrap">
 		<Breadcrumb items={[{ href: '/' }, { label: word.id }]} />
+		<ToDict />
 	</div>
 	<div class="word-scroll">
 		<WordDetailContent {word} />
@@ -54,5 +56,8 @@
 	}
 	.breadcrumb-wrap {
 		margin-bottom: 1.5rem;
+		display: flex;
+		align-items: center;
+		gap: 1rem;
 	}
 </style>

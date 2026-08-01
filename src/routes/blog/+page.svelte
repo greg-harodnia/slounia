@@ -4,6 +4,7 @@
 	import BlogCard from '$lib/components/BlogCard.svelte';
 	import Pagination from '$lib/components/Pagination.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+	import ToDict from '$lib/components/ToDict.svelte';
 	import { onMount } from 'svelte';
 	import { blogStore } from '$lib/stores/blogStore.svelte';
 	import { replaceState } from '$app/navigation';
@@ -44,7 +45,7 @@
 </svelte:head>
 
 <div class="page-wrapper page-full">
-	<div class="breadcrumb-wrap"><Breadcrumb items={[{ href: '/' }, { label: 'Блёґ' }]} /></div>
+	<div class="breadcrumb-wrap"><Breadcrumb items={[{ href: '/' }, { label: 'Блёґ' }]} /><ToDict /></div>
 	<h1 class="shrink-0">Блёґ</h1>
 
 	<button
@@ -103,6 +104,9 @@
 
 	.breadcrumb-wrap {
 		margin-bottom: 1.5rem;
+		display: flex;
+		align-items: center;
+		gap: 1rem;
 	}
 
 	@media (width <= 640px) {
