@@ -74,32 +74,37 @@
 	{:else if loadingPost}
 		<p class="empty">Ладаваньне...</p>
 	{:else}
-		<h1 class="page-title">Блёґ</h1>
+		<div class="blog-list">
+			<h1 class="page-title">Блёґ</h1>
 
-		<button
-			class="tag-chip"
-			class:active={blogStore.hashtagFilter === 'мовазнаўства'}
-			onclick={() => blogStore.toggleHashtag('мовазнаўства')}
-		>
-			Мовазнаўства
-		</button>
+			<button
+				class="tag-chip"
+				class:active={blogStore.hashtagFilter === 'мовазнаўства'}
+				onclick={() => blogStore.toggleHashtag('мовазнаўства')}
+			>
+				Мовазнаўства
+			</button>
 
-		{#if blogStore.loading}
-			<p class="empty">Ладаваньне...</p>
-		{:else if blogStore.posts.length === 0}
-			<p class="empty">Пакуль няма допісаў.</p>
-		{:else}
-			<div class="posts-list">
-				{#each blogStore.posts as post (post.id)}
-					<BlogCard {post} onclick={onOpenPost} />
-				{/each}
-			</div>
+			{#if blogStore.loading}
+				<p class="empty">Ладаваньне...</p>
+			{:else if blogStore.posts.length === 0}
+				<p class="empty">Пакуль няма допісаў.</p>
+			{/if}
+
+			{#if !blogStore.loading}
+				<div class="posts-list scroll-y">
+					{#each blogStore.posts as post (post.id)}
+						<BlogCard {post} onclick={onOpenPost} />
+					{/each}
+				</div>
+			{/if}
+
 			<Pagination
 				currentPage={blogStore.currentPage}
 				totalPages={blogStore.totalPages}
 				onPageChange={handlePageChange}
 			/>
-		{/if}
+		</div>
 	{/if}
 </OverlayShell>
 
@@ -115,6 +120,12 @@
 	.empty {
 		color: var(--c-text-muted);
 		font-size: 1rem;
+	}
+
+	.blog-list {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
 	}
 
 	.posts-list {
