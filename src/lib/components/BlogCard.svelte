@@ -130,7 +130,15 @@
 
 	@media (max-width: 600px) {
 		.post-card-link {
-			padding: 1rem;
+			padding: 0.85rem;
+		}
+
+		.post-card-title {
+			font-size: 1.05rem;
+		}
+
+		.post-card-header {
+			margin-bottom: 0.4rem;
 		}
 	}
 </style>

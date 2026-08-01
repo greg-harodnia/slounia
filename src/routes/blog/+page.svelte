@@ -11,6 +11,8 @@
 
 	let _data = $props();
 
+	let listEl: HTMLDivElement | undefined = $state();
+
 	function handlePageChange(page: number) {
 		blogStore.goToPage(page);
 		const url = new URL(window.location.href);
@@ -21,7 +23,7 @@
 		}
 		/* eslint-disable-next-line svelte/no-navigation-without-resolve */
 		replaceState(url.pathname + url.search, {});
-		window.scrollTo({ top: 0, behavior: 'smooth' });
+		listEl?.scrollTo({ top: 0, behavior: 'smooth' });
 	}
 
 	onMount(async () => {
@@ -67,7 +69,7 @@
 	{:else if blogStore.posts.length === 0}
 		<p class="empty shrink-0">Пакуль няма допісаў.</p>
 	{:else}
-		<div class="posts-list scroll-y">
+		<div class="posts-list scroll-y" bind:this={listEl}>
 			{#each blogStore.posts as post (post.id)}
 				<BlogCard {post} href="/blog/{post.slug}" />
 			{/each}
@@ -109,16 +111,16 @@
 
 	@media (width <= 640px) {
 		h1 {
-			font-size: 1.5rem;
-			margin-bottom: 1rem;
+			font-size: 1.35rem;
+			margin-bottom: 0.75rem;
 		}
 
 		.breadcrumb-wrap {
-			margin-bottom: 1rem;
+			margin-bottom: 0.75rem;
 		}
 
 		.posts-list {
-			gap: 0.75rem;
+			gap: 0.6rem;
 		}
 	}
 </style>

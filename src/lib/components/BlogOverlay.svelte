@@ -18,6 +18,7 @@
 
 	let currentPost = $state<Post | null>(null);
 	let loadingPost = $state(false);
+	let listEl: HTMLDivElement | undefined = $state();
 
 	let breadcrumbs = $derived.by(() => {
 		if (currentPost) {
@@ -39,6 +40,7 @@
 			url.searchParams.set('page', String(page));
 		}
 		history.replaceState(history.state, '', url.pathname + url.search);
+		listEl?.scrollTo({ top: 0, behavior: 'smooth' });
 	}
 
 	$effect(() => {
@@ -90,7 +92,7 @@
 			{:else if blogStore.posts.length === 0}
 				<p class="empty">Пакуль няма допісаў.</p>
 			{:else}
-				<div class="posts-list scroll-y">
+				<div class="posts-list scroll-y" bind:this={listEl}>
 					{#each blogStore.posts as post (post.id)}
 						<BlogCard {post} onclick={onOpenPost} />
 					{/each}
@@ -134,12 +136,12 @@
 
 	@media (width <= 640px) {
 		.page-title {
-			font-size: 1.5rem;
-			margin-bottom: 1rem;
+			font-size: 1.35rem;
+			margin-bottom: 0.75rem;
 		}
 
 		.posts-list {
-			gap: 0.75rem;
+			gap: 0.6rem;
 		}
 	}
 </style>
