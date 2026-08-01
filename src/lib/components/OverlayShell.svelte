@@ -71,4 +71,10 @@
 	.overlay-scroll::-webkit-scrollbar {
 		display: none;
 	}
+
+	@media (width <= 640px) {
+		.overlay-breadcrumb {
+			margin-bottom: 1rem;
+		}
+	}
 </style>
