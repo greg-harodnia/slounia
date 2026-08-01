@@ -1,6 +1,7 @@
-import { PAGE_SIZE } from '$lib/constants';
 import type { Post } from '$lib/types';
 import { SvelteURLSearchParams } from 'svelte/reactivity';
+
+const PAGE_SIZE = 5;
 
 class BlogStore {
 	posts = $state<Post[]>([]);
