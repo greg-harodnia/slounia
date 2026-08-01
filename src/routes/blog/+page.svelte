@@ -62,13 +62,11 @@
 		</div>
 	{/if}
 
-	{#if blogStore.loading}
+	{#if blogStore.loading && blogStore.posts.length === 0}
 		<p class="empty shrink-0">Ладаваньне...</p>
 	{:else if blogStore.posts.length === 0}
 		<p class="empty shrink-0">Пакуль няма допісаў.</p>
-	{/if}
-
-	{#if !blogStore.loading}
+	{:else}
 		<div class="posts-list scroll-y">
 			{#each blogStore.posts as post (post.id)}
 				<BlogCard {post} href="/blog/{post.slug}" />

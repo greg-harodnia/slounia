@@ -34,15 +34,17 @@
 		if (initialWord) {
 			word = initialWord;
 			fetchingId = null;
+			loading = false;
 		} else if (word?.id !== id && fetchingId !== id) {
 			const cached = getCachedWord(id);
 			if (cached) {
 				word = cached;
+				fetchingId = null;
+				loading = false;
 				return;
 			}
-			word = null;
-			loading = true;
 			fetchingId = id;
+			loading = true;
 			fetchWord(id).then(() => {
 				if (fetchingId === id) {
 					word = getCachedWord(id) ?? null;
@@ -58,7 +60,7 @@
 {/snippet}
 
 <OverlayShell {header} {onclose}>
-	{#if loading}
+	{#if loading && !word}
 		<p class="msg">Ладаваньне...</p>
 	{:else if word}
 		<WordDetailContent {word} {onWordLink} />
