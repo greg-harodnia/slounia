@@ -116,7 +116,7 @@
 		}
 
 		.breadcrumb-wrap {
-			margin-bottom: 0.75rem;
+			margin-bottom: 1rem;
 		}
 
 		.posts-list {
