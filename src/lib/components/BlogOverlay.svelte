@@ -5,6 +5,7 @@
 	import OverlayShell from '$lib/components/OverlayShell.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 	import Pagination from '$lib/components/Pagination.svelte';
+	import ListLoading from '$lib/components/ListLoading.svelte';
 	import { fetchBlogPost, getCachedBlogPost } from '$lib/fetch-blog';
 	import { blogStore } from '$lib/stores/blogStore.svelte';
 
@@ -97,6 +98,10 @@
 						<BlogCard {post} onclick={onOpenPost} />
 					{/each}
 				</div>
+			{/if}
+
+			{#if blogStore.loading && blogStore.posts.length > 0}
+				<ListLoading />
 			{/if}
 
 			<Pagination

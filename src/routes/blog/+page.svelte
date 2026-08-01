@@ -5,6 +5,7 @@
 	import Pagination from '$lib/components/Pagination.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 	import ToDict from '$lib/components/ToDict.svelte';
+	import ListLoading from '$lib/components/ListLoading.svelte';
 	import { onMount } from 'svelte';
 	import { blogStore } from '$lib/stores/blogStore.svelte';
 	import { replaceState } from '$app/navigation';
@@ -74,6 +75,10 @@
 				<BlogCard {post} href="/blog/{post.slug}" />
 			{/each}
 		</div>
+	{/if}
+
+	{#if blogStore.loading && blogStore.posts.length > 0}
+		<ListLoading />
 	{/if}
 
 	<Pagination currentPage={blogStore.currentPage} totalPages={blogStore.totalPages} onPageChange={handlePageChange} />
