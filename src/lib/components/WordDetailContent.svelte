@@ -136,14 +136,6 @@
 		border-bottom: none;
 	}
 
-	.future-note {
-		margin-top: 1.5rem;
-		font-size: 0.85rem;
-		color: var(--c-text-muted);
-		font-style: italic;
-		text-align: center;
-	}
-
 	@media (max-width: 600px) {
 		.word-card {
 			padding: 1.25rem 1rem;

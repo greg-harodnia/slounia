@@ -102,13 +102,6 @@
 		gap: 1rem;
 	}
 
-	.breadcrumb-wrap {
-		margin-bottom: 1.5rem;
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-	}
-
 	@media (width <= 640px) {
 		h1 {
 			font-size: 1.35rem;

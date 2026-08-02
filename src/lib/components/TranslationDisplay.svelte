@@ -233,10 +233,6 @@
 		font-size: 1.2rem;
 	}
 
-	.word-popup :global(.future-note) {
-		display: none;
-	}
-
 	.word-popup :global(.translation-item) {
 		padding: 0.5rem 0;
 	}

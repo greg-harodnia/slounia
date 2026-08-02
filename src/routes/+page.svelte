@@ -26,6 +26,8 @@
 	import BlogOverlay from '$lib/components/BlogOverlay.svelte';
 	import WordOverlay from '$lib/components/WordOverlay.svelte';
 	import PinButton from '$lib/components/PinButton.svelte';
+	import AppHeader from '$lib/components/AppHeader.svelte';
+	import WordControls from '$lib/components/WordControls.svelte';
 
 	let { data } = $props();
 
@@ -356,11 +358,6 @@
 		debounceTimer = setTimeout(doSearch, 700);
 	}
 
-	function getSortIcon(field: string) {
-		if (sort !== field) return '↕';
-		return order === 'asc' ? '↑' : '↓';
-	}
-
 	$effect(() => {
 		if (triggerIndex < 0) return;
 		const el = document.querySelector<HTMLElement>('[data-trigger]');
@@ -617,162 +614,17 @@
 </svelte:head>
 
 <div class="app" bind:this={appEl}>
-	<header class="header">
-		<div class="header-left">
-			<svg class="app-logo" viewBox="0 0 32 32" aria-label="Logo">
-				<rect width="32" height="32" rx="7" fill="var(--logo-bg)" />
-				<path
-					d="M6 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v19l-5-3.5L16 26l-5-3.5L6 26V7z"
-					fill="none"
-					stroke="var(--logo-fg)"
-					stroke-width="1.5"
-					stroke-linejoin="round"
-				/>
-				<text
-					x="16"
-					y="19"
-					font-family="system-ui, sans-serif"
-					font-size="12"
-					font-weight="700"
-					fill="var(--logo-fg)"
-					text-anchor="middle">Ў</text
-				>
-			</svg>
-			<h1><button class="heading-btn" onclick={resetFilters}>{SITE_NAME}</button></h1>
-		</div>
-		<span class="header-right">
-			<button class="header-btn btn-icon blog-btn" onclick={openBlog} onmouseenter={preloadBlogList}>
-				<svg
-					viewBox="0 0 24 24"
-					width="16"
-					height="16"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<path d="M12 20h9" />
-					<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-				</svg>
-				Блёґ
-			</button>
-			<button
-				class="header-btn btn-icon"
-				class:active={showFavorites}
-				onclick={toggleShowFavorites}
-				aria-label="Show favorites"
-			>
-				<svg
-					viewBox="0 0 24 24"
-					width="16"
-					height="16"
-					fill={showFavorites ? 'currentColor' : 'none'}
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					><path
-						d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-					/></svg
-				>
-			</button>
-			<button class="header-btn btn-icon" onclick={toggleComments} aria-label="Toggle comments">
-				<svg
-					viewBox="0 0 24 24"
-					width="16"
-					height="16"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-					{#if !showComments}
-						<line x1="4" y1="4" x2="20" y2="20" />
-					{/if}
-				</svg>
-			</button>
-			<button
-				class="header-btn btn-icon"
-				onclick={() => settings.toggleLatin()}
-				aria-label="Перамыкач паміж лацінкай і кірыліцай"
-			>
-				<svg
-					viewBox="0 0 24 24"
-					width="16"
-					height="16"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					{#if settings.showLatin}
-						<text
-							x="12"
-							y="12"
-							dominant-baseline="central"
-							font-family="system-ui, sans-serif"
-							font-size="20"
-							font-weight="700"
-							fill="currentColor"
-							text-anchor="middle"
-							stroke="none">Ł</text
-						>
-					{:else}
-						<text
-							x="12"
-							y="12"
-							dominant-baseline="central"
-							font-family="system-ui, sans-serif"
-							font-size="20"
-							font-weight="700"
-							fill="currentColor"
-							text-anchor="middle"
-							stroke="none">Ў</text
-						>
-					{/if}
-				</svg>
-			</button>
-			<button class="header-btn btn-icon theme-toggle" onclick={() => theme.toggle()} aria-label="Зьмяніць тэму">
-				{#if theme.name === 'dark'}
-					<svg
-						viewBox="0 0 24 24"
-						width="16"
-						height="16"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<path
-							d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"
-						/>
-					</svg>
-				{:else if theme.name === 'national'}
-					<span class="emoji-fix">🏰</span>
-				{:else}
-					<svg
-						viewBox="0 0 24 24"
-						width="16"
-						height="16"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<path
-							d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
-						/>
-					</svg>
-				{/if}
-			</button>
-		</span>
-	</header>
+	<AppHeader
+		{showFavorites}
+		{showComments}
+		onReset={resetFilters}
+		onOpenBlog={openBlog}
+		onPreloadBlog={preloadBlogList}
+		onToggleFavorites={toggleShowFavorites}
+		onToggleComments={toggleComments}
+		onToggleLatin={() => settings.toggleLatin()}
+		onToggleTheme={() => theme.toggle()}
+	/>
 
 	{#if !import.meta.env.PROD}
 		<div class="dev">
@@ -784,62 +636,24 @@
 		</div>
 	{/if}
 
-	<div class="controls">
-		<div class="search-box">
-			<div class="search-input-wrap">
-				<div class="search-input-inner">
-					<input
-						type="text"
-						placeholder="Пошук у словах (г=ґ, у=ў, и=і, е=ё)"
-						bind:this={searchInput}
-						bind:value={search}
-						oninput={() => {
-							clearTimeout(debounceTimer);
-							debounceTimer = setTimeout(doSearch, 300);
-						}}
-						onkeydown={(e) => {
-							if (e.key === 'Enter') doSearch();
-							else if (e.key === 'Escape') clearSearch();
-						}}
-					/>
-					{#if search}
-						<button class="search-clear" onclick={clearSearch} aria-label="Clear search">×</button>
-					{/if}
-				</div>
-				<span class="word-counter">{total}</span>
-			</div>
-		</div>
-
-		<div class="tags-row" role="group" aria-label="Фільтр водле тэґаў">
-			{#each tags as tag (tag.name)}
-				<button
-					class="tag-chip"
-					class:active={selectedTags.includes(tag.name)}
-					onclick={() => handleTagFilter(tag.name)}
-					aria-pressed={selectedTags.includes(tag.name)}
-				>
-					{tag.name}
-				</button>
-			{/each}
-		</div>
-
-		<div class="grid-header">
-			<div class="col-word">
-				<button class="sort-btn" class:active={sort === 'word'} onclick={() => handleSort('word')}>
-					Слова {getSortIcon('word')}
-				</button>
-				<button class="sort-btn" class:active={sort === 'importance'} onclick={() => handleSort('importance')}>
-					⚑ {getSortIcon('importance')}
-				</button>
-			</div>
-			<div class="col-trans">Пераклад</div>
-			<div class="col-likes">
-				<button class="sort-btn" class:active={sort === 'likes'} onclick={() => handleSort('likes')}>
-					❤️ {getSortIcon('likes')}
-				</button>
-			</div>
-		</div>
-	</div>
+	<WordControls
+		{tags}
+		{selectedTags}
+		{total}
+		{sort}
+		{order}
+		bind:search
+		bind:searchInput
+		onSearchInput={() => {
+			clearTimeout(debounceTimer);
+			debounceTimer = setTimeout(doSearch, 300);
+		}}
+		onSearchEnter={doSearch}
+		onSearchEscape={clearSearch}
+		onClearSearch={clearSearch}
+		onTagFilter={handleTagFilter}
+		onSort={handleSort}
+	/>
 
 	<div class="table-wrap">
 		{#if loading && words.length === 0}
@@ -1197,260 +1011,12 @@
 		margin-bottom: 2rem;
 	}
 
-	.header {
-		padding-top: 2rem;
-		margin-bottom: 1rem;
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-	}
-
-	.header-left {
-		display: flex;
-		align-items: center;
-		gap: 20px;
-	}
-
-	.heading-btn {
-		font-size: 1.75rem;
-		font-weight: 700;
-		letter-spacing: -0.02em;
-		background: none;
-		border: none;
-		cursor: pointer;
-		color: var(--c-text);
-		font-family: inherit;
-		padding: 0;
-		text-align: left;
-	}
-
-	.app-logo {
-		width: 36px;
-		height: 36px;
-		flex-shrink: 0;
-		--logo-bg: #0f172a;
-		--logo-fg: #e2e8f0;
-	}
-
-	:global([data-theme='dark']) .app-logo {
-		--logo-bg: #e2e8f0;
-		--logo-fg: #0f172a;
-	}
-
-	:global([data-theme='national']) .app-logo {
-		--logo-bg: var(--c-primary);
-		--logo-fg: var(--c-bg);
-	}
-
-	.header-right,
-	.search-box {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		flex-shrink: 0;
-	}
-
-	.header-btn {
-		padding: 0.5rem 0.75rem;
-		border: 1.5px solid var(--c-border);
-		border-radius: var(--radius-sm);
-		background: var(--c-surface);
-		color: var(--c-text-muted);
-		font-family: inherit;
-		cursor: pointer;
-		transition: all 0.15s;
-		line-height: 1;
-		font-size: 0.8rem;
-		font-weight: 600;
-		white-space: nowrap;
-		letter-spacing: 0.03em;
-	}
-
-	.btn-icon {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.theme-toggle {
-		flex-shrink: 0;
-	}
-
-	.emoji-fix {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 1rem;
-		height: 1rem;
-	}
-
-	.blog-btn {
-		text-decoration: none;
-		gap: 0.35rem;
-	}
-	@media (hover: hover) {
-		.header-btn:hover {
-			border-color: var(--c-primary);
-			color: var(--c-primary);
-		}
-	}
-
-	.controls {
-		/* margin-bottom: 1rem; */
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		flex-shrink: 0;
-		position: relative;
-		z-index: 2;
-	}
-
-	.search-input-wrap {
-		flex: 1;
-		display: flex;
-		position: relative;
-	}
-
-	.search-input-inner {
-		flex: 1;
-		display: flex;
-		position: relative;
-		z-index: 2;
-	}
-
-	.search-input-inner input {
-		min-width: 0;
-	}
-
-	.search-clear {
-		position: absolute;
-		right: 0.5rem;
-		top: 50%;
-		transform: translateY(-50%);
-		z-index: 3;
-		background: none;
-		border: none;
-		font-size: 1.3rem;
-		line-height: 1;
-		cursor: pointer;
-		color: var(--c-text-muted);
-		padding: 0.15rem 0.3rem;
-		border-radius: 4px;
-		font-family: inherit;
-		transition: color 0.1s;
-	}
-
-	@media (hover: hover) {
-		.search-clear:hover {
-			color: var(--c-text);
-		}
-	}
-
-	.search-box input {
-		flex: 1;
-		min-width: 0;
-		padding: 0.625rem 1rem;
-		border: 1.5px solid var(--c-border);
-		border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-		font-size: 0.95rem;
-		outline: none;
-		transition: border-color 0.15s;
-		background: var(--c-surface);
-		color: var(--c-text);
-		position: relative;
-		z-index: 1;
-	}
-
-	.search-box input:focus {
-		border-color: var(--c-primary);
-		box-shadow: 0 0 0 3px rgba(91, 106, 191, 0.1);
-	}
-
-	.word-counter {
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 3rem;
-		padding: 0.625rem 0;
-		margin-left: -1.5px;
-		border: 1.5px solid var(--c-border);
-		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-		background: var(--c-surface);
-		color: var(--c-text-muted);
-		font-size: 0.85rem;
-		font-variant-numeric: tabular-nums;
-		line-height: 1;
-	}
-
-	.tags-row {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.4rem;
-		align-items: center;
-		min-height: 1.8rem;
-	}
-
 	.table-wrap {
 		flex: 1;
 		min-height: 0;
 		background: var(--c-surface);
 		box-shadow: var(--shadow-md);
 		overflow-y: auto;
-	}
-
-	.grid-header,
-	.grid-row {
-		display: grid;
-		grid-template-columns: 33% 1fr auto;
-	}
-
-	.grid-header {
-		position: sticky;
-		top: var(--thead-top, 0);
-		z-index: 1;
-	}
-
-	.grid-header > * {
-		background: var(--c-surface);
-		padding: 0.75rem 1rem;
-		font-size: 0.8rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--c-text-muted);
-		border-bottom: 2px solid var(--c-border);
-		text-align: left;
-		white-space: nowrap;
-	}
-
-	.grid-header > *:first-child {
-		border-radius: var(--radius) 0 0 0;
-	}
-
-	.grid-header > *:last-child {
-		border-radius: 0 var(--radius) 0 0;
-	}
-
-	.sort-btn {
-		background: none;
-		border: none;
-		font: inherit;
-		color: inherit;
-		cursor: pointer;
-		padding-right: 1rem;
-		font-size: 0.8rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-	}
-
-	@media (hover: hover) {
-		.sort-btn:hover {
-			color: var(--c-primary);
-		}
 	}
 
 	.grid-row {
@@ -1487,14 +1053,6 @@
 
 	.col-likes :global(.like-btn) {
 		margin-top: 0.9rem;
-	}
-
-	@media (width > 640px) {
-		.grid-header .col-word {
-			display: flex;
-			gap: 1rem;
-			align-items: center;
-		}
 	}
 
 	.meta-row {
@@ -1624,11 +1182,6 @@
 		}
 	}
 
-	.header-btn.active {
-		border-color: var(--c-primary);
-		color: var(--c-primary);
-	}
-
 	.icon-btn {
 		display: inline-flex;
 		align-items: center;
@@ -1692,22 +1245,8 @@
 			overflow-y: auto;
 		}
 
-		.controls {
-			position: sticky;
-			top: 0;
-			z-index: 2;
-			background: var(--c-bg);
-			padding: 0.75rem 0 0;
-			/* margin-bottom: 0; */
-		}
-
 		.table-wrap {
 			flex: none;
-		}
-
-		.grid-header,
-		.grid-row {
-			grid-template-columns: 33% 1fr auto;
 		}
 	}
 
@@ -1717,115 +1256,9 @@
 			padding-bottom: env(safe-area-inset-bottom, 0.75rem);
 		}
 
-		.header {
-			flex-wrap: wrap;
-			justify-content: center;
-			gap: 0.5rem;
-			padding-top: 1rem;
-		}
-
-		.header-left {
-			flex-direction: column;
-			align-items: center;
-			gap: 0.25rem;
-		}
-
-		h1 {
-			text-align: center;
-		}
-
-		.heading-btn {
-			font-size: 1.25rem;
-		}
-
-		.header-right,
-		.search-box {
-			gap: 0.5rem;
-		}
-
-		.header-btn {
-			padding: 0.4rem 0.5rem;
-			font-size: 0.7rem;
-		}
-
-		.search-box input {
-			font-size: 0.85rem;
-			padding: 0.5rem 0.75rem;
-		}
-
-		.word-counter {
-			padding: 0.5rem 0;
-		}
-
-		.tag-chip {
-			padding: 0.2rem 0.5rem;
-		}
-
 		.table-wrap {
 			background: transparent;
 			box-shadow: none;
-		}
-
-		.controls {
-			padding-bottom: 0.75rem;
-			gap: 0.75rem;
-		}
-
-		.tags-row {
-			justify-content: space-evenly;
-		}
-
-		.grid-header {
-			display: flex;
-			justify-content: space-evenly;
-			flex-wrap: wrap;
-			align-items: center;
-			gap: 0.35rem;
-			/* padding-top: 0.5rem; */
-			position: static;
-			z-index: auto;
-		}
-
-		.grid-header > * {
-			padding: 0;
-			border: none;
-			background: none;
-			white-space: nowrap;
-			width: auto;
-			font-size: 0.75rem;
-			font-weight: 600;
-			text-transform: uppercase;
-			letter-spacing: 0.04em;
-			color: var(--c-text-muted);
-		}
-
-		.grid-header > .col-word {
-			display: contents;
-		}
-
-		.grid-header > .col-trans {
-			display: none;
-		}
-
-		.grid-header .sort-btn {
-			padding: 0.2rem 0.65rem;
-			border: 1.5px solid var(--c-border);
-			border-radius: 999px;
-			font-size: 0.75rem;
-			font-weight: 600;
-			text-transform: uppercase;
-			letter-spacing: 0.04em;
-			background: transparent;
-			color: var(--c-text-muted);
-			cursor: pointer;
-			transition: all 0.15s;
-			font-family: inherit;
-		}
-
-		.grid-header .sort-btn.active {
-			border-color: var(--c-primary);
-			color: var(--c-primary);
-			background: var(--c-primary-light);
 		}
 
 		.grid-row,
