@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getStorageClient } from '$lib/server/storage';
+import { supabase } from '$lib/server/db';
 
 export const GET: RequestHandler = async ({ request }) => {
 	// NOTE: no CRON_SECRET check — these headers are spoofable, so anyone who
@@ -14,8 +14,6 @@ export const GET: RequestHandler = async ({ request }) => {
 	if (!isVercelCron) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
-
-	const supabase = getStorageClient();
 
 	const { error: unpinError } = await supabase
 		.from('words')
