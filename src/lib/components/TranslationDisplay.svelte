@@ -148,7 +148,9 @@
 				<a
 					href={r('/word/' + encodeURIComponent(crossRef.target))}
 					class="crossref-link"
-					class:loading={loadingFetch}>{crossRef.target}</a
+					class:loading={loadingFetch}
+					onmouseenter={showWordPopup}
+					onmouseleave={hideWordPopup}>{crossRef.target}</a
 				>
 				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			{/if}
