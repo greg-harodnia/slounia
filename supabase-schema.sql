@@ -416,3 +416,32 @@ BEGIN
   RETURN new_likes;
 END;
 $$;
+
+-- Row Level Security
+-- The anon key is public by design, so it may read public content only.
+-- All writes go through the service-role key (getServiceClient in
+-- src/lib/server/db.ts), which bypasses RLS.
+
+ALTER TABLE importance   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tags          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE words         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE word_tags     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE translations  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE posts         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE referrals     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE banned_users  ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS anon_read_importance  ON importance;
+DROP POLICY IF EXISTS anon_read_tags        ON tags;
+DROP POLICY IF EXISTS anon_read_words       ON words;
+DROP POLICY IF EXISTS anon_read_word_tags   ON word_tags;
+DROP POLICY IF EXISTS anon_read_translations ON translations;
+DROP POLICY IF EXISTS anon_read_posts       ON posts;
+
+CREATE POLICY anon_read_importance ON importance FOR SELECT TO anon USING (true);
+CREATE POLICY anon_read_tags ON tags FOR SELECT TO anon USING (true);
+CREATE POLICY anon_read_words ON words FOR SELECT TO anon USING (true);
+CREATE POLICY anon_read_word_tags ON word_tags FOR SELECT TO anon USING (true);
+CREATE POLICY anon_read_translations ON translations FOR SELECT TO anon USING (true);
+CREATE POLICY anon_read_posts ON posts FOR SELECT TO anon USING (true);

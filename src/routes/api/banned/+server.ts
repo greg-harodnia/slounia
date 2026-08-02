@@ -1,12 +1,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
+import { getServiceClient } from '$lib/server/db';
 import { apiError, requireDev } from '$lib/server/utils';
 
 export const GET: RequestHandler = async ({ url: _url }) => {
 	const devErr = requireDev();
 	if (devErr) return devErr;
 
+	const supabase = getServiceClient();
 	const { data, error } = await supabase
 		.from('banned_users')
 		.select('*, messages!message_id(name, telegram, message)')
@@ -22,6 +23,8 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const body = await request.json();
 	const { userToken, name, telegram, reason, messageId } = body;
+
+	const supabase = getServiceClient();
 
 	if (!userToken && !name && !telegram) {
 		return json({ error: 'Патрэбны хаця б адзін ідэнтыфікатар (user_token, name або telegram)' }, { status: 400 });
@@ -74,6 +77,8 @@ export const PUT: RequestHandler = async ({ request }) => {
 	const body = await request.json();
 	const { id, reason } = body;
 
+	const supabase = getServiceClient();
+
 	if (!id) {
 		return json({ error: 'Патрэбны id бану' }, { status: 400 });
 	}
@@ -93,6 +98,8 @@ export const DELETE: RequestHandler = async ({ request }) => {
 
 	const body = await request.json();
 	const { id } = body;
+
+	const supabase = getServiceClient();
 
 	if (!id) {
 		return json({ error: 'Патрэбны id бану' }, { status: 400 });

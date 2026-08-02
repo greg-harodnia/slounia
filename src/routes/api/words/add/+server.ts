@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
+import { getServiceClient } from '$lib/server/db';
 import { requireDev, apiError } from '$lib/server/utils';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -8,6 +8,8 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (devBlock) return devBlock;
 
 	const body = await request.json();
+
+	const supabase = getServiceClient();
 
 	const { id, importance_id, comment, tag_ids, translations } = body;
 

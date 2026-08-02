@@ -1,11 +1,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
+import { getServiceClient } from '$lib/server/db';
 
 export const GET: RequestHandler = async ({ url, getClientAddress }) => {
 	const token = url.searchParams.get('token');
 	const name = url.searchParams.get('name');
 	const telegram = url.searchParams.get('telegram');
+
+	const supabase = getServiceClient();
 
 	let ipAddress: string | null = null;
 	try {

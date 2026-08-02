@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
+import { getServiceClient } from '$lib/server/db';
 import { requireDev, apiError } from '$lib/server/utils';
 
 export const PUT: RequestHandler = async ({ params, request }) => {
@@ -9,6 +9,8 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 
 	const body = await request.json();
 	const { id, comment, importance_id, tag_ids, hidden } = body;
+
+	const supabase = getServiceClient();
 
 	const newId = id && id !== params.id ? id : null;
 

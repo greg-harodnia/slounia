@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
+import { getServiceClient } from '$lib/server/db';
 import { requireDev, apiError } from '$lib/server/utils';
 
 export const PUT: RequestHandler = async ({ params: _params, request }) => {
@@ -8,6 +8,8 @@ export const PUT: RequestHandler = async ({ params: _params, request }) => {
 	if (devBlock) return devBlock;
 
 	const { translation_ids } = await request.json();
+
+	const supabase = getServiceClient();
 
 	if (!Array.isArray(translation_ids)) {
 		return json({ error: 'translation_ids array is required' }, { status: 400 });

@@ -1,12 +1,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
+import { getServiceClient } from '$lib/server/db';
 import { requireDev, apiError } from '$lib/server/utils';
 
 export const DELETE: RequestHandler = async ({ params }) => {
 	const devBlock = requireDev();
 	if (devBlock) return devBlock;
 
+	const supabase = getServiceClient();
 	const { error } = await supabase.from('words').delete().eq('id', params.id);
 
 	if (error) {

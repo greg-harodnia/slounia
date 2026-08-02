@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
+import { getServiceClient } from '$lib/server/db';
 import { requireDev, apiError } from '$lib/server/utils';
 
 export const POST: RequestHandler = async ({ params, request }) => {
@@ -9,6 +9,8 @@ export const POST: RequestHandler = async ({ params, request }) => {
 
 	const body = await request.json();
 	const { translation, comment } = body;
+
+	const supabase = getServiceClient();
 
 	if (!translation) {
 		return json({ error: 'Translation text is required' }, { status: 400 });

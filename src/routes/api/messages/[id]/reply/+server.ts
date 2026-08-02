@@ -1,9 +1,12 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
-import { apiError } from '$lib/server/utils';
+import { getServiceClient } from '$lib/server/db';
+import { apiError, requireDev } from '$lib/server/utils';
 
 export const POST: RequestHandler = async ({ params, request }) => {
+	const devBlock = requireDev();
+	if (devBlock) return devBlock;
+
 	const body = await request.json();
 	const { reply } = body;
 	const id = Number(params.id);
@@ -12,6 +15,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		return json({ error: 'Адказ не можа быць пустым' }, { status: 400 });
 	}
 
+	const supabase = getServiceClient();
 	const { error } = await supabase.from('messages').update({ reply: reply.trim() }).eq('id', id);
 
 	if (error) {

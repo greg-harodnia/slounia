@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
+import { getServiceClient } from '$lib/server/db';
 import { requireDev, apiError } from '$lib/server/utils';
 
 export const DELETE: RequestHandler = async ({ params }) => {
@@ -9,6 +9,7 @@ export const DELETE: RequestHandler = async ({ params }) => {
 
 	const id = Number(params.id);
 
+	const supabase = getServiceClient();
 	const { error } = await supabase.from('translations').delete().eq('id', id);
 
 	if (error) {

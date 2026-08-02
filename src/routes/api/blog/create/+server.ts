@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
+import { getServiceClient } from '$lib/server/db';
 import { requireDev, apiError } from '$lib/server/utils';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -9,6 +9,8 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const body = await request.json();
 	const { slug, title, content, hashtags, is_pinned, published_at } = body;
+
+	const supabase = getServiceClient();
 
 	if (!slug || !title || !content) {
 		return json({ error: 'slug, title and content are required' }, { status: 400 });

@@ -1,12 +1,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
+import { getServiceClient } from '$lib/server/db';
 import { requireDev, apiError } from '$lib/server/utils';
 
 export const PUT: RequestHandler = async ({ params }) => {
 	const devBlock = requireDev();
 	if (devBlock) return devBlock;
 
+	const supabase = getServiceClient();
 	const { data: word, error: fetchError } = await supabase
 		.from('words')
 		.select('is_pinned')

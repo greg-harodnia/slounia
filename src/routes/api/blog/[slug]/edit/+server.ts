@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
+import { getServiceClient } from '$lib/server/db';
 import { requireDev, apiError } from '$lib/server/utils';
 
 export const PUT: RequestHandler = async ({ params, request }) => {
@@ -9,6 +9,8 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 
 	const body = await request.json();
 	const { slug, title, content, hashtags, is_pinned, published_at } = body;
+
+	const supabase = getServiceClient();
 
 	const updates: Record<string, unknown> = {};
 	if (slug !== undefined) updates.slug = slug;
@@ -32,6 +34,7 @@ export const DELETE: RequestHandler = async ({ params }) => {
 	const devBlock = requireDev();
 	if (devBlock) return devBlock;
 
+	const supabase = getServiceClient();
 	const { error: deleteError } = await supabase.from('posts').delete().eq('slug', params.slug);
 
 	if (deleteError) {

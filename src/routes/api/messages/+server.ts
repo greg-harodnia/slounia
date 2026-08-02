@@ -1,12 +1,14 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
-import { apiError } from '$lib/server/utils';
+import { getServiceClient } from '$lib/server/db';
+import { apiError, requireDev } from '$lib/server/utils';
 
 export const POST: RequestHandler = async (event) => {
 	const { request, getClientAddress } = event;
 	const body = await request.json();
 	const { name, telegram, message, userToken } = body;
+
+	const supabase = getServiceClient();
 
 	if (!name?.trim() || !message?.trim()) {
 		return json({ error: 'Запоўніце абавязковыя палі' }, { status: 400 });
@@ -57,7 +59,12 @@ export const GET: RequestHandler = async ({ url }) => {
 	const token = url.searchParams.get('token');
 	const admin = url.searchParams.get('admin');
 
+	const supabase = getServiceClient();
+
 	if (admin === 'true') {
+		const devBlock = requireDev();
+		if (devBlock) return devBlock;
+
 		const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
 
 		if (error) return apiError(error);

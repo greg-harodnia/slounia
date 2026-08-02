@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
+import { getServiceClient } from '$lib/server/db';
 import { requireDev, apiError } from '$lib/server/utils';
 
 export const PUT: RequestHandler = async ({ params, request }) => {
@@ -11,6 +11,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	const { translation, comment } = body;
 	const id = Number(params.id);
 
+	const supabase = getServiceClient();
 	const { error } = await supabase
 		.from('translations')
 		.update({

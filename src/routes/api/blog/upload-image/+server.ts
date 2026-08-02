@@ -2,12 +2,13 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getStorageClient } from '$lib/server/storage';
 import { requireDev, apiError } from '$lib/server/utils';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const devBlock = requireDev();
 	if (devBlock) return devBlock;
 
-	let supabase: ReturnType<typeof getStorageClient>;
+	let supabase: SupabaseClient;
 	try {
 		supabase = getStorageClient();
 	} catch {
