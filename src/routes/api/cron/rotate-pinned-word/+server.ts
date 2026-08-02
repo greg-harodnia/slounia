@@ -3,7 +3,14 @@ import type { RequestHandler } from './$types';
 import { getStorageClient } from '$lib/server/storage';
 
 export const GET: RequestHandler = async ({ request }) => {
-	const isVercelCron = request.headers.get('x-vercel-cron') !== null;
+	// NOTE: no CRON_SECRET check — these headers are spoofable, so anyone who
+	// knows the URL can trigger the rotation. To harden: set a CRON_SECRET env
+	// var in Vercel and verify `Authorization: Bearer <CRON_SECRET>` here.
+	const isVercelCron =
+		request.headers.get('user-agent') === 'vercel-cron/1.0' ||
+		request.headers.get('x-vercel-cron-schedule') !== null ||
+		request.headers.get('x-vercel-cron-auth-token') !== null ||
+		request.headers.get('x-vercel-cron') !== null;
 	if (!isVercelCron) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
