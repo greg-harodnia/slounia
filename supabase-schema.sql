@@ -152,6 +152,31 @@ CREATE TRIGGER word_tags_last_tag_check
   FOR EACH ROW
   EXECUTE FUNCTION prevent_last_tag_removal();
 
+-- this is only needed because words are used as IDs without a unique and consistent word ID
+CREATE OR REPLACE FUNCTION update_crossrefs_on_word_rename()
+RETURNS TRIGGER
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.id IS DISTINCT FROM OLD.id THEN
+    UPDATE translations
+    SET translation = regexp_replace(
+      translation,
+      '^((?:гл|параўн)\.\s+).*$',
+      '\1' || NEW.id,
+      'i'
+    )
+    WHERE translation ~* '^((?:гл|параўн)\.\s+).*$'
+      AND lower(regexp_replace(translation, '^((?:гл|параўн)\.\s+)', '', 'i')) = lower(OLD.id);
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER words_crossrefs_after_rename
+  AFTER UPDATE OF id ON words
+  FOR EACH ROW
+  EXECUTE FUNCTION update_crossrefs_on_word_rename();
+
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE OR REPLACE FUNCTION normalize_text(s TEXT)
