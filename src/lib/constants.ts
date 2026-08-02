@@ -1,6 +1,8 @@
 import { resolve } from '$app/paths';
 
 export const PAGE_SIZE = 20;
+export const DEFAULT_SORT = import.meta.env.PROD ? 'word' : 'created_at';
+export const DEFAULT_ORDER = import.meta.env.PROD ? 'asc' : 'desc';
 export const CACHE_TTL = 900; // 15 minutes, in seconds
 export const CACHE_TTL_LONG = 604800; // 7 days, in seconds
 

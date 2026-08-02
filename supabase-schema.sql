@@ -276,9 +276,9 @@ BEGIN
 	sorted AS (
 		SELECT * FROM filtered
 		ORDER BY
-			CASE WHEN search != '' THEN relevance_score END DESC NULLS LAST,
-			CASE WHEN sort_dir = 'asc' THEN sort_expr END ASC NULLS LAST,
-			CASE WHEN sort_dir = 'desc' THEN sort_expr END DESC NULLS LAST,
+			CASE WHEN sort_field = 'relevance' THEN relevance_score END DESC NULLS LAST,
+			CASE WHEN sort_field != 'relevance' AND sort_dir = 'asc' THEN sort_expr END ASC NULLS LAST,
+			CASE WHEN sort_field != 'relevance' AND sort_dir = 'desc' THEN sort_expr END DESC NULLS LAST,
 			LOWER(id)
 		OFFSET result_offset
 		LIMIT result_limit

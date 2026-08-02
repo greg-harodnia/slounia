@@ -13,7 +13,7 @@
 	import TagList from '$lib/components/TagList.svelte';
 	import type { WordData, TagData } from '$lib/types';
 	import { parseCrossref } from '$lib/types';
-	import { PAGE_SIZE, SITE_NAME, SITE_URL, SITE_DESCRIPTION } from '$lib/constants';
+	import { DEFAULT_ORDER, DEFAULT_SORT, PAGE_SIZE, SITE_NAME, SITE_URL, SITE_DESCRIPTION } from '$lib/constants';
 	import { highlightText } from '$lib/highlight';
 	import { latToCyr } from '$lib/lacinka';
 	import { getCachedWord, setCachedWord } from '$lib/fetch-word';
@@ -45,6 +45,7 @@
 	let order = $state(data.order);
 	/* svelte-ignore state_referenced_locally */
 	let selectedTags = $state<string[]>(data.selectedTags);
+	let sortExplicit = $state(false);
 	let loading = $state(true);
 	/* svelte-ignore state_referenced_locally */
 	let triggerIndex = $state(data.triggerIndex);
@@ -216,8 +217,8 @@
 			!search &&
 			!showFavorites &&
 			selectedTags.length === tags.length &&
-			sort === (import.meta.env.PROD ? 'word' : 'created_at') &&
-			order === (import.meta.env.PROD ? 'asc' : 'desc')
+			sort === DEFAULT_SORT &&
+			order === DEFAULT_ORDER
 		) {
 			params.set('include_pinned', 'true');
 		}
@@ -285,8 +286,9 @@
 
 	function resetFilters() {
 		search = '';
-		sort = import.meta.env.PROD ? 'word' : 'created_at';
-		order = import.meta.env.PROD ? 'asc' : 'desc';
+		sort = DEFAULT_SORT;
+		order = DEFAULT_ORDER;
+		sortExplicit = false;
 		selectedTags = tags.map((t) => t.name);
 		/* eslint-disable-next-line svelte/no-navigation-without-resolve */
 		replaceState(window.location.pathname, {});
@@ -304,8 +306,8 @@
 	function syncUrlParams() {
 		const params = new SvelteURLSearchParams();
 		if (search) params.set('search', search);
-		if (sort !== (import.meta.env.PROD ? 'word' : 'created_at')) params.set('sort', sort);
-		if (order !== (import.meta.env.PROD ? 'asc' : 'desc')) params.set('order', order);
+		if (sort !== DEFAULT_SORT) params.set('sort', sort);
+		if (order !== DEFAULT_ORDER) params.set('order', order);
 		if (selectedTags.length > 0 && selectedTags.length < tags.length) {
 			params.set('tags', selectedTags.join(','));
 		}
@@ -318,11 +320,19 @@
 		loading = true;
 		words = [];
 		total = 0;
+		if (search && !sortExplicit && sort === DEFAULT_SORT) {
+			sort = 'relevance';
+			order = 'desc';
+		} else if (!search && sort === 'relevance') {
+			sort = DEFAULT_SORT;
+			order = DEFAULT_ORDER;
+		}
 		fetchWords();
 		syncUrlParams();
 	}
 
 	function handleSort(field: string) {
+		sortExplicit = true;
 		if (sort === field) {
 			order = order === 'asc' ? 'desc' : 'asc';
 		} else {
@@ -528,7 +538,13 @@
 		const searchParam = params.get('search');
 		if (searchParam) search = searchParam;
 		const sortParam = params.get('sort');
-		if (sortParam) sort = sortParam;
+		if (sortParam) {
+			sort = sortParam;
+			sortExplicit = true;
+		} else if (searchParam) {
+			sort = 'relevance';
+			order = 'desc';
+		}
 		const orderParam = params.get('order');
 		if (orderParam) order = orderParam;
 		const tagsParam = params.get('tags');

@@ -1,7 +1,9 @@
+import { DEFAULT_ORDER, DEFAULT_SORT } from '$lib/constants';
+
 export function load({ url }) {
 	const search = url.searchParams.get('search') || '';
-	const sort = url.searchParams.get('sort') || (import.meta.env.PROD ? 'word' : 'created_at');
-	const order = url.searchParams.get('order') || (import.meta.env.PROD ? 'asc' : 'desc');
+	const sort = url.searchParams.get('sort') || DEFAULT_SORT;
+	const order = url.searchParams.get('order') || DEFAULT_ORDER;
 	const tagsParam = url.searchParams.get('tags') || '';
 
 	let selectedTags: string[];

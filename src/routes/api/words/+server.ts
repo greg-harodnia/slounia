@@ -2,14 +2,14 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { supabase } from '$lib/server/db';
 import { apiError } from '$lib/server/utils';
-import { PAGE_SIZE } from '$lib/constants';
+import { DEFAULT_ORDER, DEFAULT_SORT, PAGE_SIZE } from '$lib/constants';
 import { latToCyr } from '$lib/lacinka';
 
 export const GET: RequestHandler = async ({ url }) => {
 	const raw = url.searchParams.get('search') || '';
 	const search = latToCyr(raw);
-	const sort = url.searchParams.get('sort') || 'word';
-	const order = url.searchParams.get('order') || 'desc';
+	const sort = url.searchParams.get('sort') || DEFAULT_SORT;
+	const order = url.searchParams.get('order') || DEFAULT_ORDER;
 	const tags = url.searchParams.get('tags') || '';
 	const offset = Number(url.searchParams.get('offset') || '0');
 	const limit = Number(url.searchParams.get('limit') || String(PAGE_SIZE));
