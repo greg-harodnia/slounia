@@ -63,7 +63,7 @@
 	{#if loading && !word}
 		<p class="msg">Ладаваньне...</p>
 	{:else if word}
-		<WordDetailContent {word} {onWordLink} />
+		<WordDetailContent {word} {onWordLink} enableViews />
 	{:else}
 		<p class="msg">Слова ня знойдзенае</p>
 	{/if}

@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS words (
 	importance_id INTEGER REFERENCES importance(id),
 	comment TEXT,
 	likes INTEGER DEFAULT 0,
+	views INTEGER DEFAULT 0,
 	hidden BOOLEAN DEFAULT false,
 	created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -214,6 +215,7 @@ BEGIN
 			w.importance_id,
 			w.comment,
 			w.likes,
+			w.views,
 			w.created_at,
 			w.hidden,
 			w.is_pinned,
@@ -289,6 +291,7 @@ BEGIN
 				s.id,
 				s.comment,
 				s.likes,
+				s.views,
 				s.hidden,
 				s.is_pinned,
 				s.created_at,
@@ -329,6 +332,7 @@ BEGIN
 		'id', w.id,
 		'comment', w.comment,
 		'likes', w.likes,
+		'views', w.views,
 		'hidden', w.hidden,
 		'is_pinned', w.is_pinned,
 		'created_at', w.created_at,
@@ -382,7 +386,8 @@ CREATE TABLE IF NOT EXISTS posts (
     published_at TIMESTAMPTZ DEFAULT NOW(),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    likes INTEGER DEFAULT 0
+    likes INTEGER DEFAULT 0,
+    views INTEGER DEFAULT 0
 );
 
 INSERT INTO storage.buckets (id, name, public)
@@ -395,6 +400,8 @@ CREATE INDEX IF NOT EXISTS idx_posts_pinned ON posts(is_pinned DESC);
 
 ALTER TABLE words ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT false;
 ALTER TABLE words ADD COLUMN IF NOT EXISTS pinned_at TIMESTAMPTZ;
+ALTER TABLE words ADD COLUMN IF NOT EXISTS views INTEGER DEFAULT 0;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS views INTEGER DEFAULT 0;
 CREATE INDEX IF NOT EXISTS idx_words_pinned ON words(is_pinned DESC) WHERE is_pinned = true;
 
 CREATE OR REPLACE FUNCTION increment_post_likes(post_slug TEXT)
@@ -414,6 +421,26 @@ DECLARE new_likes INTEGER;
 BEGIN
   UPDATE posts SET likes = GREATEST(likes - 1, 0) WHERE slug = post_slug RETURNING likes INTO new_likes;
   RETURN new_likes;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION increment_word_views(word_id TEXT)
+RETURNS INTEGER
+LANGUAGE plpgsql AS $$
+DECLARE new_views INTEGER;
+BEGIN
+  UPDATE words SET views = views + 1 WHERE id = word_id RETURNING views INTO new_views;
+  RETURN new_views;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION increment_post_views(post_slug TEXT)
+RETURNS INTEGER
+LANGUAGE plpgsql AS $$
+DECLARE new_views INTEGER;
+BEGIN
+  UPDATE posts SET views = views + 1 WHERE slug = post_slug RETURNING views INTO new_views;
+  RETURN new_views;
 END;
 $$;
 

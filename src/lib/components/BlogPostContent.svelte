@@ -2,6 +2,7 @@
 	import { formatDate } from '$lib/constants';
 	import type { Post } from '$lib/types';
 	import BlogLikeButton from '$lib/components/BlogLikeButton.svelte';
+	import ViewCounter from '$lib/components/ViewCounter.svelte';
 
 	let { post }: { post: Post } = $props();
 
@@ -32,7 +33,10 @@
 	</div>
 
 	<footer class="post-footer">
-		<BlogLikeButton slug={post.slug} likes={post.likes} />
+		<ViewCounter kind="post" id={post.slug} count={post.views} post />
+		<span class="post-like">
+			<BlogLikeButton slug={post.slug} likes={post.likes} />
+		</span>
 	</footer>
 </article>
 
@@ -167,6 +171,13 @@
 		padding-top: 1.5rem;
 		border-top: 1px solid var(--c-border);
 		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.post-like {
+		margin-left: auto;
 	}
 
 	@media (max-width: 600px) {

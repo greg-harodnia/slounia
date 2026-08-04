@@ -7,6 +7,7 @@
 	import { likes } from '$lib/stores/likes.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
 	import LikeButton from '$lib/components/LikeButton.svelte';
+	import ViewCounter from '$lib/components/ViewCounter.svelte';
 	import ImportanceBadge from '$lib/components/ImportanceBadge.svelte';
 	import TagList from '$lib/components/TagList.svelte';
 
@@ -14,7 +15,13 @@
 		word,
 		onWordLink,
 		popupChain,
-	}: { word: WordData; onWordLink?: (wordId: string) => void; popupChain?: string[] } = $props();
+		enableViews = false,
+	}: {
+		word: WordData;
+		onWordLink?: (wordId: string) => void;
+		popupChain?: string[];
+		enableViews?: boolean;
+	} = $props();
 
 	onMount(() => likes.load());
 
@@ -37,6 +44,9 @@
 				<span class="hidden-badge">Схаванае</span>
 			{/if}
 		</h1>
+		{#if enableViews}
+			<ViewCounter kind="word" id={word.id} count={word.views} />
+		{/if}
 		<LikeButton liked={!!likes.words[word.id]} count={word.likes} onclick={onToggleWordLike} label="Like word" />
 	</div>
 

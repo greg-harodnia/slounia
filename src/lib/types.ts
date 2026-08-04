@@ -20,6 +20,7 @@ export interface WordData {
 	importance: Importance;
 	comment: string | null;
 	likes: number;
+	views: number;
 	hidden: boolean;
 	is_pinned: boolean;
 	created_at: string | null;
@@ -42,6 +43,7 @@ export interface Post {
 	hashtags: string[];
 	is_pinned: boolean;
 	likes: number;
+	views: number;
 	published_at: string;
 	created_at: string;
 	updated_at: string;

@@ -44,7 +44,7 @@
 		<ToDict />
 	</div>
 	<div class="word-scroll">
-		<WordDetailContent {word} />
+		<WordDetailContent {word} enableViews />
 	</div>
 </div>
 
