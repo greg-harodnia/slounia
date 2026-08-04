@@ -108,10 +108,6 @@
 			margin-bottom: 0.75rem;
 		}
 
-		.breadcrumb-wrap {
-			margin-bottom: 1rem;
-		}
-
 		.posts-list {
 			gap: 0.6rem;
 		}
