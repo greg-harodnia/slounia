@@ -78,7 +78,7 @@
 			<h1 class="page-title">Блёґ</h1>
 
 			<button
-				class="tag-chip"
+				class="tag-chip pill tag-pill"
 				class:active={blogStore.hashtagFilter === 'мовазнаўства'}
 				onclick={() => blogStore.toggleHashtag('мовазнаўства')}
 			>

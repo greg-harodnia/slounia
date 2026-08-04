@@ -5,8 +5,8 @@
 		kind,
 		id,
 		count = 0,
-		post = false,
-	}: { kind: 'word' | 'post'; id: string; count?: number; post?: boolean } = $props();
+		large = false,
+	}: { kind: 'word' | 'post'; id: string; count?: number; large?: boolean } = $props();
 
 	/* svelte-ignore state_referenced_locally */
 	const key = `viewed_${kind}_${id}`;
@@ -54,7 +54,7 @@
 	});
 </script>
 
-<span class="view-counter" class:view-counter--post={post} title="Прагляды">
+<span class="pill" class:pill--lg={large} title="Прагляды">
 	<svg
 		class="view-icon"
 		viewBox="0 0 24 24"
@@ -74,24 +74,7 @@
 </span>
 
 <style>
-	.view-counter {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		border: 1.5px solid var(--c-border);
-		border-radius: 999px;
-		background: var(--c-surface);
-		padding: 0.35rem 0.85rem;
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: var(--c-text-muted);
-		white-space: nowrap;
-	}
-
-	.view-counter--post {
-		gap: 0.35rem;
-		padding: 0.5rem 1rem;
-		border-radius: var(--radius-sm);
+	.pill {
 		color: var(--c-text-muted);
 	}
 

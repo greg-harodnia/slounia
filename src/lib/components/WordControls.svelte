@@ -65,7 +65,7 @@
 	<div class="tags-row" role="group" aria-label="Фільтр водле тэґаў">
 		{#each tags as tag (tag.name)}
 			<button
-				class="tag-chip"
+				class="tag-chip pill tag-pill"
 				class:active={selectedTags.includes(tag.name)}
 				onclick={() => onTagFilter(tag.name)}
 				aria-pressed={selectedTags.includes(tag.name)}

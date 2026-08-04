@@ -118,7 +118,7 @@
 		<div class="tag-grid">
 			{#each allTags as tag (tag.id)}
 				<button
-					class="tag-option"
+					class="pill tag-pill"
 					class:selected={selectedTagIds.includes(tag.id)}
 					onclick={() => toggleTag(tag.id)}
 					type="button"
@@ -182,27 +182,5 @@
 		flex-wrap: wrap;
 		gap: 0.4rem;
 		margin-top: 0.3rem;
-	}
-
-	.tag-option {
-		padding: 0.3rem 0.75rem;
-		border: 1.5px solid var(--c-border);
-		border-radius: 999px;
-		background: var(--c-surface);
-		color: var(--c-tag-text);
-		font-size: 0.8rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.15s;
-		font-family: inherit;
-	}
-	.tag-option:hover {
-		border-color: var(--c-primary);
-		color: var(--c-primary);
-	}
-	.tag-option.selected {
-		background: var(--c-tag-active);
-		border-color: var(--c-tag-active);
-		color: var(--c-tag-active-text);
 	}
 </style>

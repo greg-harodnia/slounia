@@ -670,7 +670,7 @@
 					</div>
 					{#each pinnedWords as word (word.id)}
 						<div class="grid-row grid-row--pinned" role="row">
-							<span class="pinned-badge">
+							<span class="pinned-banner">
 								<svg
 									viewBox="0 0 24 24"
 									width="12"
@@ -1051,7 +1051,7 @@
 		float: right;
 	}
 
-	.col-likes :global(.like-btn) {
+	.col-likes :global(.pill) {
 		margin-top: 0.9rem;
 	}
 
@@ -1298,7 +1298,7 @@
 			justify-self: end;
 		}
 
-		.col-likes :global(.like-btn) {
+		.col-likes :global(.pill) {
 			margin-top: 0;
 		}
 
@@ -1356,7 +1356,7 @@
 		}
 	}
 
-	.grid-row > .pinned-badge {
+	.grid-row > .pinned-banner {
 		grid-column: 1 / -1;
 		display: flex;
 		align-items: center;
@@ -1374,7 +1374,7 @@
 		padding-top: 0.3rem;
 	}
 
-	.grid-row--pinned > .col-likes :global(.like-btn) {
+	.grid-row--pinned > .col-likes :global(.pill) {
 		margin-top: 0.15rem;
 	}
 
@@ -1399,7 +1399,7 @@
 	}
 
 	@media (width <= 640px) {
-		.grid-row > .pinned-badge {
+		.grid-row > .pinned-banner {
 			padding: 0;
 		}
 

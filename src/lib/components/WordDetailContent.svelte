@@ -41,13 +41,9 @@
 				<span class:has-note={word.comment !== null}>{word.id}</span>
 			</Tooltip>
 			{#if word.hidden}
-				<span class="hidden-badge">Схаванае</span>
+				<span class="badge hidden-badge">Схаванае</span>
 			{/if}
 		</h1>
-		{#if enableViews}
-			<ViewCounter kind="word" id={word.id} count={word.views} />
-		{/if}
-		<LikeButton liked={!!likes.words[word.id]} count={word.likes} onclick={onToggleWordLike} label="Like word" />
 	</div>
 
 	<div class="meta-row">
@@ -82,6 +78,20 @@
 			{/if}
 		</div>
 	</div>
+
+	<footer class="word-footer">
+		{#if enableViews}
+			<ViewCounter kind="word" id={word.id} count={word.views} />
+		{/if}
+		<span class="word-like">
+			<LikeButton
+				liked={!!likes.words[word.id]}
+				count={word.likes}
+				onclick={onToggleWordLike}
+				label="Like word"
+			/>
+		</span>
+	</footer>
 </div>
 
 <style>
@@ -130,6 +140,20 @@
 		padding-top: 0.5rem;
 	}
 
+	.word-footer {
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--c-border);
+		flex-shrink: 0;
+		display: flex;
+		align-items: stretch;
+		gap: 0.75rem;
+	}
+
+	.word-like {
+		display: flex;
+		margin-left: auto;
+	}
+
 	.translation-item {
 		display: flex;
 		align-items: center;
@@ -160,6 +184,10 @@
 		.meta-row {
 			margin-bottom: 0.5rem;
 		}
+
+		.word-footer {
+			padding-top: 1rem;
+		}
 	}
 
 	:global(.translation-item:first-child) {
@@ -171,14 +199,6 @@
 	}
 
 	.hidden-badge {
-		font-size: 0.7rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		padding: 0.15rem 0.5rem;
-		border-radius: 999px;
-		background: var(--c-like-light);
-		color: var(--c-like);
 		margin-left: 0.75rem;
 		vertical-align: middle;
 	}

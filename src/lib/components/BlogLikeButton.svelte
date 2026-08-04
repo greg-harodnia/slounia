@@ -57,4 +57,4 @@
 	}
 </script>
 
-<LikeButton liked={!!likedPosts[slug]} count={currentLikes} onclick={toggleLike} label="Like post" post />
+<LikeButton liked={!!likedPosts[slug]} count={currentLikes} onclick={toggleLike} label="Like post" large />

@@ -42,7 +42,7 @@
 	<div class="post-card-header">
 		<time datetime={post.published_at}>{published}</time>
 		{#if post.is_pinned}
-			<span class="pinned-badge">Замацаванае</span>
+			<span class="badge pinned-badge">Замацаванае</span>
 		{/if}
 	</div>
 	<h2 class="post-card-title">{post.title}</h2>
@@ -95,17 +95,6 @@
 		color: var(--c-text-muted);
 	}
 
-	.pinned-badge {
-		font-size: 0.7rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		padding: 0.15rem 0.5rem;
-		border-radius: 4px;
-		background: var(--c-primary-light);
-		color: var(--c-primary);
-	}
-
 	.post-card-title {
 		font-size: 1.15rem;
 		font-weight: 700;
@@ -118,14 +107,6 @@
 		display: flex;
 		gap: 0.35rem;
 		margin-left: auto;
-	}
-
-	.tag {
-		font-size: 0.75rem;
-		padding: 0.15rem 0.5rem;
-		border-radius: 4px;
-		background: var(--c-tag-bg);
-		color: var(--c-tag-text);
 	}
 
 	@media (max-width: 600px) {

@@ -14,7 +14,7 @@
 		<div class="post-meta">
 			<time datetime={post.published_at} class="post-date">{published}</time>
 			{#if post.is_pinned}
-				<span class="pinned-badge">Замацаванае</span>
+				<span class="badge pinned-badge">Замацаванае</span>
 			{/if}
 			{#if post.hashtags.length > 0}
 				<div class="post-tags">
@@ -33,7 +33,7 @@
 	</div>
 
 	<footer class="post-footer">
-		<ViewCounter kind="post" id={post.slug} count={post.views} post />
+		<ViewCounter kind="post" id={post.slug} count={post.views} large />
 		<span class="post-like">
 			<BlogLikeButton slug={post.slug} likes={post.likes} />
 		</span>
@@ -67,17 +67,6 @@
 		color: var(--c-text-muted);
 	}
 
-	.pinned-badge {
-		font-size: 0.7rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		padding: 0.15rem 0.5rem;
-		border-radius: 4px;
-		background: var(--c-primary-light);
-		color: var(--c-primary);
-	}
-
 	.post-title {
 		font-size: 1.75rem;
 		font-weight: 800;
@@ -90,14 +79,6 @@
 		display: flex;
 		gap: 0.35rem;
 		margin-left: auto;
-	}
-
-	.tag {
-		font-size: 0.75rem;
-		padding: 0.15rem 0.5rem;
-		border-radius: 4px;
-		background: var(--c-tag-bg);
-		color: var(--c-tag-text);
 	}
 
 	.post-content {
