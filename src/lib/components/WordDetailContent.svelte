@@ -115,8 +115,10 @@
 	}
 
 	.word-title {
+		line-height: 1;
 		font-size: 1.75rem;
 		font-weight: 700;
+		padding-bottom: 1rem;
 		margin: 0;
 		flex: 1;
 	}
@@ -142,7 +144,6 @@
 
 	.word-footer {
 		padding-top: 1.5rem;
-		border-top: 1px solid var(--c-border);
 		flex-shrink: 0;
 		display: flex;
 		align-items: stretch;
@@ -166,16 +167,13 @@
 		overflow: hidden;
 	}
 
-	.translation-item:last-child {
-		border-bottom: none;
-	}
-
 	@media (max-width: 600px) {
 		.word-card {
 			padding: 1.25rem 1rem;
 		}
 		.word-title {
 			font-size: 1.35rem;
+			padding-bottom: 0.5rem;
 		}
 		.translation-item {
 			gap: 0.5rem;
@@ -192,10 +190,6 @@
 
 	:global(.translation-item:first-child) {
 		padding-top: 0;
-	}
-
-	:global(.translation-item:last-child) {
-		padding-bottom: 0;
 	}
 
 	.hidden-badge {

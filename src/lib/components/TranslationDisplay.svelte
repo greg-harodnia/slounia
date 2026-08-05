@@ -237,6 +237,10 @@
 		padding: 0.5rem 0;
 	}
 
+	.word-popup :global(.word-footer) {
+		padding-top: 1rem;
+	}
+
 	@keyframes popup-in {
 		from {
 			opacity: 0;

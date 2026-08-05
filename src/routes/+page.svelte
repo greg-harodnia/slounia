@@ -1315,10 +1315,6 @@
 		padding-top: 0;
 	}
 
-	:global(.translation-item:last-child) {
-		padding-bottom: 0;
-	}
-
 	.scroll-top {
 		position: fixed;
 		bottom: 1.5rem;
