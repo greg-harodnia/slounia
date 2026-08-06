@@ -249,7 +249,7 @@ mark {
 	color: var(--c-tag-active-text);
 }
 
-.tag-chip {
+.tag-chip--block {
 	display: block;
 	width: fit-content;
 	margin-bottom: 1rem;
@@ -257,10 +257,14 @@ mark {
 }
 
 @media (width <= 640px) {
-	.tag-chip {
+	.tag-chip,
+	.tag-chip--block {
 		padding: 0.25rem 0.6rem;
-		margin-bottom: 0.75rem;
 		font-size: 0.75rem;
+	}
+
+	.tag-chip--block {
+		margin-bottom: 0.75rem;
 	}
 }
 
