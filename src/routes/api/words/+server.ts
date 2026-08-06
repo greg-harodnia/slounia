@@ -1,59 +1,24 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/server/db';
+import { fetchWordsPage } from '$lib/server/fetch-words';
 import { apiError } from '$lib/server/utils';
 import { DEFAULT_ORDER, DEFAULT_SORT, PAGE_SIZE } from '$lib/constants';
-import { latToCyr } from '$lib/lacinka';
 
 export const GET: RequestHandler = async ({ url }) => {
-	const raw = url.searchParams.get('search') || '';
-	const search = latToCyr(raw);
-	const sort = url.searchParams.get('sort') || DEFAULT_SORT;
-	const order = url.searchParams.get('order') || DEFAULT_ORDER;
-	const tags = url.searchParams.get('tags') || '';
-	const offset = Number(url.searchParams.get('offset') || '0');
-	const limit = Number(url.searchParams.get('limit') || String(PAGE_SIZE));
-	const ids = url.searchParams.getAll('ids').filter(Boolean);
-	const includeHidden = url.searchParams.get('include_hidden') === 'true';
-	const includePinned = url.searchParams.get('include_pinned') === 'true';
-
-	let pinnedWords: Array<unknown> = [];
-
-	if (includePinned) {
-		const { data, error } = await supabase.rpc('get_words', {
-			search: '',
-			tag_filter: '',
-			sort_field: 'pinned_at',
-			sort_dir: 'desc',
-			result_offset: 0,
-			result_limit: 100000,
-			word_ids: null,
-			include_hidden: true,
-			pinned_only: true,
+	try {
+		const result = await fetchWordsPage({
+			search: url.searchParams.get('search') || '',
+			sort: url.searchParams.get('sort') || DEFAULT_SORT,
+			order: url.searchParams.get('order') || DEFAULT_ORDER,
+			tags: url.searchParams.get('tags') || '',
+			offset: Number(url.searchParams.get('offset') || '0'),
+			limit: Number(url.searchParams.get('limit') || String(PAGE_SIZE)),
+			ids: url.searchParams.getAll('ids'),
+			includeHidden: url.searchParams.get('include_hidden') === 'true',
+			includePinned: url.searchParams.get('include_pinned') === 'true',
 		});
-
-		if (!error) {
-			const result = data as { words: Array<unknown> };
-			pinnedWords = result.words ?? [];
-		}
+		return json(result);
+	} catch (error) {
+		return apiError(error as { message: string });
 	}
-
-	const { data, error } = await supabase.rpc('get_words', {
-		search,
-		tag_filter: tags,
-		sort_field: sort,
-		sort_dir: order,
-		result_offset: offset,
-		result_limit: limit,
-		word_ids: ids.length > 0 ? ids : null,
-		include_hidden: includeHidden,
-	});
-
-	if (error) {
-		return apiError(error);
-	}
-
-	const result = data as { words: Array<unknown>; total: number };
-
-	return json({ words: result.words ?? [], total: result.total ?? 0, pinnedWords });
 };

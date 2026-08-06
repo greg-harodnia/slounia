@@ -1,31 +1,32 @@
 <script lang="ts">
 	import Modal from './Modal.svelte';
-	import EasterEgg from './EasterEgg.svelte';
+	import { onMount } from 'svelte';
+	import { contact, type ContactMessage } from '$lib/stores/contact.svelte';
 
-	let { userToken = '', devMode = false }: { userToken?: string; devMode?: boolean } = $props();
+	let {
+		userToken = '',
+		devMode = false,
+		open = false,
+		initialView = 'form',
+		onclose,
+	}: {
+		userToken?: string;
+		devMode?: boolean;
+		open?: boolean;
+		initialView?: 'form' | 'my_messages';
+		onclose: () => void;
+	} = $props();
 
 	type View = 'form' | 'my_messages' | 'admin' | 'bans';
 
-	let open = $state(false);
-	let view = $state<View>('form');
+	/* svelte-ignore state_referenced_locally */
+	let view = $state<View>(initialView);
 	let name = $state('');
 	let telegram = $state('');
 	let message = $state('');
 	let submitting = $state(false);
 	let error = $state('');
 	let done = $state(false);
-
-	interface MessageData {
-		id: number;
-		user_token: string | null;
-		name: string | null;
-		telegram: string | null;
-		message: string;
-		reply: string | null;
-		created_at: string;
-		ip_address: string | null;
-		is_read: boolean;
-	}
 
 	interface BanData {
 		id: number;
@@ -37,11 +38,7 @@
 		messages?: { message: string };
 	}
 
-	let myMessages = $state<MessageData[]>([]);
-	let unreadReplies = $state(0);
-	let lastSeenReplyId = $state(0);
-
-	let adminMessages = $state<MessageData[]>([]);
+	let adminMessages = $state<ContactMessage[]>([]);
 	let replyDraft = $state<Record<number, string>>({});
 	let replyLoading = $state<Record<number, boolean>>({});
 
@@ -58,42 +55,10 @@
 		return map;
 	});
 
-	let dismissedPopup = $state(false);
-
-	$effect(() => {
-		if (userToken) fetchMyMessages();
+	onMount(() => {
+		contact.fetchMyMessages(userToken);
+		if (devMode && view !== 'my_messages') fetchAdminMessages();
 	});
-
-	function resetForm() {
-		name = '';
-		telegram = '';
-		message = '';
-		error = '';
-		done = false;
-	}
-
-	async function fetchMyMessages() {
-		if (!userToken) return;
-		lastSeenReplyId = Number(localStorage.getItem('last_seen_reply_id') || '0');
-		try {
-			const res = await fetch(`/api/messages?token=${encodeURIComponent(userToken)}`);
-			if (res.ok) {
-				myMessages = await res.json();
-				unreadReplies = myMessages.filter((m) => m.id > lastSeenReplyId).length;
-			}
-		} catch (e) {
-			console.error(e);
-		}
-	}
-
-	function markRepliesRead() {
-		const maxId = myMessages.reduce((max, m) => Math.max(max, m.id), 0);
-		if (maxId > 0) {
-			localStorage.setItem('last_seen_reply_id', String(maxId));
-			lastSeenReplyId = maxId;
-			unreadReplies = 0;
-		}
-	}
 
 	async function fetchAdminMessages() {
 		try {
@@ -123,7 +88,7 @@
 		return el?.value?.trim() || '';
 	}
 
-	async function handleBan(msg: MessageData) {
+	async function handleBan(msg: ContactMessage) {
 		banLoading = true;
 		banMsg = '';
 		const reason = banReasonValue(msg.id);
@@ -262,26 +227,8 @@
 		}
 	}
 
-	function openModal() {
-		view = 'form';
-		open = true;
-		fetchMyMessages();
-		if (devMode) fetchAdminMessages();
-	}
-
-	function openReplies() {
-		view = 'my_messages';
-		open = true;
-		fetchMyMessages();
-	}
-
 	function close() {
-		open = false;
-		view = 'form';
-		resetForm();
-		adminMessages = [];
-		bannedList = [];
-		banMsg = '';
+		onclose();
 	}
 
 	let modalTitle = $derived(
@@ -296,39 +243,6 @@
 </script>
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && open && close()} />
-
-<div class="contact-links">
-	<button class="contact-link" onclick={openModal}>Напісаць творцу</button>
-	<EasterEgg />
-</div>
-
-{#if !open && unreadReplies > 0 && !dismissedPopup}
-	<div class="reply-popup">
-		<div class="reply-popup-body">
-			<strong>📩 Новы адказ</strong>
-			<p>{myMessages[0]?.reply}</p>
-		</div>
-		<div class="reply-popup-actions">
-			<button
-				class="reply-popup-btn"
-				onclick={() => {
-					markRepliesRead();
-					dismissedPopup = true;
-					openReplies();
-				}}
-			>
-				Паглядзець
-			</button>
-			<button
-				class="reply-popup-close"
-				onclick={() => {
-					markRepliesRead();
-					dismissedPopup = true;
-				}}>×</button
-			>
-		</div>
-	</div>
-{/if}
 
 <Modal title={modalTitle} {open} onclose={close} closeOnOverlay>
 	{#if view === 'bans' && devMode}
@@ -442,7 +356,7 @@
 		</div>
 	{:else if view === 'my_messages'}
 		<div class="admin-msg-list">
-			{#each myMessages as msg (msg.id)}
+			{#each contact.myMessages as msg (msg.id)}
 				<div class="my-msg">
 					<div class="my-msg-text">{msg.message}</div>
 					<div class="my-msg-date">{new Date(msg.created_at).toLocaleDateString()}</div>
@@ -454,23 +368,23 @@
 					{/if}
 				</div>
 			{/each}
-			{#if myMessages.length === 0}
+			{#if contact.myMessages.length === 0}
 				<div class="empty-state">Няма адказаў</div>
 			{/if}
 		</div>
 	{:else if done}
 		<div class="done-msg">Дзякую! Паведаменьне адасланае.</div>
 	{:else}
-		{#if unreadReplies > 0}
+		{#if contact.unreadReplies > 0}
 			<button
 				class="unread-btn"
 				onclick={async () => {
 					view = 'my_messages';
-					await fetchMyMessages();
-					markRepliesRead();
+					await contact.fetchMyMessages(userToken);
+					contact.markRepliesRead();
 				}}
 			>
-				📩 Ёсьць новы адказ ({unreadReplies})
+				📩 Ёсьць новы адказ ({contact.unreadReplies})
 			</button>
 		{/if}
 		{#if error}
@@ -535,102 +449,6 @@
 </Modal>
 
 <style>
-	.contact-links {
-		display: flex;
-		gap: 1rem;
-	}
-
-	.contact-link {
-		background: none;
-		border: none;
-		color: var(--c-text-muted);
-		font-size: inherit;
-		font-family: inherit;
-		cursor: pointer;
-		text-decoration: underline;
-		text-underline-offset: 2px;
-		transition: color 0.15s;
-	}
-	.contact-link:hover {
-		color: var(--c-primary);
-	}
-
-	.reply-popup {
-		position: fixed;
-		bottom: 1.5rem;
-		right: 1.5rem;
-		z-index: 200;
-		background: var(--c-surface);
-		border: 1.5px solid var(--c-primary);
-		border-radius: var(--radius);
-		box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-		width: 320px;
-		max-width: calc(100vw - 2rem);
-		display: flex;
-		flex-direction: column;
-		overflow: hidden;
-		animation: popup-in 0.3s ease-out;
-	}
-	@keyframes popup-in {
-		from {
-			opacity: 0;
-			transform: translateY(1rem);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-	.reply-popup-body {
-		padding: 1rem 1rem 0.5rem;
-	}
-	.reply-popup-body strong {
-		display: block;
-		font-size: 0.85rem;
-		margin-bottom: 0.3rem;
-	}
-	.reply-popup-body p {
-		font-size: 0.9rem;
-		margin: 0;
-		color: var(--c-text);
-		word-wrap: break-word;
-	}
-	.reply-popup-actions {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 0.5rem 1rem 0.75rem;
-		gap: 0.5rem;
-	}
-	.reply-popup-btn {
-		padding: 0.4rem 1rem;
-		border: none;
-		border-radius: var(--radius-sm);
-		background: var(--c-primary);
-		color: #fff;
-		font-size: 0.8rem;
-		font-weight: 600;
-		font-family: inherit;
-		cursor: pointer;
-		transition: opacity 0.15s;
-	}
-	.reply-popup-btn:hover {
-		opacity: 0.85;
-	}
-	.reply-popup-close {
-		background: none;
-		border: none;
-		font-size: 1.3rem;
-		cursor: pointer;
-		color: var(--c-text-muted);
-		padding: 0.1rem 0.3rem;
-		line-height: 1;
-		font-family: inherit;
-	}
-	.reply-popup-close:hover {
-		color: var(--c-text);
-	}
-
 	.done-msg {
 		text-align: center;
 		padding: 2rem 1.5rem;

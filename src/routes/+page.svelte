@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import ContactModal from '$lib/components/ContactModal.svelte';
+	import type ContactModal from '$lib/components/ContactModal.svelte';
+	import ContactTrigger from '$lib/components/ContactTrigger.svelte';
 	import AddEntity from '$lib/components/AddEntity.svelte';
-	import EditWord from '$lib/components/EditWord.svelte';
-	import TranslationForm from '$lib/components/TranslationForm.svelte';
+	import type EditWord from '$lib/components/EditWord.svelte';
+	import type TranslationForm from '$lib/components/TranslationForm.svelte';
 	import TranslationDisplay from '$lib/components/TranslationDisplay.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import Modal from '$lib/components/Modal.svelte';
@@ -23,8 +24,8 @@
 	import { theme } from '$lib/stores/theme.svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { replaceState, pushState } from '$app/navigation';
-	import BlogOverlay from '$lib/components/BlogOverlay.svelte';
-	import WordOverlay from '$lib/components/WordOverlay.svelte';
+	import type BlogOverlay from '$lib/components/BlogOverlay.svelte';
+	import type WordOverlay from '$lib/components/WordOverlay.svelte';
 	import PinButton from '$lib/components/PinButton.svelte';
 	import AppHeader from '$lib/components/AppHeader.svelte';
 	import WordControls from '$lib/components/WordControls.svelte';
@@ -38,19 +39,15 @@
 	let tags = $state<TagData[]>($page.data.tags ?? []);
 	/* svelte-ignore state_referenced_locally */
 	let total = $state(data.total);
-	/* svelte-ignore state_referenced_locally */
-	let search = $state(data.search);
+	let search = $state('');
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-	/* svelte-ignore state_referenced_locally */
-	let sort = $state(data.sort);
-	/* svelte-ignore state_referenced_locally */
-	let order = $state(data.order);
-	/* svelte-ignore state_referenced_locally */
-	let selectedTags = $state<string[]>(data.selectedTags);
+	let sort = $state(DEFAULT_SORT);
+	let order = $state(DEFAULT_ORDER);
+	let selectedTags = $state<string[]>([]);
 	let sortExplicit = $state(false);
-	let loading = $state(true);
 	/* svelte-ignore state_referenced_locally */
-	let triggerIndex = $state(data.triggerIndex);
+	let loading = $state(data.words.length === 0);
+	let triggerIndex = $state(-1);
 
 	let devMode = $state(false);
 	let draggedTransId = $state<number | null>(null);
@@ -70,12 +67,15 @@
 	function restoreOverlayFromURL() {
 		const path = window.location.pathname;
 		if (path === '/blog') {
+			preloadBlogOverlay();
 			overlay = 'blog';
 			overlayProps = null;
 		} else if (path.startsWith('/blog/')) {
+			preloadBlogOverlay();
 			overlay = 'post';
 			overlayProps = { slug: decodeURIComponent(path.slice('/blog/'.length)) };
 		} else if (path.startsWith('/word/')) {
+			preloadWordOverlay();
 			const wordId = decodeURIComponent(path.slice('/word/'.length));
 			overlay = 'word';
 			overlayProps = { wordId, word: getCachedWord(wordId) };
@@ -100,18 +100,91 @@
 	}
 
 	function preloadBlogList() {
+		preloadBlogOverlay();
 		if (blogStore.posts.length === 0) {
 			blogStore.fetchPage(1);
 		}
 	}
 
+	let BlogOverlayCtor = $state<typeof BlogOverlay | undefined>();
+	let WordOverlayCtor = $state<typeof WordOverlay | undefined>();
+	let EditWordCtor = $state<typeof EditWord | undefined>();
+	let TranslationFormCtor = $state<typeof TranslationForm | undefined>();
+	let ContactModalCtor = $state<typeof ContactModal | undefined>();
+	let contactOpen = $state(false);
+	let contactView = $state<'form' | 'my_messages'>('form');
+
+	function preloadContactModal() {
+		if (ContactModalCtor) return;
+		import('$lib/components/ContactModal.svelte')
+			.then((m) => (ContactModalCtor = m.default))
+			.catch((e) => console.error(e));
+	}
+
+	function openContact(view: 'form' | 'my_messages') {
+		preloadContactModal();
+		contactView = view;
+		contactOpen = true;
+	}
+
+	function closeContact() {
+		contactOpen = false;
+	}
+
+	function preloadBlogOverlay() {
+		if (BlogOverlayCtor) return;
+		import('$lib/components/BlogOverlay.svelte')
+			.then((m) => (BlogOverlayCtor = m.default))
+			.catch((e) => console.error(e));
+	}
+
+	function preloadWordOverlay() {
+		if (WordOverlayCtor) return;
+		import('$lib/components/WordOverlay.svelte')
+			.then((m) => (WordOverlayCtor = m.default))
+			.catch((e) => console.error(e));
+	}
+
+	function idlePreload() {
+		const preload = () => {
+			preloadWordOverlay();
+			preloadBlogOverlay();
+			preloadContactModal();
+			if (devMode) {
+				preloadEditWord();
+				preloadTranslationForm();
+			}
+		};
+		if (typeof requestIdleCallback === 'function') {
+			requestIdleCallback(preload, { timeout: 2000 });
+		} else {
+			setTimeout(preload, 0);
+		}
+	}
+
+	function preloadEditWord() {
+		if (EditWordCtor) return;
+		import('$lib/components/EditWord.svelte')
+			.then((m) => (EditWordCtor = m.default))
+			.catch((e) => console.error(e));
+	}
+
+	function preloadTranslationForm() {
+		if (TranslationFormCtor) return;
+		import('$lib/components/TranslationForm.svelte')
+			.then((m) => (TranslationFormCtor = m.default))
+			.catch((e) => console.error(e));
+	}
+
 	function openBlog() {
+		preloadBlogOverlay();
 		overlay = 'blog';
 		overlayProps = null;
 		pushState('/blog', { overlay: 'blog' });
 	}
 
 	function openWord(wordId: string, wordData?: WordData) {
+		preloadWordOverlay();
 		if (wordData) setCachedWord(wordId, wordData);
 		overlay = 'word';
 		overlayProps = { wordId, word: wordData ?? getCachedWord(wordId) };
@@ -119,6 +192,7 @@
 	}
 
 	function openBlogPost(slug: string) {
+		preloadBlogOverlay();
 		overlay = 'post';
 		overlayProps = { slug };
 		pushState(`/blog/${slug}`, { overlay: 'post', slug });
@@ -153,8 +227,19 @@
 
 	function toggleDevMode() {
 		devMode = !devMode;
+		if (devMode) {
+			preloadEditWord();
+			preloadTranslationForm();
+		}
 		localStorage.setItem('dev_mode', String(devMode));
 	}
+
+	$effect(() => {
+		if (devMode) {
+			preloadEditWord();
+			preloadTranslationForm();
+		}
+	});
 
 	function toggleComments() {
 		showComments = !showComments;
@@ -230,6 +315,19 @@
 		return res.ok ? await res.json() : null;
 	}
 
+	function applyFetchResult(data: { words: WordData[]; total: number; pinnedWords?: WordData[] }) {
+		words = data.words;
+		total = data.total;
+		pinnedWords = data.pinnedWords ?? [];
+		loading = false;
+		if (words.length < total) {
+			triggerIndex = -1;
+			prefetchNext();
+		} else {
+			updateTrigger();
+		}
+	}
+
 	async function fetchWords() {
 		try {
 			const data = await fetchPage(0);
@@ -237,25 +335,15 @@
 				console.error('API error');
 				words = [];
 				total = 0;
+				loading = false;
 				return;
 			}
-			words = data.words;
-			total = data.total;
-			pinnedWords = data.pinnedWords ?? [];
+			applyFetchResult(data);
 		} catch (e) {
 			console.error(e);
 			words = [];
 			total = 0;
-			return;
-		} finally {
 			loading = false;
-		}
-
-		if (words.length < total) {
-			triggerIndex = -1;
-			prefetchNext();
-		} else {
-			updateTrigger();
 		}
 	}
 
@@ -554,13 +642,19 @@
 			selectedTags = tags.map((t) => t.name);
 		}
 
-		loading = true;
-		words = [];
-		total = 0;
-		fetchWords();
+		if (data.words && data.words.length > 0) {
+			applyFetchResult({ words: data.words, total: data.total, pinnedWords: data.pinnedWords ?? [] });
+			if (devMode) fetchWords();
+		} else {
+			loading = true;
+			words = [];
+			total = 0;
+			fetchWords();
+		}
 
 		if (!localStorage.getItem('welcome_dismissed')) showWelcome = true;
 		restoreOverlayFromURL();
+		idlePreload();
 		window.addEventListener('popstate', handlePopstate);
 		return () => {
 			window.removeEventListener('popstate', handlePopstate);
@@ -827,7 +921,9 @@
 										{/if}
 									</svg>
 								</button>
-								<EditWord {word} onWordEdited={() => fetchWords()} />
+								{#if EditWordCtor}
+									<EditWordCtor {word} onWordEdited={() => fetchWords()} />
+								{/if}
 								{#if devMode}
 									<PinButton pinned={word.is_pinned} onclick={() => togglePin(word)} />
 								{/if}
@@ -886,7 +982,9 @@
 										/>
 									{/if}
 									{#if devMode}
-										<TranslationForm translation={tr} onDone={() => fetchWords()} />
+										{#if TranslationFormCtor}
+											<TranslationFormCtor translation={tr} onDone={() => fetchWords()} />
+										{/if}
 										<button
 											class="delete-btn-sm"
 											onclick={() => deleteTranslation(tr.id)}
@@ -899,7 +997,9 @@
 								<span class="muted">Не перакладзена</span>
 							{/if}
 							{#if devMode}
-								<TranslationForm wordId={word.id} onDone={() => fetchWords()} />
+								{#if TranslationFormCtor}
+									<TranslationFormCtor wordId={word.id} onDone={() => fetchWords()} />
+								{/if}
 							{/if}
 						</div>
 						<div class="col-likes" role="cell">
@@ -917,7 +1017,7 @@
 				{#if prefetching}
 					<div class="footer-loading">Ладаваньне...</div>
 				{:else}
-					<ContactModal userToken={likes.userToken} {devMode} />
+					<ContactTrigger userToken={likes.userToken} open={contactOpen} onOpen={openContact} />
 				{/if}
 			</div>
 		{/if}
@@ -977,22 +1077,46 @@
 	</p>
 </Modal>
 
-{#if overlay === 'blog' || overlay === 'post'}
-	<BlogOverlay
-		onOpenPost={openBlogPost}
-		initialSlug={overlayProps?.slug}
-		onclose={closeOverlay}
-		onBackToBlog={backToBlog}
+{#if contactOpen && ContactModalCtor}
+	<ContactModalCtor
+		userToken={likes.userToken}
+		{devMode}
+		open={contactOpen}
+		initialView={contactView}
+		onclose={closeContact}
 	/>
 {/if}
 
+{#if overlay === 'blog' || overlay === 'post'}
+	{#if BlogOverlayCtor}
+		<BlogOverlayCtor
+			onOpenPost={openBlogPost}
+			initialSlug={overlayProps?.slug}
+			onclose={closeOverlay}
+			onBackToBlog={backToBlog}
+		/>
+	{:else}
+		<div class="overlay-loading">
+			<div class="overlay-loading-spinner" aria-hidden="true"></div>
+			<span>Ладаваньне...</span>
+		</div>
+	{/if}
+{/if}
+
 {#if overlay === 'word'}
-	<WordOverlay
-		initialWordId={overlayProps?.wordId}
-		initialWord={overlayProps?.word}
-		onWordLink={openWord}
-		onclose={closeOverlay}
-	/>
+	{#if WordOverlayCtor}
+		<WordOverlayCtor
+			initialWordId={overlayProps?.wordId}
+			initialWord={overlayProps?.word}
+			onWordLink={openWord}
+			onclose={closeOverlay}
+		/>
+	{:else}
+		<div class="overlay-loading">
+			<div class="overlay-loading-spinner" aria-hidden="true"></div>
+			<span>Ладаваньне...</span>
+		</div>
+	{/if}
 {/if}
 
 <style>
@@ -1392,6 +1516,35 @@
 		line-height: 1.4;
 		pointer-events: none;
 		z-index: 1;
+	}
+
+	.overlay-loading {
+		position: fixed;
+		inset: 0;
+		z-index: 200;
+		background: var(--c-bg);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		color: var(--c-text-muted);
+		font-size: 0.9rem;
+	}
+
+	.overlay-loading-spinner {
+		width: 2rem;
+		height: 2rem;
+		border: 2px solid var(--c-border);
+		border-top-color: var(--c-primary);
+		border-radius: 50%;
+		animation: overlay-spin 0.8s linear infinite;
+	}
+
+	@keyframes overlay-spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	@media (width <= 640px) {
