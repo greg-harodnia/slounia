@@ -4,6 +4,10 @@ import { getServiceClient } from '$lib/server/db';
 import { apiError } from '$lib/server/utils';
 
 export const POST: RequestHandler = async ({ request }) => {
+	if (!import.meta.env.PROD) {
+		return json({ views: null });
+	}
+
 	const body = await request.json().catch(() => null);
 	if (!body || (body.kind !== 'word' && body.kind !== 'post') || typeof body.id !== 'string' || !body.id) {
 		return json({ error: 'Invalid request' }, { status: 400 });
