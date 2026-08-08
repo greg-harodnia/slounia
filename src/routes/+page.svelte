@@ -1,11 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import type ContactModal from '$lib/components/ContactModal.svelte';
 	import ContactTrigger from '$lib/components/ContactTrigger.svelte';
 	import AddEntity from '$lib/components/AddEntity.svelte';
-	import type EditWord from '$lib/components/EditWord.svelte';
-	import type TranslationForm from '$lib/components/TranslationForm.svelte';
+	import {
+		overlays,
+		preloadWordOverlay,
+		preloadBlogOverlay,
+		preloadContactModal,
+		preloadEditWord,
+		preloadTranslationForm,
+	} from '$lib/preload.svelte';
 	import TranslationDisplay from '$lib/components/TranslationDisplay.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import Modal from '$lib/components/Modal.svelte';
@@ -24,8 +29,6 @@
 	import { theme } from '$lib/stores/theme.svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { replaceState, pushState } from '$app/navigation';
-	import type BlogOverlay from '$lib/components/BlogOverlay.svelte';
-	import type WordOverlay from '$lib/components/WordOverlay.svelte';
 	import PinButton from '$lib/components/PinButton.svelte';
 	import AppHeader from '$lib/components/AppHeader.svelte';
 	import WordControls from '$lib/components/WordControls.svelte';
@@ -106,20 +109,8 @@
 		}
 	}
 
-	let BlogOverlayCtor = $state<typeof BlogOverlay | undefined>();
-	let WordOverlayCtor = $state<typeof WordOverlay | undefined>();
-	let EditWordCtor = $state<typeof EditWord | undefined>();
-	let TranslationFormCtor = $state<typeof TranslationForm | undefined>();
-	let ContactModalCtor = $state<typeof ContactModal | undefined>();
 	let contactOpen = $state(false);
 	let contactView = $state<'form' | 'my_messages'>('form');
-
-	function preloadContactModal() {
-		if (ContactModalCtor) return;
-		import('$lib/components/ContactModal.svelte')
-			.then((m) => (ContactModalCtor = m.default))
-			.catch((e) => console.error(e));
-	}
 
 	function openContact(view: 'form' | 'my_messages') {
 		preloadContactModal();
@@ -131,49 +122,14 @@
 		contactOpen = false;
 	}
 
-	function preloadBlogOverlay() {
-		if (BlogOverlayCtor) return;
-		import('$lib/components/BlogOverlay.svelte')
-			.then((m) => (BlogOverlayCtor = m.default))
-			.catch((e) => console.error(e));
-	}
-
-	function preloadWordOverlay() {
-		if (WordOverlayCtor) return;
-		import('$lib/components/WordOverlay.svelte')
-			.then((m) => (WordOverlayCtor = m.default))
-			.catch((e) => console.error(e));
-	}
-
-	function idlePreload() {
-		const preload = () => {
-			preloadWordOverlay();
-			preloadBlogOverlay();
-			preloadContactModal();
-			if (devMode) {
-				preloadEditWord();
-				preloadTranslationForm();
-			}
-		};
-		if (typeof requestIdleCallback === 'function') {
-			requestIdleCallback(preload, { timeout: 2000 });
-		} else {
-			setTimeout(preload, 0);
+	function preloadOverlays() {
+		preloadWordOverlay();
+		preloadBlogOverlay();
+		preloadContactModal();
+		if (devMode) {
+			preloadEditWord();
+			preloadTranslationForm();
 		}
-	}
-
-	function preloadEditWord() {
-		if (EditWordCtor) return;
-		import('$lib/components/EditWord.svelte')
-			.then((m) => (EditWordCtor = m.default))
-			.catch((e) => console.error(e));
-	}
-
-	function preloadTranslationForm() {
-		if (TranslationFormCtor) return;
-		import('$lib/components/TranslationForm.svelte')
-			.then((m) => (TranslationFormCtor = m.default))
-			.catch((e) => console.error(e));
 	}
 
 	function openBlog() {
@@ -664,7 +620,7 @@
 
 		if (!localStorage.getItem('welcome_dismissed')) showWelcome = true;
 		restoreOverlayFromURL();
-		idlePreload();
+		preloadOverlays();
 		window.addEventListener('popstate', handlePopstate);
 		return () => {
 			window.removeEventListener('popstate', handlePopstate);
@@ -931,8 +887,9 @@
 										{/if}
 									</svg>
 								</button>
-								{#if EditWordCtor}
-									<EditWordCtor {word} onWordEdited={() => fetchWords()} />
+								{#if overlays.editWord}
+									{@const EditWordC = overlays.editWord}
+									<EditWordC {word} onWordEdited={() => fetchWords()} />
 								{/if}
 								{#if devMode}
 									<PinButton pinned={word.is_pinned} onclick={() => togglePin(word)} />
@@ -992,8 +949,9 @@
 										/>
 									{/if}
 									{#if devMode}
-										{#if TranslationFormCtor}
-											<TranslationFormCtor translation={tr} onDone={() => fetchWords()} />
+										{#if overlays.translationForm}
+											{@const TranslationFormC = overlays.translationForm}
+											<TranslationFormC translation={tr} onDone={() => fetchWords()} />
 										{/if}
 										<button
 											class="delete-btn-sm"
@@ -1007,8 +965,9 @@
 								<span class="muted">Не перакладзена</span>
 							{/if}
 							{#if devMode}
-								{#if TranslationFormCtor}
-									<TranslationFormCtor wordId={word.id} onDone={() => fetchWords()} />
+								{#if overlays.translationForm}
+									{@const TranslationFormC = overlays.translationForm}
+									<TranslationFormC wordId={word.id} onDone={() => fetchWords()} />
 								{/if}
 							{/if}
 						</div>
@@ -1087,8 +1046,9 @@
 	</p>
 </Modal>
 
-{#if contactOpen && ContactModalCtor}
-	<ContactModalCtor
+{#if contactOpen && overlays.contact}
+	{@const ContactModalC = overlays.contact}
+	<ContactModalC
 		userToken={likes.userToken}
 		{devMode}
 		open={contactOpen}
@@ -1098,8 +1058,9 @@
 {/if}
 
 {#if overlay === 'blog' || overlay === 'post'}
-	{#if BlogOverlayCtor}
-		<BlogOverlayCtor
+	{#if overlays.blog}
+		{@const BlogOverlayC = overlays.blog}
+		<BlogOverlayC
 			onOpenPost={openBlogPost}
 			initialSlug={overlayProps?.slug}
 			onclose={closeOverlay}
@@ -1114,8 +1075,9 @@
 {/if}
 
 {#if overlay === 'word'}
-	{#if WordOverlayCtor}
-		<WordOverlayCtor
+	{#if overlays.word}
+		{@const WordOverlayC = overlays.word}
+		<WordOverlayC
 			initialWordId={overlayProps?.wordId}
 			initialWord={overlayProps?.word}
 			onWordLink={openWord}

@@ -8,6 +8,7 @@
 	import type { WordData } from '$lib/types';
 	import { parseCrossref } from '$lib/types';
 	import { computePopupPosition } from '$lib/popup-position';
+	import { preloadWordOverlay } from '$lib/preload.svelte';
 
 	let {
 		translation,
@@ -80,6 +81,7 @@
 		const token = ++popupToken;
 		if (!getCachedWord(crossRef.target)) loadingFetch = true;
 		fetchWord(crossRef.target);
+		if (onWordLink) preloadWordOverlay();
 
 		popupTimer = setTimeout(async () => {
 			await fetchWord(crossRef.target);
