@@ -315,10 +315,19 @@
 		return res.ok ? await res.json() : null;
 	}
 
+	// Populate the fetch-word cache from lists already loaded so crossref
+	// hover popups for words visible on the page resolve instantly instead of
+	// hitting /api/words/[id] again.
+	function cacheWordList(list: WordData[]) {
+		for (const word of list) setCachedWord(word.id, word);
+	}
+
 	function applyFetchResult(data: { words: WordData[]; total: number; pinnedWords?: WordData[] }) {
 		words = data.words;
 		total = data.total;
 		pinnedWords = data.pinnedWords ?? [];
+		cacheWordList(words);
+		cacheWordList(pinnedWords);
 		loading = false;
 		if (words.length < total) {
 			triggerIndex = -1;
@@ -357,6 +366,7 @@
 		try {
 			const data = await fetchPage(offset);
 			if (data && data.words.length > 0 && words.length === offset) {
+				cacheWordList(data.words);
 				words = [...words, ...data.words];
 			}
 		} catch (e) {
