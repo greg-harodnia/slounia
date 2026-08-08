@@ -1,6 +1,5 @@
 <script lang="ts">
 	import EasterEgg from './EasterEgg.svelte';
-	import { onMount } from 'svelte';
 	import { contact } from '$lib/stores/contact.svelte';
 
 	let {
@@ -13,7 +12,9 @@
 		onOpen: (view: 'form' | 'my_messages') => void;
 	} = $props();
 
-	onMount(() => {
+	// Reactive instead of onMount: userToken is set asynchronously (likes.load()
+	// runs after this component mounts), so a plain onMount would fire with ''.
+	$effect(() => {
 		if (userToken) contact.fetchMyMessages(userToken);
 	});
 </script>
