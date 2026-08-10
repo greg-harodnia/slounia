@@ -12,7 +12,7 @@
 		onOpen: (view: 'form' | 'my_messages') => void;
 	} = $props();
 
-	// Reactive instead of onMount: userToken is set asynchronously (likes.load()
+	// Reactive instead of onMount: userToken is set asynchronously (userStore.load()
 	// runs after this component mounts), so a plain onMount would fire with ''.
 	$effect(() => {
 		if (userToken) contact.fetchMyMessages(userToken);

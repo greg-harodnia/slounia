@@ -8,6 +8,7 @@
 	import PwaPrompt from '$lib/components/PwaPrompt.svelte';
 	import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from '$lib/constants';
 	import { PUBLIC_SUPABASE_URL } from '$env/static/public';
+	import { userStore } from '$lib/stores/userStore.svelte';
 	import { onMount } from 'svelte';
 
 	injectSpeedInsights();
@@ -69,6 +70,7 @@
 		if (token) {
 			setTokenCookie(token);
 		}
+		userStore.load();
 	});
 </script>
 

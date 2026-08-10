@@ -24,7 +24,7 @@
 	import { latToCyr } from '$lib/lacinka';
 	import { getCachedWord, setCachedWord } from '$lib/fetch-word';
 	import { blogStore } from '$lib/stores/blogStore.svelte';
-	import { likes } from '$lib/stores/likes.svelte';
+	import { userStore } from '$lib/stores/userStore.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
 	import { theme } from '$lib/stores/theme.svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
@@ -246,7 +246,7 @@
 		if (order) params.set('order', order);
 		if (selectedTags.length > 0) params.set('tags', selectedTags.join(','));
 		if (showFavorites) {
-			const ids = Object.keys(likes.words).filter((id) => likes.words[id]);
+			const ids = Object.keys(userStore.words).filter((id) => userStore.words[id]);
 			if (ids.length === 0) {
 				return { words: [], total: 0 };
 			}
@@ -432,7 +432,7 @@
 
 	function onToggleWordLike(wordId: string) {
 		const word = words.find((w) => w.id === wordId) ?? pinnedWords.find((w) => w.id === wordId);
-		if (word) likes.toggleWord(wordId, word);
+		if (word) userStore.toggleWordLike(wordId, word.likes);
 	}
 
 	async function deleteWord(wordId: string) {
@@ -520,7 +520,7 @@
 		for (const word of [...pinnedWords, ...words]) {
 			const tr = word.translations.find((t) => t.id === translationId);
 			if (tr) {
-				likes.toggleTranslation(translationId, tr);
+				userStore.toggleTranslationLike(translationId, tr.likes);
 				break;
 			}
 		}
@@ -582,7 +582,6 @@
 
 	onMount(() => {
 		loadSettings();
-		likes.load();
 		theme.listen();
 
 		const params = new SvelteURLSearchParams(window.location.search);
@@ -794,8 +793,8 @@
 										/>
 										{#if !parseCrossref(tr.translation)}
 											<LikeButton
-												liked={!!likes.translations[tr.id]}
-												count={tr.likes}
+												liked={!!userStore.translations[tr.id]}
+												count={userStore.getTranslationLikeCount(tr.id, tr.likes)}
 												onclick={() => onToggleTranslationLike(tr.id)}
 												label="Like translation"
 												small
@@ -809,8 +808,8 @@
 							</div>
 							<div class="col-likes" role="cell">
 								<LikeButton
-									liked={!!likes.words[word.id]}
-									count={word.likes}
+									liked={!!userStore.words[word.id]}
+									count={userStore.getWordLikeCount(word.id, word.likes)}
 									onclick={() => onToggleWordLike(word.id)}
 									label="Like word"
 								/>
@@ -941,8 +940,8 @@
 									/>
 									{#if !parseCrossref(tr.translation)}
 										<LikeButton
-											liked={!!likes.translations[tr.id]}
-											count={tr.likes}
+											liked={!!userStore.translations[tr.id]}
+											count={userStore.getTranslationLikeCount(tr.id, tr.likes)}
 											onclick={() => onToggleTranslationLike(tr.id)}
 											label="Like translation"
 											small
@@ -973,8 +972,8 @@
 						</div>
 						<div class="col-likes" role="cell">
 							<LikeButton
-								liked={!!likes.words[word.id]}
-								count={word.likes}
+								liked={!!userStore.words[word.id]}
+								count={userStore.getWordLikeCount(word.id, word.likes)}
 								onclick={() => onToggleWordLike(word.id)}
 								label="Like word"
 							/>
@@ -986,7 +985,7 @@
 				{#if prefetching}
 					<div class="footer-loading">Ладаваньне...</div>
 				{:else}
-					<ContactTrigger userToken={likes.userToken} open={contactOpen} onOpen={openContact} />
+					<ContactTrigger userToken={userStore.userToken} open={contactOpen} onOpen={openContact} />
 				{/if}
 			</div>
 		{/if}
@@ -1049,7 +1048,7 @@
 {#if contactOpen && overlays.contact}
 	{@const ContactModalC = overlays.contact}
 	<ContactModalC
-		userToken={likes.userToken}
+		userToken={userStore.userToken}
 		{devMode}
 		open={contactOpen}
 		initialView={contactView}

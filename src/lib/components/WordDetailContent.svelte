@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import TranslationDisplay from '$lib/components/TranslationDisplay.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import type { WordData } from '$lib/types';
 	import { parseCrossref } from '$lib/types';
-	import { likes } from '$lib/stores/likes.svelte';
+	import { userStore } from '$lib/stores/userStore.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
 	import LikeButton from '$lib/components/LikeButton.svelte';
 	import ViewCounter from '$lib/components/ViewCounter.svelte';
@@ -23,14 +22,12 @@
 		enableViews?: boolean;
 	} = $props();
 
-	onMount(() => likes.load());
-
 	function onToggleWordLike() {
-		likes.toggleWord(word.id, word);
+		userStore.toggleWordLike(word.id, word.likes);
 	}
 
 	function onToggleTranslationLike(trId: number, tr: { likes: number }) {
-		likes.toggleTranslation(trId, tr);
+		userStore.toggleTranslationLike(trId, tr.likes);
 	}
 </script>
 
@@ -64,8 +61,8 @@
 					/>
 					{#if !parseCrossref(tr.translation)}
 						<LikeButton
-							liked={!!likes.translations[tr.id]}
-							count={tr.likes}
+							liked={!!userStore.translations[tr.id]}
+							count={userStore.getTranslationLikeCount(tr.id, tr.likes)}
 							onclick={() => onToggleTranslationLike(tr.id, tr)}
 							label="Like translation"
 							small
@@ -85,8 +82,8 @@
 		{/if}
 		<span class="word-like">
 			<LikeButton
-				liked={!!likes.words[word.id]}
-				count={word.likes}
+				liked={!!userStore.words[word.id]}
+				count={userStore.getWordLikeCount(word.id, word.likes)}
 				onclick={onToggleWordLike}
 				label="Like word"
 			/>

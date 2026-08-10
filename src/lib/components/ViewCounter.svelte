@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { userStore } from '$lib/stores/userStore.svelte';
 
 	let {
 		kind,
@@ -8,23 +9,6 @@
 		large = false,
 	}: { kind: 'word' | 'post'; id: string; count?: number; large?: boolean } = $props();
 
-	/* svelte-ignore state_referenced_locally */
-	const key = `viewed_${kind}_${id}`;
-
-	function readStored(): number | null {
-		try {
-			const v = sessionStorage.getItem(key);
-			if (v == null) return null;
-			const n = parseInt(v, 10);
-			return Number.isFinite(n) ? n : null;
-		} catch {
-			return null;
-		}
-	}
-
-	/* svelte-ignore state_referenced_locally */
-	let current = $state(Math.max(count ?? 0, readStored() ?? 0));
-
 	function formatViews(n: number): string {
 		if (n < 1000) return String(n);
 		if (n < 10000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
@@ -32,25 +16,7 @@
 	}
 
 	onMount(() => {
-		if (readStored() != null) return;
-
-		fetch('/api/views', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ kind, id }),
-		})
-			.then((r) => (r.ok ? r.json() : null))
-			.then((data) => {
-				if (data?.views != null) {
-					current = data.views;
-					try {
-						sessionStorage.setItem(key, String(data.views));
-					} catch {
-						// sessionStorage unavailable
-					}
-				}
-			})
-			.catch(() => {});
+		userStore.incrementView(kind, id, count);
 	});
 </script>
 
@@ -70,7 +36,7 @@
 		<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
 		<circle cx="12" cy="12" r="3" />
 	</svg>
-	<span class="view-count">{formatViews(current)}</span>
+	<span class="view-count">{formatViews(userStore.getViewCount(kind, id, count))}</span>
 </span>
 
 <style>
