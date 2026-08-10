@@ -96,11 +96,10 @@
 [data-theme='national'] body {
 	background:
 		linear-gradient(rgba(240, 235, 227, 0.88), rgba(240, 235, 227, 0.88)),
-		url('/bg-national.jpeg') center/cover fixed;
+		url('/bg-national.jpeg') center/cover;
 	background:
 		linear-gradient(rgba(240, 235, 227, 0.88), rgba(240, 235, 227, 0.88)),
-		image-set(url('/bg-national.webp') type('image/webp'), url('/bg-national.jpeg') type('image/jpeg')) center/cover
-			fixed;
+		image-set(url('/bg-national.webp') type('image/webp'), url('/bg-national.jpeg') type('image/jpeg')) center/cover;
 }
 
 * {
