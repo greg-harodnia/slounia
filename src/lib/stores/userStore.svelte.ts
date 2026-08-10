@@ -142,9 +142,12 @@ class UserStore {
 		return this.views[this.#viewKey(kind, id)] ?? fallback;
 	}
 
-	// Unlike likes, a view is one-directional (never undone) and counted once
-	// per session with no persistence, so it keeps its own implementation.
+	// Views are a prod-only metric: the API ignores them in dev (returns
+	// views: null), so skip the optimistic bump and fetch entirely there
+	// instead of showing a counter that climbs on every reload.
 	async incrementView(kind: 'word' | 'post', id: string, fallback: number) {
+		if (!import.meta.env.PROD) return;
+
 		const key = this.#viewKey(kind, id);
 		if (this.#viewed.has(key)) return;
 		this.#viewed.add(key);
@@ -160,7 +163,7 @@ class UserStore {
 			});
 			if (!res.ok) throw new Error('Server error');
 			const data = await res.json();
-			if (data?.views != null) this.views[key] = data.views;
+			this.views[key] = data.views;
 		} catch (e) {
 			this.views[key] = prev ?? fallback;
 			this.#viewed.delete(key);
