@@ -273,6 +273,8 @@
 	.blog-btn {
 		text-decoration: none;
 		gap: 0.35rem;
+		border-color: var(--c-primary);
+		/* color: var(--c-primary); */
 	}
 
 	@media (hover: hover) {
