@@ -50,6 +50,7 @@
 	let sortExplicit = $state(false);
 	/* svelte-ignore state_referenced_locally */
 	let loading = $state(data.words.length === 0);
+	let listError = $state(false);
 	let triggerIndex = $state(-1);
 
 	let devMode = $state(false);
@@ -172,7 +173,7 @@
 
 	function loadSettings() {
 		try {
-			devMode = localStorage.getItem('dev_mode') === 'true';
+			devMode = !import.meta.env.PROD && localStorage.getItem('dev_mode') === 'true';
 			showComments = localStorage.getItem('show_comments') !== 'false';
 			theme.load();
 			settings.load();
@@ -285,6 +286,7 @@
 		cacheWordList(words);
 		cacheWordList(pinnedWords);
 		loading = false;
+		listError = false;
 		if (words.length < total) {
 			triggerIndex = -1;
 			prefetchNext();
@@ -301,6 +303,7 @@
 				words = [];
 				total = 0;
 				loading = false;
+				listError = true;
 				return;
 			}
 			applyFetchResult(data);
@@ -309,6 +312,7 @@
 			words = [];
 			total = 0;
 			loading = false;
+			listError = true;
 		}
 	}
 
@@ -376,6 +380,7 @@
 		loading = true;
 		words = [];
 		total = 0;
+		listError = false;
 		if (search && !sortExplicit && sort === DEFAULT_SORT) {
 			sort = 'relevance';
 			order = 'desc';
@@ -398,6 +403,7 @@
 		words = [];
 		total = 0;
 		loading = true;
+		listError = false;
 		fetchWords();
 		syncUrlParams();
 	}
@@ -717,6 +723,11 @@
 	<div class="table-wrap">
 		{#if loading && words.length === 0}
 			<div class="loading">Ладаваньне...</div>
+		{:else if listError}
+			<div class="loading">
+				<p>Не ўдалося заладаваць словы. Спраўдзьце падлучэньне да інтэрнэту.</p>
+				<button class="pill retry-btn" onclick={doSearch}>Паспрабаваць ізноў</button>
+			</div>
 		{:else if !loading && words.length === 0}
 			<div class="empty">{showFavorites ? 'Няма ўпадабаньняў' : 'Словы ня знойдзеныя'}</div>
 		{:else}
@@ -981,12 +992,12 @@
 					</div>
 				{/each}
 			</div>
+		{/if}
+		{#if prefetching}
+			<div class="footer-loading">Ладаваньне...</div>
+		{:else if search && !loading && !listError}
 			<div class="table-footer">
-				{#if prefetching}
-					<div class="footer-loading">Ладаваньне...</div>
-				{:else}
-					<ContactTrigger userToken={userStore.userToken} open={contactOpen} onOpen={openContact} />
-				{/if}
+				<ContactTrigger userToken={userStore.userToken} open={contactOpen} onOpen={openContact} />
 			</div>
 		{/if}
 	</div>
@@ -1324,7 +1335,8 @@
 
 	.footer-loading {
 		text-align: center;
-		padding: 0.25rem 0;
+		padding: 0.75rem 1rem;
+		color: var(--c-text-muted);
 	}
 
 	.loading,
@@ -1333,6 +1345,10 @@
 		text-align: center;
 		color: var(--c-text-muted);
 		font-size: 0.95rem;
+	}
+
+	.retry-btn {
+		margin-top: 0.75rem;
 	}
 
 	@media (width <= 1024px) {

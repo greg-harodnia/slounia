@@ -7,6 +7,7 @@ class BlogStore {
 	posts = $state<Post[]>([]);
 	total = $state(0);
 	loading = $state(false);
+	error = $state(false);
 	currentPage = $state(1);
 	hashtagFilter = $state<string | null>(null);
 
@@ -14,6 +15,7 @@ class BlogStore {
 
 	async fetchPage(page: number) {
 		this.loading = true;
+		this.error = false;
 		const offset = (page - 1) * PAGE_SIZE;
 		const params = new SvelteURLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) });
 		if (this.hashtagFilter) params.set('hashtag', this.hashtagFilter);
@@ -24,7 +26,11 @@ class BlogStore {
 				this.posts = json.posts;
 				this.total = json.total;
 				this.currentPage = page;
+			} else {
+				this.error = true;
 			}
+		} catch {
+			this.error = true;
 		} finally {
 			this.loading = false;
 		}

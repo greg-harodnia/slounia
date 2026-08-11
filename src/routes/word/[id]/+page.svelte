@@ -27,6 +27,9 @@
 </script>
 
 <svelte:head>
+	{#if word.hidden}
+		<meta name="robots" content="noindex" />
+	{/if}
 	<title>{word.id} — {SITE_NAME}</title>
 	<meta name="description" content="{word.id} — {word.translations.map((t) => t.translation).join(', ')}" />
 	<meta property="og:title" content="{word.id} — {SITE_NAME}" />

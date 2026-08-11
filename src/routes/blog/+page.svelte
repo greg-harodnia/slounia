@@ -63,6 +63,15 @@
 
 	{#if blogStore.loading}
 		<p class="empty">Ладаваньне...</p>
+	{:else if blogStore.error}
+		<div class="empty">
+			<div>
+				<p>Не ўдалося заладаваць блёґ.</p>
+				<button class="pill" onclick={() => blogStore.fetchPage(blogStore.currentPage)}>
+					Паспрабаваць ізноў
+				</button>
+			</div>
+		</div>
 	{:else if blogStore.posts.length === 0}
 		<p class="empty">Пакуль няма допісаў.</p>
 	{:else}
@@ -90,6 +99,10 @@
 		place-items: center;
 		color: var(--c-text-muted);
 		font-size: 1rem;
+	}
+
+	.empty button {
+		margin-top: 0.75rem;
 	}
 
 	.dev-bar {

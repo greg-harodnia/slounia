@@ -17,6 +17,7 @@
 	let word = $state<WordData | null>(initialWord ?? null);
 	let loading = $state(false);
 	let fetchingId = $state<string | null>(null);
+	let error = $state(false);
 
 	let breadcrumbs = $derived.by(() => {
 		const entries: Crumb[] = [{ label: 'Галоўная', onclick: onclose }];
@@ -35,20 +36,29 @@
 			word = initialWord;
 			fetchingId = null;
 			loading = false;
+			error = false;
 		} else if (word?.id !== id && fetchingId !== id) {
 			const cached = getCachedWord(id);
 			if (cached) {
 				word = cached;
 				fetchingId = null;
 				loading = false;
+				error = false;
 				return;
 			}
 			fetchingId = id;
 			loading = true;
-			fetchWord(id).then(() => {
-				if (fetchingId === id) {
+			error = false;
+			fetchWord(id).then((status) => {
+				if (fetchingId !== id) return;
+				loading = false;
+				if (status === 'ok') {
 					word = getCachedWord(id) ?? null;
-					loading = false;
+				} else if (status === 'error') {
+					word = null;
+					error = true;
+				} else {
+					word = null;
 				}
 			});
 		}
@@ -64,6 +74,8 @@
 		<p class="msg">Ладаваньне...</p>
 	{:else if word}
 		<WordDetailContent {word} {onWordLink} enableViews />
+	{:else if error}
+		<p class="msg">Не ўдалося заладаваць слова. Спраўдзьце падлучэньне да інтэрнэту.</p>
 	{:else}
 		<p class="msg">Слова ня знойдзенае</p>
 	{/if}

@@ -18,6 +18,7 @@
 
 	let currentPost = $state<Post | null>(null);
 	let loadingPost = $state(false);
+	let postError = $state(false);
 
 	let breadcrumbs = $derived.by(() => {
 		if (currentPost) {
@@ -46,15 +47,25 @@
 			const cached = getCachedBlogPost(initialSlug);
 			if (cached) {
 				currentPost = cached;
+				postError = false;
 			} else {
 				loadingPost = true;
-				fetchBlogPost(initialSlug).then(() => {
-					currentPost = getCachedBlogPost(initialSlug) ?? null;
+				postError = false;
+				fetchBlogPost(initialSlug).then((status) => {
 					loadingPost = false;
+					if (status === 'ok') {
+						currentPost = getCachedBlogPost(initialSlug) ?? null;
+					} else if (status === 'error') {
+						currentPost = null;
+						postError = true;
+					} else {
+						currentPost = null;
+					}
 				});
 			}
 		} else {
 			currentPost = null;
+			postError = false;
 			if (blogStore.posts.length === 0) {
 				const url = new URL(window.location.href);
 				const page = parseInt(url.searchParams.get('page') || '1', 10);
@@ -73,6 +84,8 @@
 		<BlogPostContent post={currentPost} />
 	{:else if loadingPost}
 		<p class="empty">Ладаваньне...</p>
+	{:else if postError}
+		<p class="empty">Не ўдалося заладаваць допіс. Спраўдзьце падлучэньне да інтэрнэту.</p>
 	{:else}
 		<div class="blog-list">
 			<h1 class="page-title">Блёґ</h1>
@@ -87,6 +100,15 @@
 
 			{#if blogStore.loading}
 				<p class="empty">Ладаваньне...</p>
+			{:else if blogStore.error}
+				<div class="empty">
+					<div>
+						<p>Не ўдалося заладаваць блёґ.</p>
+						<button class="pill" onclick={() => blogStore.fetchPage(blogStore.currentPage)}>
+							Паспрабаваць ізноў
+						</button>
+					</div>
+				</div>
 			{:else if blogStore.posts.length === 0}
 				<p class="empty">Пакуль няма допісаў.</p>
 			{:else}
@@ -121,6 +143,10 @@
 		place-items: center;
 		color: var(--c-text-muted);
 		font-size: 1rem;
+	}
+
+	.empty button {
+		margin-top: 0.75rem;
 	}
 
 	.blog-list {
