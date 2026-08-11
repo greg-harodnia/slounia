@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { SITE_URL, SITE_NAME } from '$lib/constants';
-	import type { Post } from '$lib/types';
 	import BlogPostContent from '$lib/components/BlogPostContent.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 	import ToDict from '$lib/components/ToDict.svelte';

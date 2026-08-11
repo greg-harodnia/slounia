@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { SITE_NAME, SITE_URL } from '$lib/constants';
-	import type { WordData } from '$lib/types';
 	import WordDetailContent from '$lib/components/WordDetailContent.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 	import ToDict from '$lib/components/ToDict.svelte';

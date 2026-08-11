@@ -4,13 +4,16 @@
 		<meta charset="utf-8" />
 		<meta name="theme-color" content="#f5f7fa" />
 		<script>
-			(function() {
+			(function () {
 				var theme = localStorage.getItem('theme');
 				if (theme === 'national' && window.innerWidth <= 1024) {
 					theme = null;
 				}
 				if (theme !== 'light' && theme !== 'dark' && theme !== 'national') {
-					theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+					theme =
+						window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+							? 'dark'
+							: 'light';
 				}
 				document.documentElement.dataset.theme = theme;
 				var meta = document.querySelector('meta[name="theme-color"]');
@@ -24,7 +27,10 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
 		<title>Слоўня</title>
-		<meta name="description" content="Слоўня — слоўнік жывой мовы. Пошук і прагляд слоў зь перакладамі калек і наватвораў на чыстую жывую мову." />
+		<meta
+			name="description"
+			content="Слоўня — слоўнік жывой мовы. Пошук і прагляд слоў зь перакладамі калек і наватвораў на чыстую жывую мову."
+		/>
 		<meta name="google-site-verification" content="DYt7fPMkb9nRbwcRu_KkPqhtBDnUHPiYn_6GAS5gl2I" />
 		<meta name="yandex-verification" content="7cb45acc69593d1e" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
