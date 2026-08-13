@@ -6,6 +6,7 @@
 	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import PwaPrompt from '$lib/components/PwaPrompt.svelte';
+	import ChatWidget from '$lib/components/ChatWidget.svelte';
 	import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from '$lib/constants';
 	import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import { userStore } from '$lib/stores/userStore.svelte';
@@ -115,6 +116,7 @@
 	<main>
 		{@render children()}
 	</main>
+	<ChatWidget />
 {/if}
 
 <style>
