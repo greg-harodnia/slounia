@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import { renderMarkdown } from '$lib/assist-markdown';
 
 	interface ChatMsg {
 		role: 'user' | 'assistant';
@@ -122,7 +123,11 @@
 
 		<div class="chat-msgs" bind:this={listEl}>
 			{#each messages as m, i (i)}
-				<div class="bubble {m.role}">{m.text}</div>
+				{#if m.role === 'assistant'}
+					<div class="bubble assistant">{@html renderMarkdown(m.text)}</div>
+				{:else}
+					<div class="bubble user">{m.text}</div>
+				{/if}
 			{/each}
 			{#if loading}
 				<div class="bubble assistant typing" aria-label="Помнік думае">
@@ -271,6 +276,63 @@
 		background: var(--c-surface-hover);
 		border: 1px solid var(--c-border);
 		border-bottom-left-radius: 2px;
+		white-space: normal;
+	}
+
+	.bubble.assistant :global(p) {
+		margin: 0 0 0.4rem;
+	}
+
+	.bubble.assistant :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	.bubble.assistant :global(ul),
+	.bubble.assistant :global(ol) {
+		margin: 0.25rem 0 0.4rem;
+		padding-left: 1.2rem;
+	}
+
+	.bubble.assistant :global(ul:last-child),
+	.bubble.assistant :global(ol:last-child) {
+		margin-bottom: 0;
+	}
+
+	.bubble.assistant :global(li) {
+		margin: 0.15rem 0;
+	}
+
+	.bubble.assistant :global(strong) {
+		font-weight: 700;
+	}
+
+	.bubble.assistant :global(a) {
+		color: var(--c-primary);
+		text-decoration: underline;
+	}
+
+	.bubble.assistant :global(code) {
+		background: var(--c-border);
+		border-radius: 3px;
+		padding: 0.1rem 0.3rem;
+		font-size: 0.85em;
+	}
+
+	.bubble.assistant :global(pre) {
+		background: var(--c-border);
+		border-radius: var(--radius-sm);
+		padding: 0.5rem;
+		overflow-x: auto;
+		margin: 0.25rem 0 0.4rem;
+	}
+
+	.bubble.assistant :global(pre:last-child) {
+		margin-bottom: 0;
+	}
+
+	.bubble.assistant :global(pre code) {
+		background: none;
+		padding: 0;
 	}
 
 	.bubble.typing {
