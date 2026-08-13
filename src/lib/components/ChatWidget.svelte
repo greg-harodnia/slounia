@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { tick } from 'svelte';
 	import { browser } from '$app/environment';
 
 	interface ChatMsg {
@@ -58,7 +57,11 @@
 	$effect(() => {
 		const el = listEl;
 		if (!el) return;
-		tick().then(() => {
+		// Re-run whenever the messages or typing indicator change; rAF guarantees
+		// layout is done before scrolling.
+		void messages;
+		void loading;
+		requestAnimationFrame(() => {
 			el.scrollTop = el.scrollHeight;
 		});
 	});
