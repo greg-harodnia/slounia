@@ -53,7 +53,7 @@ const PROVIDERS: Record<string, { keyVar: string; modelVar: string; defaultModel
 	gemini: {
 		keyVar: 'GEMINI_API_KEY',
 		modelVar: 'GEMINI_MODEL',
-		defaultModel: 'gemini-3.6-flash',
+		defaultModel: 'gemini-3.7-flash',
 		baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
 	},
 };
