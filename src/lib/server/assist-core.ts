@@ -34,6 +34,45 @@ export interface OpenAiToolMessage {
 
 export type OpenAiMessage = OpenAiUserMessage | OpenAiAssistantMessage | OpenAiToolMessage;
 
+export interface AssistProviderConfig {
+	name: string;
+	apiKey: string | undefined;
+	model: string;
+	baseUrl: string;
+}
+
+// Both providers speak the OpenAI chat-completions format, so only the
+// endpoint, key and model differ. `ASSIST_PROVIDER` switches between them.
+const PROVIDERS: Record<string, { keyVar: string; modelVar: string; defaultModel: string; baseUrl: string }> = {
+	groq: {
+		keyVar: 'GROQ_API_KEY',
+		modelVar: 'GROQ_MODEL',
+		defaultModel: 'llama-3.3-70b-versatile',
+		baseUrl: 'https://api.groq.com/openai/v1',
+	},
+	gemini: {
+		keyVar: 'GEMINI_API_KEY',
+		modelVar: 'GEMINI_MODEL',
+		defaultModel: 'gemini-3.6-flash',
+		baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+	},
+};
+
+export function resolveProvider(
+	provider: string | undefined,
+	vars: Record<string, string | undefined>,
+): AssistProviderConfig {
+	const requested = (provider || 'groq').toLowerCase();
+	const resolvedName = requested in PROVIDERS ? requested : 'groq';
+	const config = PROVIDERS[resolvedName];
+	return {
+		name: resolvedName,
+		apiKey: vars[config.keyVar],
+		model: vars[config.modelVar] || config.defaultModel,
+		baseUrl: config.baseUrl,
+	};
+}
+
 export const MAX_MESSAGES = 40;
 export const MAX_TEXT_CHARS = 4000;
 

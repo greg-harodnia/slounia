@@ -4,6 +4,7 @@ import {
 	extractToolCalls,
 	limitMessages,
 	makeToolResultMessage,
+	resolveProvider,
 	toOpenAiMessages,
 } from '../assist-core';
 import type { OpenAiAssistantMessage } from '../assist-core';
@@ -80,5 +81,34 @@ describe('makeToolResultMessage', () => {
 			tool_call_id: 'call_1',
 			content: '{"result":{"words":[]}}',
 		});
+	});
+});
+
+describe('resolveProvider', () => {
+	it('defaults to groq', () => {
+		const config = resolveProvider(undefined, { GROQ_API_KEY: 'gk' });
+		expect(config).toEqual({
+			name: 'groq',
+			apiKey: 'gk',
+			model: 'llama-3.3-70b-versatile',
+			baseUrl: 'https://api.groq.com/openai/v1',
+		});
+	});
+
+	it('switches to gemini when requested', () => {
+		const config = resolveProvider('gemini', { GEMINI_API_KEY: 'gk' });
+		expect(config).toEqual({
+			name: 'gemini',
+			apiKey: 'gk',
+			model: 'gemini-3.6-flash',
+			baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+		});
+	});
+
+	it('honours per-provider model overrides and falls back to groq for unknown providers', () => {
+		const gemini = resolveProvider('gemini', { GEMINI_API_KEY: 'gk', GEMINI_MODEL: 'gemini-3.1-flash' });
+		expect(gemini.model).toBe('gemini-3.1-flash');
+		const unknown = resolveProvider('claude', { GROQ_API_KEY: 'gk' });
+		expect(unknown.name).toBe('groq');
 	});
 });

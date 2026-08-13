@@ -6,12 +6,12 @@ import {
 	extractToolCalls,
 	limitMessages,
 	makeToolResultMessage,
+	resolveProvider,
 	toOpenAiMessages,
 	type ChatMessage,
 	type OpenAiAssistantMessage,
 } from './assist-core';
 
-const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
 const MAX_TOOL_ROUNDS = 5;
 const MAX_POST_SNIPPET = 600; // chars of blog content sent to the model
 
@@ -142,11 +142,13 @@ function extractErrorMessage(error: unknown): string {
 }
 
 async function chatCompletion(
+	providerName: string,
+	baseUrl: string,
 	apiKey: string,
 	model: string,
 	messages: unknown[],
 ): Promise<{ choices?: { message?: OpenAiAssistantMessage }[] }> {
-	const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+	const res = await fetch(`${baseUrl}/chat/completions`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -169,26 +171,31 @@ async function chatCompletion(
 		} catch {
 			// non-JSON error body
 		}
-		throw new Error(`Groq request failed (${res.status}): ${detail}`);
+		throw new Error(`${providerName} request failed (${res.status}): ${detail}`);
 	}
 	return res.json();
 }
 
 export async function runAssist(messages: ChatMessage[]): Promise<string> {
-	const apiKey = env.GROQ_API_KEY;
-	if (!apiKey) {
-		throw new Error('GROQ_API_KEY is not set');
+	const provider = resolveProvider(env.ASSIST_PROVIDER, env);
+	if (!provider.apiKey) {
+		throw new Error(`No AI API key set for provider "${provider.name}"`);
 	}
-	const model = env.GROQ_MODEL || DEFAULT_MODEL;
 
 	// history is mutated across tool-calling rounds (assistant turn + tool results).
 	const history: unknown[] = [...toOpenAiMessages(limitMessages(messages))];
 
 	for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-		const response = await chatCompletion(apiKey, model, history);
+		const response = await chatCompletion(
+			provider.name,
+			provider.baseUrl,
+			provider.apiKey,
+			provider.model,
+			history,
+		);
 		const message = response.choices?.[0]?.message;
 		if (!message) {
-			throw new Error('Groq returned an empty response');
+			throw new Error(`${provider.name} returned an empty response`);
 		}
 
 		const calls = extractToolCalls(message);
@@ -210,5 +217,5 @@ export async function runAssist(messages: ChatMessage[]): Promise<string> {
 		}
 	}
 
-	throw new Error('Groq exceeded the tool-call limit');
+	throw new Error(`Exceeded the tool-call limit (${provider.name})`);
 }
