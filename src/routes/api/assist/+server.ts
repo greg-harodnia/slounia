@@ -65,6 +65,6 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		return json({ reply });
 	} catch (error) {
 		console.error('assist error:', error);
-		return json({ error: 'Не ўдалося атрымаць адказ. Паспрабуйце пазьней.' }, { status: 500 });
+		return json({ error: 'Не ўдалося здабыць адказ. Паспрабуйце позьней.' }, { status: 500 });
 	}
 };
