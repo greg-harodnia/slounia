@@ -41,23 +41,23 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	if (isRateLimited(ip)) {
-		return json({ error: 'Зашмат запытаў. Паспрабуйце пазьней.' }, { status: 429 });
+		return json({ error: 'Замнога запытаў. Паспрабуйце праз хвіліну.' }, { status: 429 });
 	}
 
 	let body: { messages?: unknown };
 	try {
 		body = await request.json();
 	} catch {
-		return json({ error: 'Няслушны запыт' }, { status: 400 });
+		return json({ error: 'Няправільны запыт' }, { status: 400 });
 	}
 
 	if (!Array.isArray(body.messages)) {
-		return json({ error: 'Няслушны запыт' }, { status: 400 });
+		return json({ error: 'Няправільны запыт' }, { status: 400 });
 	}
 
 	const messages = body.messages.filter(isValidMessage).slice(-MAX_MESSAGES);
 	if (messages.length === 0) {
-		return json({ error: 'Няслушны запыт' }, { status: 400 });
+		return json({ error: 'Няправільны запыт' }, { status: 400 });
 	}
 
 	try {
@@ -65,9 +65,9 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		return json({ reply });
 	} catch (error) {
 		if (error instanceof AssistRateLimitError) {
-			return json({ error: 'Зашмат запытаў да памочніка. Паспрабуйце праз хвіліну.' }, { status: 429 });
+			return json({ error: 'Замнога запытаў да памочніка. Паспрабуйце праз хвіліну.' }, { status: 429 });
 		}
 		console.error('assist error:', error);
-		return json({ error: 'Не ўдалося атрымаць адказ. Паспрабуйце пазьней.' }, { status: 500 });
+		return json({ error: 'Не ўдалося здабыць адказ. Паспрабуйце позьней.' }, { status: 500 });
 	}
 };
