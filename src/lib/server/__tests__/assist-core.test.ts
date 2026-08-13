@@ -105,7 +105,7 @@ describe('resolveProvider', () => {
 		expect(config).toEqual({
 			name: 'groq',
 			apiKey: 'gk',
-			model: 'llama-3.3-70b-versatile',
+			model: 'openai/gpt-oss-120b',
 			baseUrl: 'https://api.groq.com/openai/v1',
 		});
 	});

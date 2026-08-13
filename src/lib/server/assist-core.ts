@@ -47,7 +47,7 @@ const PROVIDERS: Record<string, { keyVar: string; modelVar: string; defaultModel
 	groq: {
 		keyVar: 'GROQ_API_KEY',
 		modelVar: 'GROQ_MODEL',
-		defaultModel: 'llama-3.3-70b-versatile',
+		defaultModel: 'openai/gpt-oss-120b',
 		baseUrl: 'https://api.groq.com/openai/v1',
 	},
 	gemini: {
