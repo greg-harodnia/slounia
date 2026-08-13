@@ -7,7 +7,7 @@
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	import PwaPrompt from '$lib/components/PwaPrompt.svelte';
 	import { overlays, preloadChatWidget } from '$lib/preload.svelte';
-	import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from '$lib/constants';
+	import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, MOBILE_MAX_WIDTH } from '$lib/constants';
 	import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import { userStore } from '$lib/stores/userStore.svelte';
 	import { onMount } from 'svelte';
@@ -20,6 +20,8 @@
 	let isBanned = $derived(data.banned);
 	let banReason = $derived(data.banReason || '');
 	let chatRequested = $state(false);
+	// Chat helper is desktop-only (MOBILE_MAX_WIDTH breakpoint).
+	let isDesktop = $state(true);
 
 	const svgChat =
 		'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
@@ -76,6 +78,12 @@
 			setTokenCookie(token);
 		}
 		userStore.load();
+
+		const mq = window.matchMedia(`(min-width: ${MOBILE_MAX_WIDTH + 1}px)`);
+		const update = () => (isDesktop = mq.matches);
+		update();
+		mq.addEventListener('change', update);
+		return () => mq.removeEventListener('change', update);
 	});
 </script>
 
@@ -123,7 +131,7 @@
 	{#if overlays.chat}
 		{@const ChatWidgetC = overlays.chat}
 		<ChatWidgetC open={chatRequested} />
-	{:else}
+	{:else if isDesktop}
 		<button
 			class="chat-fab"
 			aria-label="Адкрыць памочніка"

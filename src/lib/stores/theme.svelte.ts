@@ -1,9 +1,11 @@
+import { MOBILE_MAX_WIDTH } from '$lib/constants';
+
 const ALL_THEMES = ['light', 'dark', 'national'] as const;
 type Theme = (typeof ALL_THEMES)[number];
 
 function isMobile() {
 	try {
-		return window.innerWidth <= 1024;
+		return window.innerWidth <= MOBILE_MAX_WIDTH;
 	} catch {
 		return true;
 	}
