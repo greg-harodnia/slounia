@@ -13,7 +13,12 @@ import {
 } from './assist-core';
 
 const MAX_TOOL_ROUNDS = 5;
+const MAX_ATTEMPTS = 3; // per provider call, for transient failures (429/5xx)
 const MAX_POST_SNIPPET = 600; // chars of blog content sent to the model
+
+// Thrown when the AI provider is rate-limited (HTTP 429). The endpoint maps
+// this to a 429 response so the user gets a retryable message, not a 500.
+export class AssistRateLimitError extends Error {}
 
 // Keep hidden (draft) words private unless the project explicitly opts in.
 const INCLUDE_HIDDEN_WORDS = false;
@@ -141,6 +146,20 @@ function extractErrorMessage(error: unknown): string {
 	return String(error);
 }
 
+function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function readErrorDetail(res: Response): Promise<string> {
+	try {
+		const body = (await res.json()) as { error?: { message?: string } };
+		return body.error?.message ?? '';
+	} catch {
+		// non-JSON error body
+		return '';
+	}
+}
+
 async function chatCompletion(
 	providerName: string,
 	baseUrl: string,
@@ -148,32 +167,42 @@ async function chatCompletion(
 	model: string,
 	messages: unknown[],
 ): Promise<{ choices?: { message?: OpenAiAssistantMessage }[] }> {
-	const res = await fetch(`${baseUrl}/chat/completions`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${apiKey}`,
-		},
-		body: JSON.stringify({
-			model,
-			messages: [{ role: 'system', content: `${SYSTEM_PROMPT}\n\n${HIDDEN_CONTEXT}` }, ...messages],
-			tools: TOOL_DECLARATIONS,
-			temperature: 0.3,
-			max_tokens: 1500,
-		}),
-	});
+	let lastError: Error | undefined;
+	for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+		const res = await fetch(`${baseUrl}/chat/completions`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${apiKey}`,
+			},
+			body: JSON.stringify({
+				model,
+				messages: [{ role: 'system', content: `${SYSTEM_PROMPT}\n\n${HIDDEN_CONTEXT}` }, ...messages],
+				tools: TOOL_DECLARATIONS,
+				temperature: 0.3,
+				max_tokens: 1500,
+			}),
+		});
 
-	if (!res.ok) {
-		let detail = '';
-		try {
-			const body = (await res.json()) as { error?: { message?: string } };
-			detail = body.error?.message ?? '';
-		} catch {
-			// non-JSON error body
+		if (res.ok) return res.json();
+
+		const detail = await readErrorDetail(res);
+		const message = `${providerName} request failed (${res.status}): ${detail}`;
+		if (res.status === 429) {
+			lastError = new AssistRateLimitError(message);
+		} else if (res.status >= 500) {
+			lastError = new Error(message);
+		} else {
+			// 4xx (400/401/403/404) are config errors — retrying won't help.
+			throw new Error(message);
 		}
-		throw new Error(`${providerName} request failed (${res.status}): ${detail}`);
+
+		if (attempt === MAX_ATTEMPTS) break;
+		const retryAfter = res.headers.get('retry-after');
+		const waitMs = retryAfter ? Math.min(parseInt(retryAfter, 10) * 1000 || 1000, 3000) : 750 * attempt;
+		await sleep(waitMs);
 	}
-	return res.json();
+	throw lastError ?? new Error(`${providerName} request failed`);
 }
 
 export async function runAssist(messages: ChatMessage[]): Promise<string> {

@@ -75,12 +75,23 @@ export function resolveProvider(
 
 export const MAX_MESSAGES = 40;
 export const MAX_TEXT_CHARS = 4000;
+export const MAX_TOTAL_CHARS = 16000; // total history budget (~4k tokens), keeps requests under free-tier token limits
 
-// Cap how much conversation history is sent to the model (last N messages,
-// each text truncated) to protect the free-tier context window.
+// Cap how much conversation history is sent to the model: the newest messages
+// that fit the per-message and total character budgets. Keeps requests under
+// free-tier token limits (e.g. Groq TPM).
 export function limitMessages(messages: ChatMessage[]): ChatMessage[] {
 	const sliced = messages.slice(-MAX_MESSAGES);
-	return sliced.map((m) => (m.text.length > MAX_TEXT_CHARS ? { ...m, text: m.text.slice(0, MAX_TEXT_CHARS) } : m));
+	const kept: ChatMessage[] = [];
+	let total = 0;
+	for (let i = sliced.length - 1; i >= 0; i--) {
+		const m = sliced[i];
+		const text = m.text.length > MAX_TEXT_CHARS ? m.text.slice(0, MAX_TEXT_CHARS) : m.text;
+		if (total + text.length > MAX_TOTAL_CHARS) break;
+		total += text.length;
+		kept.push({ ...m, text });
+	}
+	return kept.reverse();
 }
 
 // Convert the UI message format to OpenAI-compatible chat messages.

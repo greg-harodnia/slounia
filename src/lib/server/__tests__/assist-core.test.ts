@@ -21,6 +21,21 @@ describe('limitMessages', () => {
 		const limited = limitMessages([{ role: 'user', text: 'x'.repeat(5000) }]);
 		expect(limited[0].text).toHaveLength(4000);
 	});
+
+	it('drops older messages when the total character budget is exceeded', () => {
+		const messages = Array.from({ length: 20 }, () => ({ role: 'user' as const, text: 'x'.repeat(1000) }));
+		const limited = limitMessages(messages);
+		expect(limited).toHaveLength(16); // 16 * 1000 = 16000 = MAX_TOTAL_CHARS
+		expect(limited[0].text).toBe('x'.repeat(1000));
+	});
+
+	it('truncates first, then applies the total budget', () => {
+		const messages = Array.from({ length: 5 }, () => ({ role: 'user' as const, text: 'x'.repeat(9000) }));
+		const limited = limitMessages(messages);
+		// each truncated to 4000 chars; newest 4 fit within 16000
+		expect(limited).toHaveLength(4);
+		expect(limited[0].text).toHaveLength(4000);
+	});
 });
 
 describe('toOpenAiMessages', () => {

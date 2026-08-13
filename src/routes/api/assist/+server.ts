@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { runAssist } from '$lib/server/assist';
+import { runAssist, AssistRateLimitError } from '$lib/server/assist';
 import { MAX_MESSAGES, MAX_TEXT_CHARS, type ChatMessage } from '$lib/server/assist-core';
 
 const WINDOW_MS = 10 * 60_000;
@@ -64,7 +64,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		const reply = await runAssist(messages);
 		return json({ reply });
 	} catch (error) {
+		if (error instanceof AssistRateLimitError) {
+			return json({ error: 'Зашмат запытаў да памочніка. Паспрабуйце праз хвіліну.' }, { status: 429 });
+		}
 		console.error('assist error:', error);
-		return json({ error: 'Не ўдалося здабыць адказ. Паспрабуйце позьней.' }, { status: 500 });
+		return json({ error: 'Не ўдалося атрымаць адказ. Паспрабуйце пазьней.' }, { status: 500 });
 	}
 };
