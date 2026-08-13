@@ -119,6 +119,18 @@ export function extractResponseText(message: OpenAiAssistantMessage): string {
 	return message.content ?? '';
 }
 
+// Parse the `Retry-After` header, which may be a number of seconds or an
+// HTTP-date. Returns seconds, or undefined if absent/unparseable.
+export function parseRetryAfter(res: Response): number | undefined {
+	const raw = res.headers.get('retry-after');
+	if (!raw) return undefined;
+	const seconds = Number(raw);
+	if (Number.isFinite(seconds)) return Math.max(0, seconds);
+	const date = Date.parse(raw);
+	if (Number.isFinite(date)) return Math.max(0, Math.ceil((date - Date.now()) / 1000));
+	return undefined;
+}
+
 // Build the tool-result message to feed back after executing a tool call.
 export function makeToolResultMessage(callId: string, result: unknown): OpenAiToolMessage {
 	return { role: 'tool', tool_call_id: callId, content: JSON.stringify({ result }) };

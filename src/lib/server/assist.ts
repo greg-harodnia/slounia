@@ -6,6 +6,7 @@ import {
 	extractToolCalls,
 	limitMessages,
 	makeToolResultMessage,
+	parseRetryAfter,
 	resolveProvider,
 	toOpenAiMessages,
 	type ChatMessage,
@@ -14,11 +15,23 @@ import {
 
 const MAX_TOOL_ROUNDS = 5;
 const MAX_ATTEMPTS = 3; // per provider call, for transient failures (429/5xx)
+const MAX_BACKOFF_MS = 60_000; // never sleep longer than this between retries
 const MAX_POST_SNIPPET = 600; // chars of blog content sent to the model
 
 // Thrown when the AI provider is rate-limited (HTTP 429). The endpoint maps
 // this to a 429 response so the user gets a retryable message, not a 500.
-export class AssistRateLimitError extends Error {}
+// `detail` carries the provider's own explanation (e.g. which quota fired) and
+// `retryAfterSeconds` the server-requested backoff, for logging/diagnostics.
+export class AssistRateLimitError extends Error {
+	constructor(
+		message: string,
+		readonly detail: string,
+		readonly retryAfterSeconds?: number,
+	) {
+		super(message);
+		this.name = 'AssistRateLimitError';
+	}
+}
 
 // Keep hidden (draft) words private unless the project explicitly opts in.
 const INCLUDE_HIDDEN_WORDS = false;
@@ -168,6 +181,7 @@ async function chatCompletion(
 	messages: unknown[],
 ): Promise<{ choices?: { message?: OpenAiAssistantMessage }[] }> {
 	let lastError: Error | undefined;
+	let lastRetryAfter: number | undefined;
 	for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
 		const res = await fetch(`${baseUrl}/chat/completions`, {
 			method: 'POST',
@@ -189,7 +203,8 @@ async function chatCompletion(
 		const detail = await readErrorDetail(res);
 		const message = `${providerName} request failed (${res.status}): ${detail}`;
 		if (res.status === 429) {
-			lastError = new AssistRateLimitError(message);
+			lastRetryAfter = parseRetryAfter(res);
+			lastError = new AssistRateLimitError(message, detail, lastRetryAfter);
 		} else if (res.status >= 500) {
 			lastError = new Error(message);
 		} else {
@@ -198,8 +213,8 @@ async function chatCompletion(
 		}
 
 		if (attempt === MAX_ATTEMPTS) break;
-		const retryAfter = res.headers.get('retry-after');
-		const waitMs = retryAfter ? Math.min(parseInt(retryAfter, 10) * 1000 || 1000, 3000) : 750 * attempt;
+		// Prefer the provider's requested backoff; fall back to exponential backoff.
+		const waitMs = Math.min(lastRetryAfter ?? 750 * attempt, MAX_BACKOFF_MS);
 		await sleep(waitMs);
 	}
 	throw lastError ?? new Error(`${providerName} request failed`);

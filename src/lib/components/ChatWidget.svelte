@@ -10,7 +10,7 @@
 	const STORAGE_KEY = 'slounia_assist_history';
 	const GREETING: ChatMsg = {
 		role: 'assistant',
-		text: 'Вітаю! Гэта бязглузды й недарэчны AI-памочнік. Чым магу дапамагчы?',
+		text: 'Вітаю! Я бязглузды й недарэчны AI-памочнік. Чым магу дапамагчы?',
 	};
 
 	const svgChat =

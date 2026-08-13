@@ -41,7 +41,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	}
 
 	if (isRateLimited(ip)) {
-		return json({ error: 'Замнога запытаў. Паспрабуйце праз хвіліну.' }, { status: 429 });
+		return json({ error: 'Замнога запытаў. Паспрабуйце позьней.' }, { status: 429 });
 	}
 
 	let body: { messages?: unknown };
@@ -65,7 +65,10 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		return json({ reply });
 	} catch (error) {
 		if (error instanceof AssistRateLimitError) {
-			return json({ error: 'Замнога запытаў да памочніка. Паспрабуйце праз хвіліну.' }, { status: 429 });
+			// Log the provider's explanation (e.g. "daily quota exceeded", "tokens
+			// per minute") so the real cause is visible in server logs.
+			console.error(`assist rate limited (retry-after ${error.retryAfterSeconds ?? '?'}s): ${error.detail}`);
+			return json({ error: 'Замнога запытаў да памочніка. Паспрабуйце позьней.' }, { status: 429 });
 		}
 		console.error('assist error:', error);
 		return json({ error: 'Не ўдалося здабыць адказ. Паспрабуйце позьней.' }, { status: 500 });
