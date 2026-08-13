@@ -22,7 +22,11 @@
 	const svgSend =
 		'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
 
-	let open = $state(false);
+	// `startOpen` is only used to decide the initial state (the widget mounts
+	// open when opened from the static FAB); afterwards `open` is fully internal.
+	let { open: startOpen = false } = $props();
+	const openFromProps = () => startOpen;
+	let open = $state.raw(openFromProps());
 	let expanded = $state(false);
 	let messages = $state<ChatMsg[]>([]);
 	let input = $state('');
@@ -154,7 +158,7 @@
 		</div>
 	</div>
 {:else}
-	<button class="fab" aria-label="Адкрыць дапамогу" onclick={() => (open = true)}>{@html svgChat}</button>
+	<button class="fab" aria-label="Адкрыць памочніка" onclick={() => (open = true)}>{@html svgChat}</button>
 {/if}
 
 <style>

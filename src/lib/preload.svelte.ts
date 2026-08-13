@@ -3,6 +3,7 @@ import type BlogOverlay from '$lib/components/BlogOverlay.svelte';
 import type ContactModal from '$lib/components/ContactModal.svelte';
 import type EditWord from '$lib/components/EditWord.svelte';
 import type TranslationForm from '$lib/components/TranslationForm.svelte';
+import type ChatWidget from '$lib/components/ChatWidget.svelte';
 
 // Lazily-loaded component constructors shared across the app. Any component can
 // call a preload* function (from a hover handler, on mount, etc.) to warm the
@@ -14,6 +15,7 @@ export const overlays = $state({
 	contact: undefined as typeof ContactModal | undefined,
 	editWord: undefined as typeof EditWord | undefined,
 	translationForm: undefined as typeof TranslationForm | undefined,
+	chat: undefined as typeof ChatWidget | undefined,
 });
 
 // Internal non-reactive caches of in-flight/finished loads (SvelteSet/SvelteMap
@@ -75,5 +77,13 @@ export function preloadTranslationForm() {
 		'translation-form',
 		(c) => (overlays.translationForm = c),
 		() => import('$lib/components/TranslationForm.svelte'),
+	);
+}
+
+export function preloadChatWidget() {
+	load(
+		'chat',
+		(c) => (overlays.chat = c),
+		() => import('$lib/components/ChatWidget.svelte'),
 	);
 }
