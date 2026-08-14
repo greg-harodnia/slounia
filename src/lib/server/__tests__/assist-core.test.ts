@@ -115,7 +115,7 @@ describe('resolveProvider', () => {
 		expect(config).toEqual({
 			name: 'gemini',
 			apiKey: 'gk',
-			model: 'gemini-3.7-flash',
+			model: 'gemini-3.6-flash',
 			baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
 		});
 	});
