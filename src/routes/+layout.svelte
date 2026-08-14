@@ -20,8 +20,9 @@
 	let isBanned = $derived(data.banned);
 	let banReason = $derived(data.banReason || '');
 	let chatRequested = $state(false);
-	// Chat helper is desktop-only (MOBILE_MAX_WIDTH breakpoint).
-	let isDesktop = $state(true);
+	// Chat helper is desktop-only (MOBILE_MAX_WIDTH breakpoint). Starts false so
+	// the FAB isn't in SSR HTML that would flash on mobile before onMount corrects it.
+	let isDesktop = $state(false);
 
 	const svgChat =
 		'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
