@@ -5,9 +5,11 @@
 	interface ChatMsg {
 		role: 'user' | 'assistant';
 		text: string;
+		img?: string;
 	}
 
 	const STORAGE_KEY = 'slounia_assist_history';
+	const NO_ANSWER_IMG = '/chat-no-answer.webp';
 	const GREETING: ChatMsg = {
 		role: 'assistant',
 		text: 'Чалом б’ю! Я бязглузды й недарэчны AI-памочнік. Я ўжываю калькаваную лексыку ў сваіх адказах, таму ня стаўцеся да мяне, як да прадстаўніка Слоўні. Але я маю доступ да зьмесьціва гэтага сайта. Чым магу дапамагчы? 🧐 \n\n Дарэчы, калі вы не зь Беларусі й можаце стварыць ключ API для Google Gemini (https://aistudio.google.com/), каб я рабіў яшчэ лепей (цяперашняя мадэль слаба ведае беларускую мову, напрыклад, яна ня можа ўжываць клясычны правапіс, а таксама мае строгія абмежаваньні ў часьціні запытаў), то зьвяжыцеся з аўтарам праекта праз форму "Напісаць творцу"',
@@ -87,14 +89,20 @@
 			const data = await res.json();
 			if (!res.ok) {
 				error = data.error || 'Памылка';
+				addNoAnswerImg();
 			} else {
 				messages = [...messages, { role: 'assistant', text: data.reply }];
 			}
 		} catch {
 			error = 'Памылка сеткі. Паспрабуйце пазьней.';
+			addNoAnswerImg();
 		} finally {
 			loading = false;
 		}
+	}
+
+	function addNoAnswerImg() {
+		messages = [...messages, { role: 'assistant', text: '', img: NO_ANSWER_IMG }];
 	}
 
 	function onKeydown(e: KeyboardEvent) {
@@ -128,7 +136,14 @@
 		<div class="chat-msgs" bind:this={listEl}>
 			{#each messages as m, i (i)}
 				{#if m.role === 'assistant'}
-					<div class="bubble assistant">{@html renderMarkdown(m.text)}</div>
+					<div class="bubble assistant">
+						{#if m.img}
+							<img class="chat-img" src={m.img} alt="Няма адказу" loading="lazy" />
+						{/if}
+						{#if m.text}
+							{@html renderMarkdown(m.text)}
+						{/if}
+					</div>
 				{:else}
 					<div class="bubble user">{m.text}</div>
 				{/if}
@@ -325,6 +340,13 @@
 		border-radius: 3px;
 		padding: 0.1rem 0.3rem;
 		font-size: 0.85em;
+	}
+
+	.chat-img {
+		display: block;
+		max-width: 100%;
+		height: auto;
+		border-radius: var(--radius-sm);
 	}
 
 	.bubble.assistant :global(pre) {
