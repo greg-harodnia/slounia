@@ -398,6 +398,19 @@ CREATE INDEX IF NOT EXISTS idx_posts_published_at ON posts(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_slug ON posts(slug);
 CREATE INDEX IF NOT EXISTS idx_posts_pinned ON posts(is_pinned DESC);
 
+CREATE TABLE IF NOT EXISTS suggestions (
+    id SERIAL PRIMARY KEY,
+    word TEXT NOT NULL,
+    translation TEXT NOT NULL,
+    comment TEXT,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'agreed')),
+    user_token TEXT,
+    published_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_suggestions_published_at ON suggestions(published_at DESC);
+
 ALTER TABLE words ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT false;
 ALTER TABLE words ADD COLUMN IF NOT EXISTS pinned_at TIMESTAMPTZ;
 ALTER TABLE words ADD COLUMN IF NOT EXISTS views INTEGER DEFAULT 0;
@@ -458,6 +471,7 @@ ALTER TABLE posts         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE referrals     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE banned_users  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE suggestions   ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS anon_read_importance  ON importance;
 DROP POLICY IF EXISTS anon_read_tags        ON tags;
@@ -465,6 +479,7 @@ DROP POLICY IF EXISTS anon_read_words       ON words;
 DROP POLICY IF EXISTS anon_read_word_tags   ON word_tags;
 DROP POLICY IF EXISTS anon_read_translations ON translations;
 DROP POLICY IF EXISTS anon_read_posts       ON posts;
+DROP POLICY IF EXISTS anon_read_suggestions ON suggestions;
 
 CREATE POLICY anon_read_importance ON importance FOR SELECT TO anon USING (true);
 CREATE POLICY anon_read_tags ON tags FOR SELECT TO anon USING (true);
@@ -472,3 +487,4 @@ CREATE POLICY anon_read_words ON words FOR SELECT TO anon USING (true);
 CREATE POLICY anon_read_word_tags ON word_tags FOR SELECT TO anon USING (true);
 CREATE POLICY anon_read_translations ON translations FOR SELECT TO anon USING (true);
 CREATE POLICY anon_read_posts ON posts FOR SELECT TO anon USING (true);
+CREATE POLICY anon_read_suggestions ON suggestions FOR SELECT TO anon USING (true);

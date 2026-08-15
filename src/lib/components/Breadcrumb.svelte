@@ -5,6 +5,7 @@
 	const labels: Record<string, string> = {
 		'/': 'Галоўная',
 		'/blog': 'Блёґ',
+		'/suggest': 'Запрапанаваць слова',
 	};
 
 	let { items }: { items: Crumb[] } = $props();

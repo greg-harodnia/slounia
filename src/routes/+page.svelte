@@ -10,6 +10,7 @@
 		preloadContactModal,
 		preloadEditWord,
 		preloadTranslationForm,
+		preloadSuggestOverlay,
 	} from '$lib/preload.svelte';
 	import TranslationDisplay from '$lib/components/TranslationDisplay.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
@@ -83,6 +84,10 @@
 			const wordId = decodeURIComponent(path.slice('/word/'.length));
 			overlay = 'word';
 			overlayProps = { wordId, word: getCachedWord(wordId) };
+		} else if (path === '/suggest') {
+			preloadSuggestOverlay();
+			overlay = 'suggest';
+			overlayProps = null;
 		} else if (path === '/' || path === '') {
 			overlay = null;
 			overlayProps = null;
@@ -127,6 +132,7 @@
 		preloadWordOverlay();
 		preloadBlogOverlay();
 		preloadContactModal();
+		preloadSuggestOverlay();
 		if (devMode) {
 			preloadEditWord();
 			preloadTranslationForm();
@@ -155,6 +161,13 @@
 		pushState(`/blog/${slug}`, { overlay: 'post', slug });
 	}
 
+	function openSuggest() {
+		preloadSuggestOverlay();
+		overlay = 'suggest';
+		overlayProps = null;
+		pushState('/suggest', { overlay: 'suggest' });
+	}
+
 	function handlePopstate(e: PopStateEvent) {
 		const s = e.state?.['sveltekit:states'] as Record<string, unknown> | undefined;
 		if (s?.overlay === 'blog') {
@@ -166,6 +179,9 @@
 		} else if (s?.overlay === 'word' && typeof s.wordId === 'string') {
 			overlay = 'word';
 			overlayProps = { wordId: s.wordId, word: getCachedWord(s.wordId) };
+		} else if (s?.overlay === 'suggest') {
+			overlay = 'suggest';
+			overlayProps = null;
 		} else {
 			restoreOverlayFromURL();
 		}
@@ -685,6 +701,8 @@
 		onReset={resetFilters}
 		onOpenBlog={openBlog}
 		onPreloadBlog={preloadBlogList}
+		onOpenSuggest={openSuggest}
+		onPreloadSuggest={preloadSuggestOverlay}
 		onToggleFavorites={toggleShowFavorites}
 		onToggleComments={toggleComments}
 		onToggleLatin={() => settings.toggleLatin()}
@@ -1093,6 +1111,18 @@
 			onWordLink={openWord}
 			onclose={closeOverlay}
 		/>
+	{:else}
+		<div class="overlay-loading">
+			<div class="overlay-loading-spinner" aria-hidden="true"></div>
+			<span>Ладаваньне...</span>
+		</div>
+	{/if}
+{/if}
+
+{#if overlay === 'suggest'}
+	{#if overlays.suggest}
+		{@const SuggestOverlayC = overlays.suggest}
+		<SuggestOverlayC userToken={userStore.userToken} {devMode} onclose={closeOverlay} />
 	{:else}
 		<div class="overlay-loading">
 			<div class="overlay-loading-spinner" aria-hidden="true"></div>

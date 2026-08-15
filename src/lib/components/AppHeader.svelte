@@ -9,6 +9,8 @@
 		onReset: () => void;
 		onOpenBlog: () => void;
 		onPreloadBlog: () => void;
+		onOpenSuggest: () => void;
+		onPreloadSuggest: () => void;
 		onToggleFavorites: () => void;
 		onToggleComments: () => void;
 		onToggleLatin: () => void;
@@ -21,6 +23,8 @@
 		onReset,
 		onOpenBlog,
 		onPreloadBlog,
+		onOpenSuggest,
+		onPreloadSuggest,
 		onToggleFavorites,
 		onToggleComments,
 		onToggleLatin,
@@ -67,6 +71,27 @@
 				<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
 			</svg>
 			Блёґ
+		</button>
+		<button
+			class="header-btn btn-icon suggest-btn"
+			onclick={onOpenSuggest}
+			onmouseenter={onPreloadSuggest}
+			onfocus={onPreloadSuggest}
+			aria-label="Запрапанаваць слова"
+		>
+			<svg
+				viewBox="0 0 24 24"
+				width="16"
+				height="16"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<line x1="12" y1="5" x2="12" y2="19" />
+				<line x1="5" y1="12" x2="19" y2="12" />
+			</svg>
 		</button>
 		<button
 			class="header-btn btn-icon"

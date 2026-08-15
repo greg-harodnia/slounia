@@ -48,3 +48,16 @@ export interface Post {
 	created_at: string;
 	updated_at: string;
 }
+
+export type SuggestionStatus = 'pending' | 'approved' | 'rejected' | 'agreed';
+
+export interface Suggestion {
+	id: number;
+	word: string;
+	translation: string;
+	comment: string | null;
+	status: SuggestionStatus;
+	is_mine: boolean;
+	published_at: string;
+	created_at: string;
+}
