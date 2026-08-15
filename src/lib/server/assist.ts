@@ -179,7 +179,7 @@ async function chatCompletion(
 	apiKey: string,
 	model: string,
 	messages: unknown[],
-): Promise<{ choices?: { message?: OpenAiAssistantMessage }[] }> {
+): Promise<{ choices?: { message?: OpenAiAssistantMessage; finish_reason?: string }[] }> {
 	let lastError: Error | undefined;
 	let lastRetryAfter: number | undefined;
 	for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -194,7 +194,7 @@ async function chatCompletion(
 				messages: [{ role: 'system', content: `${SYSTEM_PROMPT}\n\n${HIDDEN_CONTEXT}` }, ...messages],
 				tools: TOOL_DECLARATIONS,
 				temperature: 0.3,
-				max_tokens: 1500,
+				max_tokens: 2500,
 			}),
 		});
 
@@ -228,6 +228,7 @@ export async function runAssist(messages: ChatMessage[]): Promise<string> {
 
 	// history is mutated across tool-calling rounds (assistant turn + tool results).
 	const history: unknown[] = [...toOpenAiMessages(limitMessages(messages))];
+	let reply = '';
 
 	for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
 		const response = await chatCompletion(
@@ -244,7 +245,19 @@ export async function runAssist(messages: ChatMessage[]): Promise<string> {
 
 		const calls = extractToolCalls(message);
 		if (calls.length === 0) {
-			return extractResponseText(message) || '…';
+			reply += extractResponseText(message);
+			// max_tokens was hit mid-answer: ask the model to finish instead of
+			// returning a truncated reply.
+			if (response.choices?.[0]?.finish_reason === 'length' && reply) {
+				history.push(message);
+				history.push({
+					role: 'user',
+					content:
+						'Continue this answer in the same language exactly from the last word you wrote, repeating the final word, without repeating earlier content or adding new headings.',
+				});
+				continue;
+			}
+			return reply || '…';
 		}
 
 		history.push(message);
@@ -261,5 +274,8 @@ export async function runAssist(messages: ChatMessage[]): Promise<string> {
 		}
 	}
 
+	// Rounds exhausted. Prefer a complete-looking answer over failing, e.g. when
+	// the model keeps truncating at max_tokens.
+	if (reply) return reply;
 	throw new Error(`Exceeded the tool-call limit (${provider.name})`);
 }
