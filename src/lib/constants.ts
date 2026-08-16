@@ -1,6 +1,11 @@
 import { resolve } from '$app/paths';
 
 export const PAGE_SIZE = 20;
+// How far below the visible area the list is pre-rendered while scrolling.
+// Rows are appended when the sentinel enters this margin, so a fast fling
+// never lands on un-rendered content mid-momentum (which would stall the
+// scroll). In pixels.
+export const SCROLL_PREFETCH_MARGIN = 1500;
 export const MOBILE_MAX_WIDTH = 1024; // px; matches the @media (width <= 1024px) rules in *.svelte
 export const DEFAULT_SORT = import.meta.env.PROD ? 'word' : 'created_at';
 export const DEFAULT_ORDER = import.meta.env.PROD ? 'asc' : 'desc';

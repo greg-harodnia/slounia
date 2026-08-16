@@ -25,6 +25,7 @@
 		DEFAULT_SORT,
 		FULL_LIST_LIMIT,
 		PAGE_SIZE,
+		SCROLL_PREFETCH_MARGIN,
 		SITE_NAME,
 		SITE_URL,
 		SITE_DESCRIPTION,
@@ -133,13 +134,15 @@
 	$effect(() => {
 		const el = loadMoreEl;
 		if (!el || !hasMore) return;
+		// Pre-render rows before they reach the viewport so momentum scrolling
+		// doesn't hit a wall of freshly-inserted DOM mid-fling.
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0]?.isIntersecting) {
 					visibleCount += PAGE_SIZE;
 				}
 			},
-			{ root: appEl ?? null, rootMargin: '200px' },
+			{ root: appEl ?? null, rootMargin: `0px 0px ${SCROLL_PREFETCH_MARGIN}px 0px` },
 		);
 		observer.observe(el);
 		return () => observer.disconnect();
