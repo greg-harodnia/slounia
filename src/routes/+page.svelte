@@ -359,6 +359,11 @@
 		}
 	}
 
+	function resetAll() {
+		filters.resetFilters();
+		appEl?.scrollTo({ top: 0, behavior: 'smooth' });
+	}
+
 	function clearSearch() {
 		if (!filters.search) return;
 		filters.clearSearch();
@@ -583,7 +588,7 @@
 	<AppHeader
 		showFavorites={filters.showFavorites}
 		{showComments}
-		onReset={() => filters.resetFilters()}
+		onReset={resetAll}
 		onOpenBlog={openBlog}
 		onPreloadBlog={preloadBlogList}
 		onOpenSuggest={openSuggest}
