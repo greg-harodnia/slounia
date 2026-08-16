@@ -47,14 +47,16 @@ function createdAtMs(createdAt: string | null): number {
 	return createdAt ? new Date(createdAt).getTime() : 0;
 }
 
-// Codepoint order of the lowercased id, mirroring the SQL `LOWER(id)`
-// ordering. Deterministic across browsers/locales.
+// Belarusian-alphabet order via ICU collation ('be'). Plain UTF-16 comparison
+// is wrong here: і (U+0456) has a higher codepoint than я (U+044F), so і-words
+// would sort after я, but in the Belarusian alphabet і sits between з and й.
+// Codepoint comparison is kept as a deterministic tiebreak.
 function compareIds(a: string, b: string): number {
 	const la = a.toLowerCase();
 	const lb = b.toLowerCase();
-	if (la < lb) return -1;
-	if (la > lb) return 1;
-	return a < b ? -1 : a > b ? 1 : 0;
+	const cmp = la.localeCompare(lb, 'be');
+	if (cmp !== 0) return cmp;
+	return la < lb ? -1 : la > lb ? 1 : 0;
 }
 
 export function sortWords(words: WordData[], sort: string, order: string): WordData[] {

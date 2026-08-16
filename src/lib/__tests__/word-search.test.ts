@@ -124,6 +124,12 @@ describe('sortWords', () => {
 		expect(sortWords(words, 'word', 'desc').map((w) => w.id)).toEqual(['в', 'б', 'а']);
 	});
 
+	it('sorts by the Belarusian alphabet (і between з and й, before я)', () => {
+		const bel = [mkWord({ id: 'яблык' }), mkWord({ id: 'ісці' }), mkWord({ id: 'згода' }), mkWord({ id: 'й' })];
+		expect(sortWords(bel, 'word', 'asc').map((w) => w.id)).toEqual(['згода', 'ісці', 'й', 'яблык']);
+		expect(sortWords(bel, 'word', 'desc').map((w) => w.id)).toEqual(['яблык', 'й', 'ісці', 'згода']);
+	});
+
 	it('sorts by likes in both directions', () => {
 		expect(sortWords(words, 'likes', 'asc').map((w) => w.id)).toEqual(['в', 'б', 'а']);
 		expect(sortWords(words, 'likes', 'desc').map((w) => w.id)).toEqual(['а', 'б', 'в']);
