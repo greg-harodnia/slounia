@@ -1,15 +1,17 @@
-import { DEFAULT_ORDER, DEFAULT_SORT, PAGE_SIZE } from '$lib/constants';
-import { fetchWordsPage } from '$lib/server/fetch-words';
-import type { TagData, WordData } from '$lib/types';
+import { dev } from '$app/environment';
+import { CACHE_TTL_PAGE } from '$lib/constants';
+import { fetchAllWords } from '$lib/server/fetch-words';
+import type { WordData } from '$lib/types';
 
-export async function load({ url, parent }) {
-	const search = url.searchParams.get('search') || '';
-	const sortParam = url.searchParams.get('sort');
-	const orderParam = url.searchParams.get('order');
-	const tagsParam = url.searchParams.get('tags') || '';
-
-	const sort = search && !sortParam ? 'relevance' : sortParam || DEFAULT_SORT;
-	const order = search && !sortParam ? 'desc' : orderParam || DEFAULT_ORDER;
+export async function load({ url, setHeaders }) {
+	// The homepage HTML (the full word list) is identical for every visitor,
+	// so let Vercel serve it from the edge cache. Ref links must stay dynamic
+	// to count each visit.
+	if (!url.searchParams.has('ref')) {
+		setHeaders({
+			'Cache-Control': `public, s-maxage=${CACHE_TTL_PAGE}, stale-while-revalidate=${CACHE_TTL_PAGE}`,
+		});
+	}
 
 	const refCode = url.searchParams.get('ref');
 	const refPromise = refCode
@@ -21,29 +23,18 @@ export async function load({ url, parent }) {
 		: Promise.resolve();
 
 	let words: WordData[] = [];
-	let total = 0;
-	let pinnedWords: WordData[] = [];
-
 	try {
-		const [{ tags }] = await Promise.all([parent(), refPromise]);
-		const tagList = (tags ?? []) as TagData[];
-		const selectedTags = tagsParam ? tagsParam.split(',') : tagList.map((t) => t.name);
-		const includePinned =
-			selectedTags.length === tagList.length && sort === DEFAULT_SORT && order === DEFAULT_ORDER;
-
-		({ words, total, pinnedWords } = await fetchWordsPage({
-			search,
-			sort,
-			order,
-			tags: selectedTags.join(','),
-			offset: 0,
-			limit: PAGE_SIZE,
-			includeHidden: false,
-			includePinned,
-		}));
+		// In dev builds load the full list including hidden words in one pass;
+		// in prod hidden words never leave the DB.
+		({ words } = await fetchAllWords(dev));
 	} catch (e) {
 		console.error(e);
 	}
+	await refPromise;
 
-	return { words, total, pinnedWords };
+	// Pinned words are a regular subset of the full list; keep them as a
+	// separate array so the template can render the "word of the week" section.
+	const pinnedWords = words.filter((w) => w.is_pinned);
+
+	return { words, total: words.length, pinnedWords };
 }

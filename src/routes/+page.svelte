@@ -20,10 +20,20 @@
 	import TagList from '$lib/components/TagList.svelte';
 	import type { WordData, TagData } from '$lib/types';
 	import { parseCrossref } from '$lib/types';
-	import { DEFAULT_ORDER, DEFAULT_SORT, PAGE_SIZE, SITE_NAME, SITE_URL, SITE_DESCRIPTION } from '$lib/constants';
+	import {
+		DEFAULT_ORDER,
+		DEFAULT_SORT,
+		FULL_LIST_LIMIT,
+		PAGE_SIZE,
+		SITE_NAME,
+		SITE_URL,
+		SITE_DESCRIPTION,
+	} from '$lib/constants';
 	import { highlightText } from '$lib/highlight';
 	import { latToCyr } from '$lib/lacinka';
 	import { getCachedWord, setCachedWord } from '$lib/fetch-word';
+	import { queryWords } from '$lib/word-search';
+	import { WordFilters } from '$lib/word-filters.svelte';
 	import { blogStore } from '$lib/stores/blogStore.svelte';
 	import { userStore } from '$lib/stores/userStore.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
@@ -37,22 +47,27 @@
 	let { data } = $props();
 
 	/* svelte-ignore state_referenced_locally */
-	let words = $state<WordData[]>(data.words);
-	/* svelte-ignore state_referenced_locally */
-	let pinnedWords = $state<WordData[]>(data.pinnedWords);
+	let allWords = $state<WordData[]>(data.words);
 	let tags = $state<TagData[]>($page.data.tags ?? []);
-	/* svelte-ignore state_referenced_locally */
-	let total = $state(data.total);
-	let search = $state('');
-	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-	let sort = $state(DEFAULT_SORT);
-	let order = $state(DEFAULT_ORDER);
-	let selectedTags = $state<string[]>([]);
-	let sortExplicit = $state(false);
+
+	// Initial filter state comes from the URL so a shared link renders
+	// filtered without a flash of the full list.
+	const initialSearch = $page.url.searchParams.get('search') ?? '';
+	const initialSortParam = $page.url.searchParams.get('sort');
+	const initialOrderParam = $page.url.searchParams.get('order');
+	const initialTagsParam = $page.url.searchParams.get('tags');
+	const filters = new WordFilters({
+		search: initialSearch,
+		sort: initialSortParam ?? (initialSearch ? 'relevance' : DEFAULT_SORT),
+		order: initialOrderParam ?? (initialSearch && !initialSortParam ? 'desc' : DEFAULT_ORDER),
+		sortExplicit: !!initialSortParam,
+		selectedTags: initialTagsParam ? initialTagsParam.split(',') : tags.map((t) => t.name),
+		allTagNames: tags.map((t) => t.name),
+	});
+
 	/* svelte-ignore state_referenced_locally */
 	let loading = $state(data.words.length === 0);
 	let listError = $state(false);
-	let triggerIndex = $state(-1);
 
 	let devMode = $state(false);
 	let draggedTransId = $state<number | null>(null);
@@ -62,8 +77,73 @@
 	let appEl: HTMLDivElement | undefined = $state();
 	let showScrollTop = $state(false);
 	let searchInput: HTMLInputElement | undefined = $state();
-	let showFavorites = $state(false);
 	let showComments = $state(true);
+
+	// Local search/filter/sort over the full dictionary. Everything is derived
+	// from allWords + the filter state, so mutating the underlying word objects
+	// (pins, hidden flags, deletions) updates the view automatically. In dev
+	// builds the SSR load already includes hidden words; they only become
+	// visible once the dev_mode admin toggle is on.
+	let visiblePool = $derived(devMode ? allWords : allWords.filter((w) => !w.hidden));
+	let favoriteIds = $derived(Object.keys(userStore.words).filter((id) => userStore.words[id]));
+	let visibleWords = $derived(
+		queryWords(visiblePool, {
+			search: filters.search,
+			sort: filters.sort,
+			order: filters.order,
+			selectedTags: filters.selectedTags,
+			allTags: tags.map((t) => t.name),
+			favoriteIds: filters.showFavorites ? favoriteIds : null,
+		}),
+	);
+	let pinnedWords = $derived(visiblePool.filter((w) => w.is_pinned));
+	let total = $derived(visibleWords.length);
+	let showPinned = $derived(
+		!filters.search &&
+			!filters.showFavorites &&
+			filters.selectedTags.length === tags.length &&
+			filters.sort === DEFAULT_SORT &&
+			filters.order === DEFAULT_ORDER,
+	);
+
+	// Paging: same visual behavior as the old infinite scroll — words appear in
+	// pages of PAGE_SIZE as you scroll. But the whole dictionary is already in
+	// memory, so "loading" the next page is just a local slice, no refetch.
+	let visibleCount = $state(PAGE_SIZE);
+	let pagedWords = $derived(visibleWords.slice(0, visibleCount));
+	let hasMore = $derived(visibleCount < visibleWords.length);
+	let loadMoreEl: HTMLDivElement | undefined = $state();
+
+	let queryVersion = '';
+	$effect(() => {
+		// Reset to the first page whenever the query changes.
+		const version = [
+			filters.search,
+			filters.sort,
+			filters.order,
+			filters.selectedTags.join(','),
+			filters.showFavorites,
+		].join('|');
+		if (version !== queryVersion) {
+			queryVersion = version;
+			visibleCount = PAGE_SIZE;
+		}
+	});
+
+	$effect(() => {
+		const el = loadMoreEl;
+		if (!el || !hasMore) return;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0]?.isIntersecting) {
+					visibleCount += PAGE_SIZE;
+				}
+			},
+			{ root: appEl ?? null, rootMargin: '200px' },
+		);
+		observer.observe(el);
+		return () => observer.disconnect();
+	});
 
 	let overlay = $state<string | null>(null);
 	type OverlayProps = { slug?: string; wordId?: string; word?: WordData } | null;
@@ -219,11 +299,6 @@
 		localStorage.setItem('show_comments', String(showComments));
 	}
 
-	function toggleShowFavorites() {
-		showFavorites = !showFavorites;
-		doSearch();
-	}
-
 	async function togglePin(word: WordData) {
 		if (!devMode) return;
 		try {
@@ -231,11 +306,6 @@
 			if (res.ok) {
 				const result = await res.json();
 				word.is_pinned = result.is_pinned;
-				if (result.is_pinned) {
-					pinnedWords = [word, ...pinnedWords];
-				} else {
-					pinnedWords = pinnedWords.filter((w) => w.id !== word.id);
-				}
 			}
 		} catch (e) {
 			console.error(e);
@@ -249,43 +319,11 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ hidden }),
 			});
-			const word = words.find((w) => w.id === wordId);
+			const word = allWords.find((w) => w.id === wordId);
 			if (word) word.hidden = hidden;
 		} catch (e) {
 			console.error(e);
 		}
-	}
-
-	async function fetchPage(offset: number) {
-		const params = new SvelteURLSearchParams();
-		if (search) params.set('search', search);
-		if (sort) params.set('sort', sort);
-		if (order) params.set('order', order);
-		if (selectedTags.length > 0) params.set('tags', selectedTags.join(','));
-		if (showFavorites) {
-			const ids = Object.keys(userStore.words).filter((id) => userStore.words[id]);
-			if (ids.length === 0) {
-				return { words: [], total: 0 };
-			}
-			for (const id of ids) {
-				params.append('ids', id);
-			}
-		}
-		if (devMode) params.set('include_hidden', 'true');
-		if (
-			offset === 0 &&
-			!search &&
-			!showFavorites &&
-			selectedTags.length === tags.length &&
-			sort === DEFAULT_SORT &&
-			order === DEFAULT_ORDER
-		) {
-			params.set('include_pinned', 'true');
-		}
-		params.set('offset', String(offset));
-		params.set('limit', String(PAGE_SIZE));
-		const res = await fetch(`/api/words?${params}`);
-		return res.ok ? await res.json() : null;
 	}
 
 	// Populate the fetch-word cache from lists already loaded so crossref
@@ -295,165 +333,37 @@
 		for (const word of list) setCachedWord(word.id, word);
 	}
 
-	function applyFetchResult(data: { words: WordData[]; total: number; pinnedWords?: WordData[] }) {
-		words = data.words;
-		total = data.total;
-		pinnedWords = data.pinnedWords ?? [];
-		cacheWordList(words);
-		cacheWordList(pinnedWords);
-		loading = false;
-		listError = false;
-		if (words.length < total) {
-			triggerIndex = -1;
-			prefetchNext();
-		} else {
-			updateTrigger();
-		}
-	}
-
+	// Reload the dictionary from the API. Only used as a retry/fallback when
+	// the server-side load failed; hidden words are included in dev builds.
 	async function fetchWords() {
 		try {
-			const data = await fetchPage(0);
-			if (!data) {
-				console.error('API error');
-				words = [];
-				total = 0;
+			const params = new SvelteURLSearchParams();
+			params.set('limit', String(FULL_LIST_LIMIT));
+			if (devMode) params.set('include_hidden', 'true');
+			const res = await fetch(`/api/words?${params}`);
+			if (!res.ok) throw new Error('API error');
+			const data = await res.json();
+			allWords = data.words ?? [];
+			cacheWordList(allWords);
+			loading = false;
+			listError = false;
+		} catch (e) {
+			console.error(e);
+			if (allWords.length === 0) {
 				loading = false;
 				listError = true;
-				return;
 			}
-			applyFetchResult(data);
-		} catch (e) {
-			console.error(e);
-			words = [];
-			total = 0;
-			loading = false;
-			listError = true;
 		}
-	}
-
-	let prefetching = $state(false);
-
-	async function prefetchNext() {
-		if (prefetching) return;
-		const offset = words.length;
-		if (offset <= 0 || offset >= total) return;
-		prefetching = true;
-		try {
-			const data = await fetchPage(offset);
-			if (data && data.words.length > 0 && words.length === offset) {
-				cacheWordList(data.words);
-				words = [...words, ...data.words];
-			}
-		} catch (e) {
-			console.error(e);
-		}
-		prefetching = false;
-		updateTrigger();
-	}
-
-	function updateTrigger() {
-		if (words.length < total) {
-			triggerIndex = words.length - PAGE_SIZE;
-		} else {
-			triggerIndex = -1;
-		}
-	}
-
-	function resetFilters() {
-		search = '';
-		sort = DEFAULT_SORT;
-		order = DEFAULT_ORDER;
-		sortExplicit = false;
-		selectedTags = tags.map((t) => t.name);
-		/* eslint-disable-next-line svelte/no-navigation-without-resolve */
-		replaceState(window.location.pathname, {});
-		showFavorites = false;
-		doSearch();
 	}
 
 	function clearSearch() {
-		if (!search) return;
-		search = '';
+		if (!filters.search) return;
+		filters.clearSearch();
 		searchInput?.blur();
-		doSearch();
 	}
-
-	function syncUrlParams() {
-		const params = new SvelteURLSearchParams();
-		if (search) params.set('search', search);
-		if (sort !== DEFAULT_SORT) params.set('sort', sort);
-		if (order !== DEFAULT_ORDER) params.set('order', order);
-		if (selectedTags.length > 0 && selectedTags.length < tags.length) {
-			params.set('tags', selectedTags.join(','));
-		}
-		const qs = params.toString();
-		/* eslint-disable-next-line svelte/no-navigation-without-resolve */
-		replaceState(qs ? `/?${qs}` : '/', {});
-	}
-
-	function doSearch() {
-		loading = true;
-		words = [];
-		total = 0;
-		listError = false;
-		if (search && !sortExplicit && sort === DEFAULT_SORT) {
-			sort = 'relevance';
-			order = 'desc';
-		} else if (!search && sort === 'relevance') {
-			sort = DEFAULT_SORT;
-			order = DEFAULT_ORDER;
-		}
-		fetchWords();
-		syncUrlParams();
-	}
-
-	function handleSort(field: string) {
-		sortExplicit = true;
-		if (sort === field) {
-			order = order === 'asc' ? 'desc' : 'asc';
-		} else {
-			sort = field;
-			order = field === 'word' ? 'asc' : 'desc';
-		}
-		words = [];
-		total = 0;
-		loading = true;
-		listError = false;
-		fetchWords();
-		syncUrlParams();
-	}
-
-	function handleTagFilter(tagName: string) {
-		if (selectedTags.includes(tagName)) {
-			selectedTags = selectedTags.filter((t) => t !== tagName);
-		} else {
-			selectedTags = [...selectedTags, tagName];
-		}
-		clearTimeout(debounceTimer);
-		debounceTimer = setTimeout(doSearch, 700);
-	}
-
-	$effect(() => {
-		if (triggerIndex < 0) return;
-		const el = document.querySelector<HTMLElement>('[data-trigger]');
-		if (!el) return;
-
-		const observer = new IntersectionObserver(
-			(entries) => {
-				if (entries[0].isIntersecting) {
-					observer.disconnect();
-					prefetchNext();
-				}
-			},
-			{ threshold: 0 },
-		);
-		observer.observe(el);
-		return () => observer.disconnect();
-	});
 
 	function onToggleWordLike(wordId: string) {
-		const word = words.find((w) => w.id === wordId) ?? pinnedWords.find((w) => w.id === wordId);
+		const word = allWords.find((w) => w.id === wordId);
 		if (word) userStore.toggleWordLike(wordId, word.likes);
 	}
 
@@ -464,8 +374,7 @@
 				method: 'DELETE',
 			});
 			if (res.ok) {
-				words = words.filter((w) => w.id !== wordId);
-				total -= 1;
+				allWords = allWords.filter((w) => w.id !== wordId);
 			}
 		} catch (e) {
 			console.error(e);
@@ -499,7 +408,7 @@
 		e.preventDefault();
 		if (draggedTransId === null || draggedTransId === targetId) return;
 
-		const word = words.find((w) => w.id === wordId);
+		const word = allWords.find((w) => w.id === wordId);
 		if (!word) return;
 
 		const fromIdx = word.translations.findIndex((t) => t.id === draggedTransId);
@@ -525,7 +434,7 @@
 				method: 'DELETE',
 			});
 			if (res.ok) {
-				for (const word of words) {
+				for (const word of allWords) {
 					const idx = word.translations.findIndex((t) => t.id === translationId);
 					if (idx !== -1) {
 						word.translations.splice(idx, 1);
@@ -539,7 +448,7 @@
 	}
 
 	function onToggleTranslationLike(translationId: number) {
-		for (const word of [...pinnedWords, ...words]) {
+		for (const word of allWords) {
 			const tr = word.translations.find((t) => t.id === translationId);
 			if (tr) {
 				userStore.toggleTranslationLike(translationId, tr.likes);
@@ -551,8 +460,8 @@
 	async function exportData() {
 		exportError = null;
 		const params = new SvelteURLSearchParams();
-		if (search) params.set('search', search);
-		if (selectedTags.length) params.set('tags', selectedTags.join(','));
+		if (filters.search) params.set('search', filters.search);
+		if (filters.selectedTags.length) params.set('tags', filters.selectedTags.join(','));
 
 		const res = await fetch(`/api/words/export?${params}`);
 		if (!res.ok) {
@@ -606,36 +515,9 @@
 		loadSettings();
 		theme.listen();
 
-		const params = new SvelteURLSearchParams(window.location.search);
-		const searchParam = params.get('search');
-		if (searchParam) search = searchParam;
-		const sortParam = params.get('sort');
-		if (sortParam) {
-			sort = sortParam;
-			sortExplicit = true;
-		} else if (searchParam) {
-			sort = 'relevance';
-			order = 'desc';
-		}
-		const orderParam = params.get('order');
-		if (orderParam) order = orderParam;
-		const tagsParam = params.get('tags');
-
-		tags = $page.data.tags ?? [];
-
-		if (tagsParam) {
-			selectedTags = tagsParam.split(',');
-		} else if (tags.length > 0) {
-			selectedTags = tags.map((t) => t.name);
-		}
-
-		if (data.words && data.words.length > 0) {
-			applyFetchResult({ words: data.words, total: data.total, pinnedWords: data.pinnedWords ?? [] });
-			if (devMode) fetchWords();
-		} else {
+		cacheWordList(allWords);
+		if (data.words.length === 0) {
 			loading = true;
-			words = [];
-			total = 0;
 			fetchWords();
 		}
 
@@ -696,14 +578,14 @@
 
 <div class="app" bind:this={appEl}>
 	<AppHeader
-		{showFavorites}
+		showFavorites={filters.showFavorites}
 		{showComments}
-		onReset={resetFilters}
+		onReset={() => filters.resetFilters()}
 		onOpenBlog={openBlog}
 		onPreloadBlog={preloadBlogList}
 		onOpenSuggest={openSuggest}
 		onPreloadSuggest={preloadSuggestOverlay}
-		onToggleFavorites={toggleShowFavorites}
+		onToggleFavorites={() => filters.toggleShowFavorites()}
 		onToggleComments={toggleComments}
 		onToggleLatin={() => settings.toggleLatin()}
 		onToggleTheme={() => theme.toggle()}
@@ -721,35 +603,32 @@
 
 	<WordControls
 		{tags}
-		{selectedTags}
+		selectedTags={filters.selectedTags}
 		{total}
-		{sort}
-		{order}
-		bind:search
+		sort={filters.sort}
+		order={filters.order}
+		bind:search={filters.search}
 		bind:searchInput
-		onSearchInput={() => {
-			clearTimeout(debounceTimer);
-			debounceTimer = setTimeout(doSearch, 300);
-		}}
-		onSearchEnter={doSearch}
+		onSearchInput={() => filters.doSearch()}
+		onSearchEnter={() => filters.doSearch()}
 		onSearchEscape={clearSearch}
 		onClearSearch={clearSearch}
-		onTagFilter={handleTagFilter}
-		onSort={handleSort}
+		onTagFilter={(tag) => filters.handleTagFilter(tag)}
+		onSort={(field) => filters.handleSort(field)}
 	/>
 
 	<div class="table-wrap">
-		{#if loading && words.length === 0}
+		{#if loading && allWords.length === 0}
 			<div class="loading">Ладаваньне...</div>
 		{:else if listError}
 			<div class="loading">
 				<p>Не ўдалося заладаваць словы. Спраўдзьце падлучэньне да інтэрнэту.</p>
-				<button class="pill retry-btn" onclick={doSearch}>Паспрабаваць ізноў</button>
+				<button class="pill retry-btn" onclick={fetchWords}>Паспрабаваць ізноў</button>
 			</div>
-		{:else if !loading && words.length === 0}
-			<div class="empty">{showFavorites ? 'Няма ўпадабаньняў' : 'Словы ня знойдзеныя'}</div>
+		{:else if !loading && visibleWords.length === 0}
+			<div class="empty">{filters.showFavorites ? 'Няма ўпадабаньняў' : 'Словы ня знойдзеныя'}</div>
 		{:else}
-			{#if pinnedWords.length > 0}
+			{#if showPinned && pinnedWords.length > 0}
 				<div class="grid-table grid-table--pinned" role="table">
 					<div role="row" class="sr-only">
 						<div role="columnheader">Слова тыдня</div>
@@ -796,7 +675,7 @@
 								>
 								<Tooltip content={showComments ? word.comment : null}>
 									<span class="word-text" class:has-note={showComments && word.comment !== null}
-										>{@html highlightText(word.id, latToCyr(search))}</span
+										>{@html highlightText(word.id, latToCyr(filters.search))}</span
 									>
 								</Tooltip>
 								{#if devMode}
@@ -817,7 +696,7 @@
 											comment={tr.comment}
 											showLatin={settings.showLatin}
 											{showComments}
-											searchQuery={search}
+											searchQuery={filters.search}
 											onWordLink={openWord}
 										/>
 										{#if !parseCrossref(tr.translation)}
@@ -853,8 +732,8 @@
 					<div role="columnheader">Пераклад</div>
 					<div role="columnheader">Лайкі</div>
 				</div>
-				{#each words as word, i (word.id)}
-					<div class="grid-row" role="row" data-trigger={i === triggerIndex ? '' : undefined}>
+				{#each pagedWords as word (word.id)}
+					<div class="grid-row" role="row">
 						{#if word.created_at && Date.now() - new Date(word.created_at).getTime() < 7 * 24 * 60 * 60 * 1000}
 							<span class="new-badge">Новае</span>
 						{/if}
@@ -879,7 +758,7 @@
 							>
 							<Tooltip content={showComments ? word.comment : null}>
 								<span class="word-text" class:has-note={showComments && word.comment !== null}
-									>{@html highlightText(word.id, latToCyr(search))}</span
+									>{@html highlightText(word.id, latToCyr(filters.search))}</span
 								>
 							</Tooltip>
 							{#if devMode}
@@ -963,7 +842,7 @@
 										comment={tr.comment}
 										showLatin={settings.showLatin}
 										{showComments}
-										searchQuery={search}
+										searchQuery={filters.search}
 										onWordLink={openWord}
 										popupChain={[word.id]}
 									/>
@@ -1010,10 +889,11 @@
 					</div>
 				{/each}
 			</div>
+			{#if hasMore}
+				<div class="footer-loading" bind:this={loadMoreEl} role="status">Ладаваньне...</div>
+			{/if}
 		{/if}
-		{#if prefetching}
-			<div class="footer-loading">Ладаваньне...</div>
-		{:else if search && !loading && !listError}
+		{#if filters.search && !loading && !listError}
 			<div class="table-footer">
 				<ContactTrigger userToken={userStore.userToken} open={contactOpen} onOpen={openContact} />
 			</div>

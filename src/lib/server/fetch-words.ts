@@ -1,5 +1,5 @@
 import { supabase } from '$lib/server/db';
-import { DEFAULT_ORDER, DEFAULT_SORT, PAGE_SIZE } from '$lib/constants';
+import { DEFAULT_ORDER, DEFAULT_SORT, FULL_LIST_LIMIT, PAGE_SIZE } from '$lib/constants';
 import { latToCyr } from '$lib/lacinka';
 import type { WordData } from '$lib/types';
 
@@ -44,7 +44,7 @@ export async function fetchWordsPage(params: WordsPageParams) {
 				sort_field: 'pinned_at',
 				sort_dir: 'desc',
 				result_offset: 0,
-				result_limit: 100000,
+				result_limit: FULL_LIST_LIMIT,
 				word_ids: null,
 				include_hidden: true,
 				pinned_only: true,
@@ -64,4 +64,12 @@ export async function fetchWordsPage(params: WordsPageParams) {
 
 	const result = mainResult.data as { words: WordData[]; total: number };
 	return { words: result.words ?? [], total: result.total ?? 0, pinnedWords };
+}
+
+// The whole dictionary in one call (used by the homepage SSR load). Pinned
+// words (is_pinned) are regular words that happen to be promoted — they are
+// never hidden, so a single include_hidden: false query already returns them;
+// the pinned section is derived client-side from the same list.
+export function fetchAllWords(includeHidden = false) {
+	return fetchWordsPage({ offset: 0, limit: FULL_LIST_LIMIT, includeHidden });
 }
