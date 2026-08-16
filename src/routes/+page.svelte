@@ -1448,7 +1448,7 @@
 		}
 
 		.table-footer {
-			margin-top: 0.75rem;
+			margin: 0.75rem 0;
 		}
 	}
 
