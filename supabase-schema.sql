@@ -285,6 +285,32 @@ BEGIN
 		OFFSET result_offset
 		LIMIT result_limit
 	)
+	-- Aggregate translations and tags set-based (one GROUP BY scan per table,
+	-- restricted to the already-paginated rows) instead of two correlated
+	-- subqueries per returned word.
+	,
+	trans_agg AS (
+		SELECT t.word_id,
+			json_agg(
+				json_build_object(
+					'id', t.id,
+					'translation', t.translation,
+					'comment', t.comment,
+					'likes', t.likes
+				) ORDER BY t.sort_order, t.id
+			) AS translations
+		FROM translations t
+		WHERE t.word_id IN (SELECT id FROM sorted)
+		GROUP BY t.word_id
+	),
+	tag_agg AS (
+		SELECT wt.word_id,
+			json_agg(tg.name) AS tags
+		FROM word_tags wt
+		JOIN tags tg ON wt.tag_id = tg.id
+		WHERE wt.word_id IN (SELECT id FROM sorted)
+		GROUP BY wt.word_id
+	)
 	SELECT json_build_object(
 		'words', COALESCE((SELECT json_agg(row_to_json(subq)) FROM (
 			SELECT
@@ -296,25 +322,11 @@ BEGIN
 				s.is_pinned,
 				s.created_at,
 				json_build_object('id', s.imp_id, 'name', s.imp_name, 'level', s.imp_level) AS importance,
-				COALESCE(
-					(SELECT json_agg(
-						json_build_object(
-							'id', t.id,
-							'translation', t.translation,
-							'comment', t.comment,
-							'likes', t.likes
-						) ORDER BY t.sort_order, t.id
-					) FROM translations t WHERE t.word_id = s.id),
-					'[]'::json
-				) AS translations,
-				COALESCE(
-					(SELECT json_agg(tg.name)
-					FROM word_tags wt
-					JOIN tags tg ON wt.tag_id = tg.id
-					WHERE wt.word_id = s.id),
-					'[]'::json
-				) AS tags
+				COALESCE(ta.translations, '[]'::json) AS translations,
+				COALESCE(tga.tags, '[]'::json) AS tags
 			FROM sorted s
+			LEFT JOIN trans_agg ta ON ta.word_id = s.id
+			LEFT JOIN tag_agg tga ON tga.word_id = s.id
 		) subq), '[]'::json),
 		'total', (SELECT COUNT(*) FROM filtered)
 	) INTO result;
