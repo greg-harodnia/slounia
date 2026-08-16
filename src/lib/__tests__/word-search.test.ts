@@ -110,6 +110,23 @@ describe('queryWords', () => {
 		const result = queryWords(words, baseQuery({ search: 'кава', sort: 'relevance', order: 'desc' }));
 		expect(result.map((w) => w.id)).toEqual(['кава', 'накавальня', 'дом']);
 	});
+
+	it('ranks real translation matches above crossref ("гл./параўн.") matches', () => {
+		const words = [
+			mkWord({ id: 'наведвальнік' }),
+			mkWord({
+				id: 'гасцёўня',
+				translations: [{ id: 1, translation: 'гл. Наведвальнік', comment: null, likes: 0 }],
+			}),
+			mkWord({
+				id: 'посведка',
+				translations: [{ id: 2, translation: 'наведвальнік мерапрыемства', comment: null, likes: 0 }],
+			}),
+		];
+		const result = queryWords(words, baseQuery({ search: 'наведвальнік', sort: 'relevance', order: 'desc' }));
+		// гасцёўня still matches (via its crossref) but sinks to the bottom.
+		expect(result.map((w) => w.id)).toEqual(['наведвальнік', 'посведка', 'гасцёўня']);
+	});
 });
 
 describe('sortWords', () => {

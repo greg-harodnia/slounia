@@ -1,6 +1,6 @@
 import { normalizeText } from '$lib/highlight';
 import { latToCyr } from '$lib/lacinka';
-import type { WordData } from '$lib/types';
+import { parseCrossref, type WordData } from '$lib/types';
 
 export interface WordQuery {
 	search: string;
@@ -25,16 +25,24 @@ function matchesTerm(term: string, word: WordData): boolean {
 	);
 }
 
+// A crossref translation ("гл. X" / "параўн. Y") points to another entry
+// instead of translating it, so a term found only there shouldn't rank as
+// high as a real translation.
+function hasRealTranslationMatch(word: WordData, term: string): boolean {
+	return word.translations.some((t) => !parseCrossref(t.translation) && normalizeText(t.translation).includes(term));
+}
+
 // Approximates the SQL relevance ranking (pg_trgm similarity). Deliberately
 // simple and deterministic: a term in the word itself beats one only found in
-// a translation, and a prefix match beats a mid-word one.
+// a translation, and a prefix match beats a mid-word one. Crossref matches
+// rank below real translations (they're "see also" pointers, not translations).
 function relevanceScore(word: WordData, terms: string[]): number {
 	let score = 0;
 	for (const term of terms) {
 		const id = normalizeText(word.id);
 		if (id.startsWith(term)) score += 3;
 		else if (id.includes(term)) score += 2;
-		else if (word.translations.some((t) => normalizeText(t.translation).includes(term))) score += 1;
+		else if (hasRealTranslationMatch(word, term)) score += 1;
 	}
 	return score;
 }
