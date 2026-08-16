@@ -32,9 +32,5 @@ export async function load({ url, setHeaders }) {
 	}
 	await refPromise;
 
-	// Pinned words are a regular subset of the full list; keep them as a
-	// separate array so the template can render the "word of the week" section.
-	const pinnedWords = words.filter((w) => w.is_pinned);
-
-	return { words, total: words.length, pinnedWords };
+	return { words };
 }

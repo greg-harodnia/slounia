@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { supabase } from '$lib/server/db';
 import { apiError } from '$lib/server/utils';
-import { SITE_NAME } from '$lib/constants';
+import { SITE_NAME, FULL_LIST_LIMIT } from '$lib/constants';
 
 export const GET: RequestHandler = async ({ url }) => {
 	const search = url.searchParams.get('search') || '';
@@ -15,7 +15,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		sort_field: 'word',
 		sort_dir: 'asc',
 		result_offset: 0,
-		result_limit: 100000,
+		result_limit: FULL_LIST_LIMIT,
 		word_ids: null,
 		include_hidden: false,
 	});

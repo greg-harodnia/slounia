@@ -15,7 +15,6 @@ export const GET: RequestHandler = async ({ url }) => {
 			limit: Number(url.searchParams.get('limit') || String(PAGE_SIZE)),
 			ids: url.searchParams.getAll('ids'),
 			includeHidden: url.searchParams.get('include_hidden') === 'true',
-			includePinned: url.searchParams.get('include_pinned') === 'true',
 		});
 		return json(result);
 	} catch (error) {

@@ -202,8 +202,7 @@ CREATE OR REPLACE FUNCTION get_words(
 	result_offset INTEGER DEFAULT 0,
 	result_limit INTEGER DEFAULT 100000,
 	word_ids TEXT[] DEFAULT NULL,
-	include_hidden BOOLEAN DEFAULT false,
-	pinned_only BOOLEAN DEFAULT false
+	include_hidden BOOLEAN DEFAULT false
 )
 RETURNS JSON
 LANGUAGE plpgsql AS $$
@@ -219,7 +218,6 @@ BEGIN
 			w.created_at,
 			w.hidden,
 			w.is_pinned,
-			w.pinned_at,
 			i.id AS imp_id,
 			i.name AS imp_name,
 			i.level AS imp_level,
@@ -227,7 +225,6 @@ BEGIN
 				WHEN sort_field = 'importance' THEN COALESCE(i.level::text, '0')
 				WHEN sort_field = 'likes' THEN LPAD(w.likes::text, 10, '0')
 				WHEN sort_field = 'created_at' THEN COALESCE(to_char(w.created_at, 'YYYYMMDDHH24MISS'), '0')
-				WHEN sort_field = 'pinned_at' THEN COALESCE(to_char(w.pinned_at, 'YYYYMMDDHH24MISS'), '0')
 				ELSE LOWER(w.id)
 			END AS sort_expr,
 			CASE
@@ -273,7 +270,6 @@ BEGIN
 		)
 		AND (word_ids IS NULL OR w.id = ANY(word_ids))
 		AND (include_hidden OR NOT COALESCE(w.hidden, false))
-		AND (NOT pinned_only OR w.is_pinned = true)
 	),
 	sorted AS (
 		SELECT * FROM filtered
