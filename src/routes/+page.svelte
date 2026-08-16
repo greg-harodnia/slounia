@@ -76,6 +76,7 @@
 	let exportError = $state<string | null>(null);
 	let showWelcome = $state(false);
 	let appEl: HTMLDivElement | undefined = $state();
+	let tableWrapEl: HTMLDivElement | undefined = $state();
 	let showScrollTop = $state(false);
 	let searchInput: HTMLInputElement | undefined = $state();
 	let showComments = $state(true);
@@ -359,9 +360,14 @@
 		}
 	}
 
+	function scrollToTop() {
+		const el = [tableWrapEl, appEl].find((e): e is HTMLDivElement => !!e && e.scrollHeight > e.clientHeight + 1);
+		el?.scrollTo({ top: 0, behavior: 'smooth' });
+	}
+
 	function resetAll() {
 		filters.resetFilters();
-		appEl?.scrollTo({ top: 0, behavior: 'smooth' });
+		scrollToTop();
 	}
 
 	function clearSearch() {
@@ -625,7 +631,7 @@
 		onSort={(field) => filters.handleSort(field)}
 	/>
 
-	<div class="table-wrap">
+	<div class="table-wrap" bind:this={tableWrapEl}>
 		{#if loading && allWords.length === 0}
 			<div class="loading">Ладаваньне...</div>
 		{:else if listError}
@@ -914,11 +920,7 @@
 		<div class="copy-toast error" role="alert">{exportError}</div>
 	{/if}
 	{#if showScrollTop}
-		<button
-			class="scroll-top"
-			onclick={() => appEl?.scrollTo({ top: 0, behavior: 'smooth' })}
-			aria-label="Scroll to top"
-		>
+		<button class="scroll-top" onclick={scrollToTop} aria-label="Scroll to top">
 			<svg
 				width="20"
 				height="20"
