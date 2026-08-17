@@ -491,8 +491,14 @@ DROP POLICY IF EXISTS anon_read_suggestions ON suggestions;
 
 CREATE POLICY anon_read_importance ON importance FOR SELECT TO anon USING (true);
 CREATE POLICY anon_read_tags ON tags FOR SELECT TO anon USING (true);
-CREATE POLICY anon_read_words ON words FOR SELECT TO anon USING (true);
-CREATE POLICY anon_read_word_tags ON word_tags FOR SELECT TO anon USING (true);
-CREATE POLICY anon_read_translations ON translations FOR SELECT TO anon USING (true);
+-- Hidden (draft) words must not be readable by anon: they only become
+-- visible through the app in dev builds, which use the service client.
+CREATE POLICY anon_read_words ON words FOR SELECT TO anon USING (NOT COALESCE(hidden, false));
+CREATE POLICY anon_read_word_tags ON word_tags FOR SELECT TO anon USING (
+	EXISTS (SELECT 1 FROM words w WHERE w.id = word_tags.word_id AND NOT COALESCE(w.hidden, false))
+);
+CREATE POLICY anon_read_translations ON translations FOR SELECT TO anon USING (
+	EXISTS (SELECT 1 FROM words w WHERE w.id = translations.word_id AND NOT COALESCE(w.hidden, false))
+);
 CREATE POLICY anon_read_posts ON posts FOR SELECT TO anon USING (true);
 CREATE POLICY anon_read_suggestions ON suggestions FOR SELECT TO anon USING (true);

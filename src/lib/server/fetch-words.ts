@@ -1,4 +1,4 @@
-import { supabase } from '$lib/server/db';
+import { supabase, getServiceClient } from '$lib/server/db';
 import { DEFAULT_ORDER, DEFAULT_SORT, FULL_LIST_LIMIT, PAGE_SIZE } from '$lib/constants';
 import { latToCyr } from '$lib/lacinka';
 import type { WordData } from '$lib/types';
@@ -24,7 +24,12 @@ export async function fetchWordsPage(params: WordsPageParams) {
 	const ids = (params.ids ?? []).filter(Boolean);
 	const includeHidden = params.includeHidden ?? false;
 
-	const { data, error } = await supabase.rpc('get_words', {
+	// Hidden (draft) words are blocked for anon by RLS, so including them
+	// requires the service client. Only dev builds request them (the API
+	// route gates include_hidden behind dev too).
+	const client = includeHidden ? getServiceClient() : supabase;
+
+	const { data, error } = await client.rpc('get_words', {
 		search,
 		tag_filter: tags,
 		sort_field: sort,

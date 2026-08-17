@@ -5,6 +5,10 @@ import { apiError } from '$lib/server/utils';
 import { DEFAULT_ORDER, DEFAULT_SORT, PAGE_SIZE } from '$lib/constants';
 
 export const GET: RequestHandler = async ({ url }) => {
+	// include_hidden is a dev-only escape hatch for the dev_mode admin list;
+	// it is never honored in production (hidden words are RLS-blocked there).
+	const includeHidden = !import.meta.env.PROD && url.searchParams.get('include_hidden') === 'true';
+
 	try {
 		const result = await fetchWordsPage({
 			search: url.searchParams.get('search') || '',
@@ -14,7 +18,7 @@ export const GET: RequestHandler = async ({ url }) => {
 			offset: Number(url.searchParams.get('offset') || '0'),
 			limit: Number(url.searchParams.get('limit') || String(PAGE_SIZE)),
 			ids: url.searchParams.getAll('ids'),
-			includeHidden: url.searchParams.get('include_hidden') === 'true',
+			includeHidden,
 		});
 		return json(result);
 	} catch (error) {

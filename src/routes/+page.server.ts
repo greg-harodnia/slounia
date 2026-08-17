@@ -6,8 +6,11 @@ import type { WordData } from '$lib/types';
 export async function load({ url, setHeaders }) {
 	// The homepage HTML (the full word list) is identical for every visitor,
 	// so let Vercel serve it from the edge cache. Ref links must stay dynamic
-	// to count each visit.
-	if (!url.searchParams.has('ref')) {
+	// to count each visit, so they are never cached (and the hooks default
+	// only applies when no Cache-Control header is already set).
+	if (url.searchParams.has('ref')) {
+		setHeaders({ 'Cache-Control': 'no-store' });
+	} else {
 		setHeaders({
 			'Cache-Control': `public, s-maxage=${CACHE_TTL_PAGE}, stale-while-revalidate=${CACHE_TTL_PAGE}`,
 		});
