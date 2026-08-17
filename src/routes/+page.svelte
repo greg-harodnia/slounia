@@ -530,6 +530,10 @@
 		theme.listen();
 
 		cacheWordList(allWords);
+		userStore.syncLikeCounts(
+			allWords.map((w) => w.id),
+			allWords.flatMap((w) => w.translations.map((t) => t.id)),
+		);
 		if (data.words.length === 0) {
 			loading = true;
 			fetchWords();

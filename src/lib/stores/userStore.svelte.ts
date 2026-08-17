@@ -138,6 +138,30 @@ class UserStore {
 		}
 	}
 
+	// Pre-populate word/translation like counts from the server so that
+	// CDN-cached pages still show fresh numbers (see +page.server.ts cache).
+	async syncLikeCounts(wordIds: string[], translationIds: number[]) {
+		if (wordIds.length === 0 && translationIds.length === 0) return;
+
+		const parts: string[] = [];
+		if (wordIds.length > 0) parts.push(`words=${encodeURIComponent(wordIds.join(','))}`);
+		if (translationIds.length > 0) parts.push(`translations=${encodeURIComponent(translationIds.join(','))}`);
+
+		try {
+			const res = await fetch(`/api/likes?${parts.join('&')}`);
+			if (!res.ok) return;
+			const data = await res.json();
+			for (const [id, likes] of Object.entries(data.words ?? {})) {
+				this.wordLikes[id] = likes as number;
+			}
+			for (const [id, likes] of Object.entries(data.translations ?? {})) {
+				this.translationLikes[id] = likes as number;
+			}
+		} catch {
+			// non-critical; fallback values from the page will be used
+		}
+	}
+
 	getViewCount(kind: 'word' | 'post', id: string, fallback: number) {
 		return this.views[this.#viewKey(kind, id)] ?? fallback;
 	}
