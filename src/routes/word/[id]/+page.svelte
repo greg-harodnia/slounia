@@ -5,12 +5,17 @@
 	import ToDict from '$lib/components/ToDict.svelte';
 	import { onMount } from 'svelte';
 	import { settings } from '$lib/stores/settings.svelte';
+	import { userStore } from '$lib/stores/userStore.svelte';
 
 	let { data } = $props();
 	const word = $derived(data.word);
 
 	onMount(() => {
 		settings.load();
+		userStore.syncLikeCounts(
+			[word.id],
+			word.translations.map((t) => t.id),
+		);
 	});
 
 	const wordLd = $derived(

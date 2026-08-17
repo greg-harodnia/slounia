@@ -3,10 +3,16 @@
 	import BlogPostContent from '$lib/components/BlogPostContent.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 	import ToDict from '$lib/components/ToDict.svelte';
+	import { onMount } from 'svelte';
+	import { userStore } from '$lib/stores/userStore.svelte';
 
 	let { data } = $props();
 	/* svelte-ignore state_referenced_locally */
 	const post = data.post;
+
+	onMount(() => {
+		userStore.syncLikeCounts([], [], [post.slug]);
+	});
 
 	let excerpt = $derived(
 		post.content

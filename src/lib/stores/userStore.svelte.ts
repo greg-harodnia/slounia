@@ -138,14 +138,15 @@ class UserStore {
 		}
 	}
 
-	// Pre-populate word/translation like counts from the server so that
+	// Pre-populate word/translation/post like counts from the server so that
 	// CDN-cached pages still show fresh numbers (see +page.server.ts cache).
-	async syncLikeCounts(wordIds: string[], translationIds: number[]) {
-		if (wordIds.length === 0 && translationIds.length === 0) return;
+	async syncLikeCounts(wordIds: string[], translationIds: number[], postSlugs: string[] = []) {
+		if (wordIds.length === 0 && translationIds.length === 0 && postSlugs.length === 0) return;
 
 		const parts: string[] = [];
 		if (wordIds.length > 0) parts.push(`words=${encodeURIComponent(wordIds.join(','))}`);
 		if (translationIds.length > 0) parts.push(`translations=${encodeURIComponent(translationIds.join(','))}`);
+		if (postSlugs.length > 0) parts.push(`posts=${encodeURIComponent(postSlugs.join(','))}`);
 
 		try {
 			const res = await fetch(`/api/likes?${parts.join('&')}`);
@@ -156,6 +157,9 @@ class UserStore {
 			}
 			for (const [id, likes] of Object.entries(data.translations ?? {})) {
 				this.translationLikes[id] = likes as number;
+			}
+			for (const [slug, likes] of Object.entries(data.posts ?? {})) {
+				this.postLikes[slug] = likes as number;
 			}
 		} catch {
 			// non-critical; fallback values from the page will be used
