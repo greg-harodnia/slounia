@@ -14,10 +14,6 @@
 	} = $props();
 
 	let inputEl = $state<HTMLInputElement | HTMLTextAreaElement | null>(null);
-
-	export function focus() {
-		inputEl?.focus();
-	}
 </script>
 
 {#if multiline}

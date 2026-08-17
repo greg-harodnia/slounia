@@ -48,6 +48,20 @@ export function formatDate(iso: string): string {
 	return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+// Importance levels. `id` is the serial row id in the `importance` table and
+// only matters when submitting forms; `level` is the stable semantic key used
+// everywhere else (badges, sorting, the pinned-word cron). Prefer matching by
+// `level`, never by hardcoded `id` (ids depend on seed order).
+//
+// id → level mapping (ids are pinned in supabase-schema.sql and match the live DB):
+//   id 8 → level -2 (Сынонімы)
+//   id 7 → level -1 (Трасянка)
+//   id 6 → level 0  (Уважліва)
+//   id 1 → level 1  (Можна лепей)
+//   id 2 → level 2  (Нязграба)
+//   id 3 → level 3  (Недарэка)
+//   id 4 → level 4  (Жах)
+//   id 5 → level 5  (💀 / Паўсюдны жах)
 export const importanceLevels = [
 	{ id: 8, name: 'Сынонімы' },
 	{ id: 7, name: 'Трасянка' },

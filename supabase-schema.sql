@@ -6,15 +6,19 @@ CREATE TABLE IF NOT EXISTS importance (
 	level INTEGER NOT NULL UNIQUE
 );
 
-INSERT INTO importance (name, level) VALUES
-	('Сынонімы', -2),
-	('Трасянка', -1),
-	('Уважліва', 0),
-	('Можна лепей', 1),
-	('Нязграба', 2),
-	('Недарэка', 3),
-	('Жах', 4),
-	('Паўсюдны жах', 5)
+-- IMPORTANT: these ids are pinned explicitly and MUST stay in sync with
+-- src/lib/constants.ts (importanceLevels) and the rotate-pinned-word cron
+-- (which filters words by importance_id = 5). Relying on SERIAL insertion
+-- order would silently assign different ids.
+INSERT INTO importance (id, name, level) VALUES
+	(8, 'Сынонімы', -2),
+	(7, 'Трасянка', -1),
+	(6, 'Уважліва', 0),
+	(1, 'Можна лепей', 1),
+	(2, 'Нязграба', 2),
+	(3, 'Недарэка', 3),
+	(4, 'Жах', 4),
+	(5, 'Паўсюдны жах', 5)
 ON CONFLICT (name) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS tags (
