@@ -98,6 +98,9 @@ const TOOLS: Record<string, { description: string; parameters: object; run: Tool
 			const supabase = getServiceClient();
 			const q = String(query ?? '').trim();
 			let request = supabase.from('posts').select('slug,title,hashtags,published_at,likes,views,content');
+			if (import.meta.env.PROD) {
+				request = request.lte('published_at', new Date().toISOString());
+			}
 			if (q) {
 				const like = `%${q.replace(/[\\%_]/g, (c) => '\\' + c)}%`;
 				request = request.or(`title.ilike.${like},content.ilike.${like}`);
@@ -120,6 +123,7 @@ const TOOLS: Record<string, { description: string; parameters: object; run: Tool
 				.from('posts')
 				.select('*')
 				.eq('slug', String(slug ?? ''))
+				.lte('published_at', new Date().toISOString())
 				.maybeSingle();
 			if (error) return { error: error.message };
 			if (!data) return { not_found: true };
@@ -134,7 +138,10 @@ const TOOLS: Record<string, { description: string; parameters: object; run: Tool
 			const [words, translations, posts, tags] = await Promise.all([
 				supabase.from('words').select('id', { count: 'exact', head: true }).eq('hidden', false),
 				supabase.from('translations').select('id', { count: 'exact', head: true }),
-				supabase.from('posts').select('id', { count: 'exact', head: true }),
+				supabase
+					.from('posts')
+					.select('id', { count: 'exact', head: true })
+					.lte('published_at', new Date().toISOString()),
 				supabase.from('tags').select('id', { count: 'exact', head: true }),
 			]);
 			return {

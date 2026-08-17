@@ -1,10 +1,14 @@
-import { supabase } from '$lib/server/db';
 import { json } from '@sveltejs/kit';
 import { CACHE_TTL } from '$lib/constants';
 import type { Post } from '$lib/types';
 
 export async function GET({ params }) {
-	const { data, error } = await supabase.from('posts').select('*').eq('slug', params.slug).single();
+	const { supabase } = await import('$lib/server/db');
+	let query = supabase.from('posts').select('*').eq('slug', params.slug);
+	if (import.meta.env.PROD) {
+		query = query.lte('published_at', new Date().toISOString());
+	}
+	const { data, error } = await query.single();
 
 	if (error || !data) {
 		return json({ error: 'Post not found' }, { status: 404 });

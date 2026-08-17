@@ -7,7 +7,11 @@ export async function GET() {
 
 	try {
 		const [postsRes, wordsRes] = await Promise.all([
-			supabase.from('posts').select('slug, updated_at, published_at').order('published_at', { ascending: false }),
+			supabase
+				.from('posts')
+				.select('slug, updated_at, published_at')
+				.lte('published_at', new Date().toISOString())
+				.order('published_at', { ascending: false }),
 			supabase.from('words').select('id, created_at').eq('hidden', false).order('id'),
 		]);
 		if (postsRes.data) posts = postsRes.data;

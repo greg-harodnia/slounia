@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Crumb } from '$lib/types';
-	import { r } from '$lib/constants';
+	import { r, SITE_URL } from '$lib/constants';
+	import { page } from '$app/stores';
 
 	const labels: Record<string, string> = {
 		'/': 'Галоўная',
@@ -13,6 +14,30 @@
 	function breadcrumbLabel(item: Crumb): string {
 		return item.label ?? (item.href ? labels[item.href] : undefined) ?? 'Галоўная';
 	}
+
+	// Emit the same breadcrumbs Google sees (only for the real per-page
+	// breadcrumbs that carry navigable hrefs; in-app overlays are skipped
+	// because their crumbs are pure JS state, not page structure).
+	const ldBreadcrumb = $derived.by(() => {
+		const list = items
+			.map((item, i) => {
+				const name = breadcrumbLabel(item);
+				if (item.href) {
+					return { '@type': 'ListItem', position: i + 1, name, item: SITE_URL + r(item.href) };
+				}
+				// The trailing "current page" crumb -> canonical page URL.
+				if (i === items.length - 1) {
+					return { '@type': 'ListItem', position: i + 1, name, item: SITE_URL + $page.url.pathname };
+				}
+				return null;
+			})
+			.filter((x): x is { '@type': string; position: number; name: string; item: string } => x !== null);
+		if (list.length < 2) return '';
+		return JSON.stringify({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: list });
+	});
+	const ldBreadcrumbHtml = $derived(
+		ldBreadcrumb ? '<script type="application/ld+json">' + ldBreadcrumb + '<' + '/script>' : '',
+	);
 </script>
 
 <nav class="breadcrumb">
@@ -54,6 +79,8 @@
 		{/if}
 	{/each}
 </nav>
+
+{@html ldBreadcrumbHtml}
 
 <style>
 	.breadcrumb {

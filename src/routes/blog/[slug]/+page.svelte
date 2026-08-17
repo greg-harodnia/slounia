@@ -48,7 +48,7 @@
 </script>
 
 <svelte:head>
-	<title>{post.title} — Блёґ Слоўні</title>
+	<title>{post.title} — {SITE_NAME}</title>
 	<meta name="description" content={excerpt || post.title} />
 	<meta property="og:title" content="{post.title} — {SITE_NAME}" />
 	<meta property="og:description" content={excerpt || post.title} />

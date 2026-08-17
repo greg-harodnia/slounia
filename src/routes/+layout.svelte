@@ -11,6 +11,7 @@
 	import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import { userStore } from '$lib/stores/userStore.svelte';
 	import { onMount } from 'svelte';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 	injectSpeedInsights();
 	injectAnalytics({ mode: dev ? 'development' : 'production' });
@@ -61,6 +62,20 @@
 	const ldOrganizationHtml = '<script type="application/ld+json">' + ldOrganization + '</' + 'script>';
 	const ldBreadcrumbHtml = '<script type="application/ld+json">' + ldBreadcrumb + '</' + 'script>';
 
+	// Pagination/filter state is part of the URL and must survive into the
+	// canonical + hreflang links (/blog?page=2 -> canonical for page 2).
+	// Tracking/debug params (?ref=, ?search=) are deliberately dropped.
+	const canonicalUrl = $derived.by(() => {
+		const u = $page.url;
+		const kept = new SvelteURLSearchParams();
+		for (const key of ['page', 'hashtag']) {
+			const v = u.searchParams.get(key);
+			if (v) kept.set(key, v);
+		}
+		const qs = kept.toString();
+		return SITE_URL + u.pathname + (qs ? '?' + qs : '');
+	});
+
 	function getTokenFromStorage(): string {
 		try {
 			return localStorage.getItem('user_token') || '';
@@ -108,14 +123,16 @@
 	<meta property="og:image:height" content="512" />
 	<meta name="twitter:card" content="summary_large_image" />
 
-	<link rel="canonical" href="{SITE_URL}{$page.url.pathname}" />
-	<link rel="alternate" hreflang="be" href="{SITE_URL}{$page.url.pathname}" />
-	<link rel="alternate" hreflang="be-tarask" href="{SITE_URL}{$page.url.pathname}" />
-	<link rel="alternate" hreflang="x-default" href="{SITE_URL}{$page.url.pathname}" />
+	<link rel="canonical" href={canonicalUrl} />
+	<link rel="alternate" hreflang="be" href={canonicalUrl} />
+	<link rel="alternate" hreflang="be-tarask" href={canonicalUrl} />
+	<link rel="alternate" hreflang="x-default" href={canonicalUrl} />
 
 	{@html ldWebsiteHtml}
 	{@html ldOrganizationHtml}
-	{@html ldBreadcrumbHtml}
+	{#if $page.url.pathname === '/'}
+		{@html ldBreadcrumbHtml}
+	{/if}
 </svelte:head>
 
 {#if isBanned}

@@ -17,6 +17,7 @@ export const FULL_LIST_LIMIT = 100000;
 // The homepage HTML (the whole word list) is identical for every visitor,
 // so Vercel may serve it from the edge cache. 12 hours, in seconds.
 export const CACHE_TTL_PAGE = 43200;
+export const BLOG_PAGE_SIZE = 5;
 
 export function r(path: string): string {
 	// @ts-expect-error - dynamic path, not literal route

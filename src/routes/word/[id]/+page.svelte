@@ -42,6 +42,9 @@
 	<meta property="og:image" content="{SITE_URL}/pwa-512x512.png" />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="{SITE_URL}/word/{word.id}" />
+	<meta name="twitter:title" content="{word.id} — {SITE_NAME}" />
+	<meta name="twitter:description" content={word.translations.map((t) => t.translation).join(', ')} />
+	<meta name="twitter:image" content="{SITE_URL}/pwa-512x512.png" />
 	{@html wordLdHtml}
 </svelte:head>
 

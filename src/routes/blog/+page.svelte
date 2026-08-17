@@ -9,7 +9,22 @@
 	import { blogStore } from '$lib/stores/blogStore.svelte';
 	import { replaceState } from '$app/navigation';
 
-	let _data = $props();
+	let { data } = $props();
+
+	const description = `Артыкулы пра мовазнаўства, цікавосткі й іншае.`;
+
+	// Covers the SSR first paint (crawlers + no-JS) and client-side
+	// navigation back/forward: seed the store from the server load so the
+	// singleton never lags behind the current URL. Client-side pagination and
+	// hashtag toggling don't re-run the load, so they keep control of the store.
+	$effect(() => {
+		blogStore.posts = data.posts;
+		blogStore.total = data.total;
+		blogStore.currentPage = data.page;
+		blogStore.hashtagFilter = data.hashtag;
+		blogStore.loading = false;
+		blogStore.error = false;
+	});
 
 	function handlePageChange(page: number) {
 		blogStore.goToPage(page);
@@ -26,20 +41,28 @@
 	onMount(async () => {
 		const url = new URL(window.location.href);
 		const page = parseInt(url.searchParams.get('page') || '1', 10);
+		const hashtag = url.searchParams.get('hashtag');
+		// If the SSR load already delivered the requested page, the store is
+		// seeded by $effect — no need to refetch. If the load errored while the
+		// client works, try again here (the store shows the error UI meanwhile).
+		if (data.posts.length > 0 && data.page === page && (data.hashtag ?? null) === (hashtag ?? null)) {
+			return;
+		}
+		if (hashtag) blogStore.hashtagFilter = hashtag;
 		await blogStore.fetchPage(page);
 	});
 </script>
 
 <svelte:head>
 	<title>Блёґ — {SITE_NAME}</title>
-	<meta name="description" content="Навіны, артыкулы і іншая карысная інфармацыя пра {SITE_NAME.toLowerCase()}." />
+	<meta name="description" content={description} />
 	<meta property="og:title" content="Блёґ — {SITE_NAME}" />
-	<meta property="og:description" content="Навіны, артыкулы і іншая карысная інфармацыя пра слоўнічак." />
+	<meta property="og:description" content={description} />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="{SITE_URL}/blog" />
 	<meta property="og:image" content="{SITE_URL}/pwa-512x512.png" />
 	<meta name="twitter:title" content="Блёґ — {SITE_NAME}" />
-	<meta name="twitter:description" content="Блёґ Слоўні" />
+	<meta name="twitter:description" content={description} />
 	<meta name="twitter:image" content="{SITE_URL}/pwa-512x512.png" />
 </svelte:head>
 
