@@ -4,6 +4,7 @@
 	import OverlayShell from '$lib/components/OverlayShell.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 	import { fetchWord, getCachedWord } from '$lib/fetch-word';
+	import { userStore } from '$lib/stores/userStore.svelte';
 
 	let {
 		initialWordId,
@@ -37,6 +38,10 @@
 			fetchingId = null;
 			loading = false;
 			error = false;
+			userStore.syncLikeCounts(
+				[id],
+				initialWord.translations.map((t) => t.id),
+			);
 		} else if (word?.id !== id && fetchingId !== id) {
 			const cached = getCachedWord(id);
 			if (cached) {
@@ -44,6 +49,10 @@
 				fetchingId = null;
 				loading = false;
 				error = false;
+				userStore.syncLikeCounts(
+					[id],
+					cached.translations.map((t) => t.id),
+				);
 				return;
 			}
 			fetchingId = id;
@@ -54,6 +63,11 @@
 				loading = false;
 				if (status === 'ok') {
 					word = getCachedWord(id) ?? null;
+					if (word)
+						userStore.syncLikeCounts(
+							[id],
+							word.translations.map((t) => t.id),
+						);
 				} else if (status === 'error') {
 					word = null;
 					error = true;
