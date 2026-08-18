@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { MOBILE_MAX_WIDTH } from '$lib/constants';
+
 	interface BeforeInstallPromptEvent extends Event {
 		prompt: () => void;
 		userChoice: Promise<{ outcome: string }>;
@@ -6,11 +8,18 @@
 
 	let deferredPrompt: BeforeInstallPromptEvent | null = null;
 	let showPrompt = $state(false);
+	let isMobile = $state(false);
+	// The prompt is offered at most once per device; both outcomes persist the
+	// decision so it never nags again on later visits.
+	let dismissed = $state(localStorage.getItem('pwa_prompt_dismissed') === '1');
 
 	function handleBeforeInstall(e: Event) {
 		e.preventDefault();
 		deferredPrompt = e as BeforeInstallPromptEvent;
-		showPrompt = true;
+		// Offer the install prompt only on mobile/tablet — desktop PWAs are
+		// less useful here (the app is designed for touch use). Skip entirely
+		// once the user has already answered.
+		showPrompt = isMobile && !dismissed;
 	}
 
 	async function install() {
@@ -21,17 +30,27 @@
 			deferredPrompt = null;
 			showPrompt = false;
 		}
+		localStorage.setItem('pwa_prompt_dismissed', '1');
 	}
 
 	function dismiss() {
 		showPrompt = false;
 		deferredPrompt = null;
+		localStorage.setItem('pwa_prompt_dismissed', '1');
 	}
 
 	$effect(() => {
+		const mq = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH}px)`);
+		const update = () => (isMobile = mq.matches);
+		update();
+		mq.addEventListener('change', update);
+
 		const handler = handleBeforeInstall;
 		window.addEventListener('beforeinstallprompt', handler);
-		return () => window.removeEventListener('beforeinstallprompt', handler);
+		return () => {
+			mq.removeEventListener('change', update);
+			window.removeEventListener('beforeinstallprompt', handler);
+		};
 	});
 </script>
 
