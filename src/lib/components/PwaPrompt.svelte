@@ -10,8 +10,10 @@
 	let showPrompt = $state(false);
 	let isMobile = $state(false);
 	// The prompt is offered at most once per device; both outcomes persist the
-	// decision so it never nags again on later visits.
-	let dismissed = $state(localStorage.getItem('pwa_prompt_dismissed') === '1');
+	// decision so it never nags again on later visits. The read is guarded
+	// because this component is SSR'd by the layout, where localStorage
+	// doesn't exist.
+	let dismissed = $state(typeof localStorage !== 'undefined' && localStorage.getItem('pwa_prompt_dismissed') === '1');
 
 	function handleBeforeInstall(e: Event) {
 		e.preventDefault();
