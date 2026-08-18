@@ -39,7 +39,7 @@
 	<div class="prompt">
 		<div class="prompt-text">
 			<strong>Усталяваць аплікацыю</strong>
-			<span>Дадайце да галоўнага экрана для хуткага доступу</span>
+			<span>Дадайце да галоўнага экрана для зручнейшага доступу</span>
 		</div>
 		<div class="prompt-actions">
 			<button onclick={dismiss} class="prompt-skip">Не</button>
