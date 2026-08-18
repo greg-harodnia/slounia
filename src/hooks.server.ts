@@ -43,7 +43,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 		// client address unavailable (e.g. Vercel dev)
 	}
 
-	await refreshBanList();
+	// Refresh ban list in background (fire-and-forget) so page render
+	// is never blocked by a Supabase round-trip.
+	// NOTE: this means the ban check below uses a potentially stale set.
+	// On Vercel cold starts (empty set) or right after the 60 s refresh
+	// window expires, a banned user may slip through on their first request.
+	refreshBanList();
 
 	let reason: string | null = null;
 	if (token && bannedTokens.has(token)) {
