@@ -11,7 +11,7 @@ const config = {
 		// + @vercel/nft version resolved in bun.lock. adapter-auto installs
 		// adapter-vercel at build time on Vercel, which pulled a broken
 		// @vercel/nft and broke pushes (manual redeploys worked only via cache).
-		adapter: adapter({ runtime: 'nodejs22.x' }),
+		adapter: adapter({ runtime: 'nodejs24.x' }),
 	},
 };
 
