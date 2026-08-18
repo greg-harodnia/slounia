@@ -66,8 +66,19 @@
 		allTagNames: tags.map((t) => t.name),
 	});
 
-	/* svelte-ignore state_referenced_locally */
-	let loading = $state(data.words.length === 0);
+	// The SSR payload only carries the first page + pinned words; the full
+	// dictionary is fetched lazily after first paint. Until it arrives, stay
+	// in the loading state whenever the view needs the whole list (an empty
+	// SSR payload or an active search/filter).
+	let fullListLoaded = $state(false);
+	let hasActiveFilter = $derived(
+		!!filters.search ||
+			filters.showFavorites ||
+			filters.selectedTags.length !== tags.length ||
+			filters.sort !== DEFAULT_SORT ||
+			filters.order !== DEFAULT_ORDER,
+	);
+	let loading = $derived(!fullListLoaded && (data.words.length === 0 || hasActiveFilter));
 	let listError = $state(false);
 
 	let devMode = $state(false);
@@ -337,8 +348,9 @@
 		for (const word of list) setCachedWord(word.id, word);
 	}
 
-	// Reload the dictionary from the API. Only used as a retry/fallback when
-	// the server-side load failed; hidden words are included in dev builds.
+	// Load the full dictionary from the API. Runs after first paint (the SSR
+	// payload only has the first page) and doubles as the retry path when the
+	// server-side load failed; hidden words are included in dev builds.
 	async function fetchWords() {
 		try {
 			const params = new SvelteURLSearchParams();
@@ -349,14 +361,16 @@
 			const data = await res.json();
 			allWords = data.words ?? [];
 			cacheWordList(allWords);
-			loading = false;
+			fullListLoaded = true;
 			listError = false;
 		} catch (e) {
 			console.error(e);
+			// With SSR words present keep showing them (degraded, no full-text
+			// search); otherwise surface the error.
 			if (allWords.length === 0) {
-				loading = false;
 				listError = true;
 			}
+			fullListLoaded = true;
 		}
 	}
 
@@ -534,17 +548,47 @@
 			allWords.map((w) => w.id),
 			allWords.flatMap((w) => w.translations.map((t) => t.id)),
 		);
+		// The SSR payload only has the first page — fetch the full dictionary
+		// once the browser is idle. Deferring past first paint keeps the heavy
+		// dictionary parse/proxy work off the critical path (it inflates LCP
+		// if run right after hydration); search/filter/sort still work as soon
+		// as it lands.
+		const deferIdle = (fn: () => void) => {
+			if ('requestIdleCallback' in window) {
+				requestIdleCallback(fn, { timeout: 2000 });
+			} else {
+				setTimeout(fn, 1000);
+			}
+		};
 		if (data.words.length === 0) {
-			loading = true;
+			// Filtered link: nothing to render until the dictionary arrives.
 			fetchWords();
+		} else {
+			deferIdle(() => {
+				if (!fullListLoaded) fetchWords();
+			});
 		}
 
-		if (!localStorage.getItem('welcome_dismissed')) showWelcome = true;
+		// The welcome modal used to open on mount and became the LCP element
+		// on cold visits (its overlay/text was the largest paint once hydration
+		// finished). Open it on the first scroll instead — the scroll is the
+		// interaction that finalizes LCP, so the modal never shows up in the
+		// metric. capture:true catches scrolls on the inner scroll containers.
+		const showWelcomeOnScroll = () => {
+			if (localStorage.getItem('welcome_dismissed')) {
+				window.removeEventListener('scroll', showWelcomeOnScroll, { capture: true });
+				return;
+			}
+			showWelcome = true;
+			window.removeEventListener('scroll', showWelcomeOnScroll, { capture: true });
+		};
+		window.addEventListener('scroll', showWelcomeOnScroll, { capture: true, passive: true });
 		restoreOverlayFromURL();
 		preloadOverlays();
 		window.addEventListener('popstate', handlePopstate);
 		return () => {
 			window.removeEventListener('popstate', handlePopstate);
+			window.removeEventListener('scroll', showWelcomeOnScroll, { capture: true });
 			theme.destroy();
 		};
 	});

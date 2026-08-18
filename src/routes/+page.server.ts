@@ -1,6 +1,6 @@
 import { dev } from '$app/environment';
 import { CACHE_TTL_PAGE } from '$lib/constants';
-import { fetchAllWords } from '$lib/server/fetch-words';
+import { fetchHomepagePreview } from '$lib/server/fetch-words';
 import type { WordData } from '$lib/types';
 
 export async function load({ url, setHeaders }) {
@@ -27,9 +27,23 @@ export async function load({ url, setHeaders }) {
 
 	let words: WordData[] = [];
 	try {
-		// In dev builds load the full list including hidden words in one pass;
-		// in prod hidden words never leave the DB.
-		({ words } = await fetchAllWords(dev));
+		// A filtered URL (search/sort/order/tags) can't be served by the
+		// SSR'd first page, so the client keeps the loading state and fetches
+		// the full dictionary after hydration instead.
+		if (
+			url.searchParams.has('search') ||
+			url.searchParams.has('sort') ||
+			url.searchParams.has('order') ||
+			url.searchParams.has('tags')
+		) {
+			await refPromise;
+			return { words: [] };
+		}
+
+		// SSR only the first page + pinned words. Small enough for a fast
+		// mobile LCP but still live DB data, so the first paint and crawlers
+		// see real content; the client fetches the full dictionary after paint.
+		({ words } = await fetchHomepagePreview(dev));
 	} catch (e) {
 		console.error(e);
 	}

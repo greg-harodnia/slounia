@@ -1,5 +1,5 @@
 import { supabase, getServiceClient } from '$lib/server/db';
-import { DEFAULT_ORDER, DEFAULT_SORT, FULL_LIST_LIMIT, PAGE_SIZE } from '$lib/constants';
+import { DEFAULT_ORDER, DEFAULT_SORT, PAGE_SIZE } from '$lib/constants';
 import { latToCyr } from '$lib/lacinka';
 import type { WordData } from '$lib/types';
 
@@ -46,10 +46,24 @@ export async function fetchWordsPage(params: WordsPageParams) {
 	return { words: result.words ?? [], total: result.total ?? 0 };
 }
 
-// The whole dictionary in one call (used by the homepage SSR load). Pinned
-// words (is_pinned) are regular words that happen to be promoted — they are
-// never hidden, so a single include_hidden: false query already returns them;
-// the pinned section is derived client-side from the same list.
-export function fetchAllWords(includeHidden = false) {
-	return fetchWordsPage({ offset: 0, limit: FULL_LIST_LIMIT, includeHidden });
+// The homepage SSR payload: the first page plus any pinned words (which may
+// live anywhere in the dictionary). Two cheap calls instead of loading the
+// whole dictionary — only the returned rows get their translations/tags
+// aggregated, so cache-miss renders stay fast. The client fetches the full
+// list afterwards, at which point the pinned section is derived from it.
+export async function fetchHomepagePreview(includeHidden = false) {
+	const client = includeHidden ? getServiceClient() : supabase;
+	const [{ data: pinnedRows }, { words: firstPage }] = await Promise.all([
+		client.from('words').select('id').eq('is_pinned', true),
+		fetchWordsPage({ offset: 0, limit: PAGE_SIZE, includeHidden }),
+	]);
+
+	const ids = (pinnedRows ?? []).map((r) => r.id).filter(Boolean);
+	const pinned = ids.length > 0 ? (await fetchWordsPage({ ids, limit: ids.length, includeHidden })).words : [];
+
+	const words = firstPage.slice();
+	for (const w of pinned) {
+		if (!words.some((x) => x.id === w.id)) words.push(w);
+	}
+	return { words };
 }
