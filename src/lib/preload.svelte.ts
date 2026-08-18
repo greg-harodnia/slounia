@@ -1,6 +1,7 @@
 import type WordOverlay from '$lib/components/WordOverlay.svelte';
 import type BlogOverlay from '$lib/components/BlogOverlay.svelte';
 import type ContactModal from '$lib/components/ContactModal.svelte';
+import type Modal from '$lib/components/Modal.svelte';
 import type EditWord from '$lib/components/EditWord.svelte';
 import type TranslationForm from '$lib/components/TranslationForm.svelte';
 import type ChatWidget from '$lib/components/ChatWidget.svelte';
@@ -18,6 +19,7 @@ export const overlays = $state({
 	translationForm: undefined as typeof TranslationForm | undefined,
 	chat: undefined as typeof ChatWidget | undefined,
 	suggest: undefined as typeof SuggestOverlay | undefined,
+	welcome: undefined as typeof Modal | undefined,
 });
 
 // Internal non-reactive caches of in-flight/finished loads (SvelteSet/SvelteMap
@@ -95,5 +97,13 @@ export function preloadSuggestOverlay() {
 		'suggest',
 		(c) => (overlays.suggest = c),
 		() => import('$lib/components/SuggestOverlay.svelte'),
+	);
+}
+
+export function preloadWelcomeModal() {
+	load(
+		'welcome',
+		(c) => (overlays.welcome = c),
+		() => import('$lib/components/Modal.svelte'),
 	);
 }

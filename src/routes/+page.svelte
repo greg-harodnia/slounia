@@ -11,10 +11,10 @@
 		preloadEditWord,
 		preloadTranslationForm,
 		preloadSuggestOverlay,
+		preloadWelcomeModal,
 	} from '$lib/preload.svelte';
 	import TranslationDisplay from '$lib/components/TranslationDisplay.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
-	import Modal from '$lib/components/Modal.svelte';
 	import LikeButton from '$lib/components/LikeButton.svelte';
 	import ImportanceBadge from '$lib/components/ImportanceBadge.svelte';
 	import TagList from '$lib/components/TagList.svelte';
@@ -566,6 +566,9 @@
 		} else {
 			deferIdle(() => {
 				if (!fullListLoaded) fetchWords();
+				// The welcome modal's chunk is warmed here too, so it never
+				// competes with the first paint or LCP for the main thread.
+				preloadWelcomeModal();
 			});
 		}
 
@@ -574,11 +577,16 @@
 		// finished). Open it on the first scroll instead — the scroll is the
 		// interaction that finalizes LCP, so the modal never shows up in the
 		// metric. capture:true catches scrolls on the inner scroll containers.
+		// Its component is loaded lazily (preloadWelcomeModal), so nothing
+		// modal-related ships in the initial bundle; the open state renders as
+		// soon as the chunk lands, even if the user scrolls before the idle
+		// warmup fires.
 		const showWelcomeOnScroll = () => {
 			if (localStorage.getItem('welcome_dismissed')) {
 				window.removeEventListener('scroll', showWelcomeOnScroll, { capture: true });
 				return;
 			}
+			preloadWelcomeModal();
 			showWelcome = true;
 			window.removeEventListener('scroll', showWelcomeOnScroll, { capture: true });
 		};
@@ -983,34 +991,37 @@
 	{/if}
 </div>
 
-<Modal
-	title="Вітаем"
-	open={showWelcome}
-	onclose={() => {
-		showWelcome = false;
-		localStorage.setItem('welcome_dismissed', '1');
-	}}
-	closeOnOverlay
->
-	<p>
-		Нам вельмі важна, каб гэты праект зыскаў (састарэлае слоўца для калярыту) як мага болей увагі й распаўсюду, таму
-		будзем удзячныя, калі вы спрычыніцеся да гэтае справы разам з намі й падзеліцеся спасылкай з кім можаце 🙂
-		Таксама вельмі дапамогуць публічныя спасылкі, будзь тое ў X, Instagram, VK ці дзе яшчэ. Шчыра дзякуем!<br /><br
-		/>
-		Спасылка для капіяваньня:
-		<!-- eslint-disable svelte/no-navigation-without-resolve -->
-		<a
-			href={SITE_URL + '/?ref=voluntary'}
-			onclick={(e) => {
-				e.preventDefault();
-				navigator.clipboard.writeText(`${SITE_URL}/?ref=voluntary`);
-				copiedSearch = true;
-				setTimeout(() => (copiedSearch = false), 1500);
-			}}>{SITE_URL}/?ref=voluntary</a
-		>
-		<!-- eslint-enable svelte/no-navigation-without-resolve -->
-	</p>
-</Modal>
+{#if showWelcome && overlays.welcome}
+	{@const WelcomeModalC = overlays.welcome}
+	<WelcomeModalC
+		title="Вітаем"
+		open={showWelcome}
+		onclose={() => {
+			showWelcome = false;
+			localStorage.setItem('welcome_dismissed', '1');
+		}}
+		closeOnOverlay
+	>
+		<p>
+			Нам вельмі важна, каб гэты праект зыскаў (састарэлае слоўца для калярыту) як мага болей увагі й распаўсюду,
+			таму будзем удзячныя, калі вы спрычыніцеся да гэтае справы разам з намі й падзеліцеся спасылкай з кім можаце
+			🙂 Таксама вельмі дапамогуць публічныя спасылкі, будзь тое ў X, Instagram, VK ці дзе яшчэ. Шчыра дзякуем!<br
+			/><br />
+			Спасылка для капіяваньня:
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
+			<a
+				href={SITE_URL + '/?ref=voluntary'}
+				onclick={(e) => {
+					e.preventDefault();
+					navigator.clipboard.writeText(`${SITE_URL}/?ref=voluntary`);
+					copiedSearch = true;
+					setTimeout(() => (copiedSearch = false), 1500);
+				}}>{SITE_URL}/?ref=voluntary</a
+			>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
+		</p>
+	</WelcomeModalC>
+{/if}
 
 {#if contactOpen && overlays.contact}
 	{@const ContactModalC = overlays.contact}
