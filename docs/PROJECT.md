@@ -18,6 +18,148 @@ non-commercial project.
   the dictionary. Search/sort/tag/favorites logic must stay mirrored between the
   SQL RPC (`get_words`) and the client (`word-search.ts`).
 
+## End-user experience
+
+### Homepage — the word list
+
+The homepage is a full-page CSS-grid table with three columns: word, translation,
+likes. It is rendered at SSR and hydrated client-side with interactive filtering.
+
+- **Search** (`WordControls`): client-side, searches word IDs and translation text.
+  Latin input is transliterated to Cyrillic (`latToCyr`) before matching; Matching
+  is lenient via `normalizeText` (ё/э→е, stress stripped, apostrophes tolerated).
+  Ctrl/Cmd+F focuses the input. URL-synced.
+- **Sort**: by word (prod default, ascending), importance, likes, or date (dev
+  default, descending). Uses ICU collation `localeCompare('be')` for Belarusian
+  word order. Sort buttons are in the grid header (desktop) or pill toggles
+  (mobile ≤640px).
+- **Tag filter**: multi-select tag chips below search; toggling filters the list.
+  URL-synced (comma-separated `tags` param).
+- **Favorites**: heart icon toggles "show only liked words" mode.
+- **Pinned "word of the week"**: shown at the top when no search/filter/sort is
+  active; rotated weekly by cron (`importance_id = 5`).
+- **Infinite scroll**: the full list is in memory; words render in pages of
+  `PAGE_SIZE` (20) via an `IntersectionObserver` sentinel with a 1500px prefetch
+  margin for smooth momentum scrolling.
+- **Word rows**: each row shows the word (bold), an importance badge (color-coded
+  by level), tag chips, translations (each with a like button), and a word-level
+  like button. Words created in the last 7 days get a green "Новае" badge. Words
+  with a `comment` show a visual indicator and a hover tooltip.
+- **Łacinka toggle**: header button ("Ł" / "Ў") switches all translations to
+  Belarusian Latin script (`cyrToLat`). Persisted in localStorage.
+- **Mobile layout** (≤640px): rows become card-like (2-column grid with word
+  spanning full width, translations below). Sort buttons become pill toggles.
+- **Welcome modal**: shown on first visit, asks users to share the site link
+  (with copy-to-clipboard). Dismissed permanently via localStorage.
+
+### Word detail / overlay
+
+Two display modes: an in-app overlay (SPA navigation from the word list) and a
+standalone page (`/word/{id}`) for direct links and SEO.
+
+- **Overlay** (`WordOverlay` in `OverlayShell`): fullscreen fixed panel with
+  fade-in animation, breadcrumb navigation (Home → word ID), and close button.
+- **Content** (`WordDetailContent`): word heading (with comment tooltip),
+  importance badge, tag list, translations with like buttons, view counter
+  (prod-only, formatted as "1.2k"), word-level like button.
+- **Cross-references**: translations matching `гл. X` / `параўн. X` render as
+  italic clickable links. Hovering after 150ms fetches the target word and shows
+  a positioned popup (320px) with full word detail. Self-referencing crossrefs
+  show a Spider-Man pointing meme instead. Popup follows mouse; closes 300ms
+  after mouse leaves.
+- **SEO page** (`/word/[id]`): full `<head>` meta (title, description from
+  translations, og:_, twitter:_, DefinedTerm JSON-LD). Hidden words get
+  `noindex`.
+
+### Blog
+
+- **Blog list** (`/blog`): paginated cards (`BLOG_PAGE_SIZE = 5`). Each card
+  shows published date (Belarusian format), title, hashtags, and a "Замацаванае"
+  badge if pinned. Pinned posts get a primary-colored border. Hashtag filter
+  chip ("Мовазнаўства") at the top. Pagination synced to URL (`?page=N`).
+- **Blog detail** (`/blog/{slug}`): Markdown rendered as styled HTML (headings,
+  blockquotes, code blocks, images, lists). Footer has view counter + like
+  button. Standalone route includes full SEO meta.
+- **Blog likes**: optimistic toggle with rollback, persisted per-device.
+
+### Suggest a word (`/suggest`)
+
+- **Form**: word (required), translation (required), comment (optional, for
+  explaining the calque). Submit creates a `pending` suggestion.
+- **Suggestion list**: all public suggestions shown as cards with status badges:
+  У чаканьні (pending), Ухваленае (approved, green), Адкінутае (rejected, red),
+  Ухваленае, але без публікацыі (agreed, yellow).
+- **Own suggestions**: identified by `user_token`; only the author (or dev mode)
+  sees the delete button.
+
+### Contact form
+
+- **Trigger**: "Напісаць творцу" link in the footer (shown when search is active).
+- **Form** (modal): name (required), Telegram (optional), message (required).
+  Success shows "Дзякую! Паведамленне адасланае."
+- **My messages view**: lists user's own messages with admin replies (if any) in
+  a primary-colored box.
+- **Unread reply notification**: floating popup "📩 Новы адказ" when a reply
+  arrives; clicking it opens the messages view and marks as read.
+
+### AI assistant (chat widget)
+
+- **Desktop-only** FAB (56px circular chat bubble, bottom-right). Preloads the
+  component on hover/focus/touchstart. Click opens the chat panel.
+- **Chat panel**: fixed position, min(380px) wide, min(560px) tall. Can toggle
+  to fullscreen. Slide-up animation.
+- **Messages**: user messages right-aligned (primary bubble), assistant messages
+  left-aligned (surface bubble, rendered as HTML with markdown support).
+- **Input**: textarea, Enter sends, Shift+Enter for newline.
+- **History**: last 40 messages persisted in localStorage.
+- **Escape key**: collapses fullscreen first, then closes.
+
+### Theme system
+
+Three themes, toggled by a header button:
+
+- **Light** (default) — ☀️ icon
+- **Dark** — 🌙 icon
+- **National** (red Belarusian theme) — 🏰 icon, desktop-only (hidden on mobile)
+
+Applied via `data-theme` attribute on `<html>`. Stored in localStorage.
+Respects `prefers-color-scheme: dark` on first visit; listens for OS changes
+until the user manually picks a theme. `<meta name="theme-color">` is updated
+for mobile browser chrome.
+
+### PWA
+
+Bottom bar prompt: "Усталяваць аплікацыю — Дадайце да галоўнага экрана для
+хуткага доступу" with "Не" / "Усталяваць" buttons. Handles `safe-area-inset`
+for notch devices.
+
+### Ban system
+
+Server-side: ban list loaded every 60s; banned `user_token` or IP → API gets
+403 JSON, pages get a fullscreen "Доступ забаранёны" overlay with the reason.
+No navigation possible while banned.
+
+### Likes & views
+
+- **Likes** (words, translations, blog posts): optimistic toggle, per-device
+  `localStorage` persistence, server-confirmed count. Token-based identification
+  (`user_token` UUID in cookie + localStorage).
+- **Views** (words, blog posts): prod-only, deduplicated per session, optimistic
+  bump with server confirmation.
+
+### URL state & navigation
+
+Search, sort, order, tags, blog page, and blog hashtag are all URL-synced.
+Overlays (word detail, blog, suggest) use `pushState`; filter changes use
+`replaceState`. Browser back/forward restores the correct overlay.
+Canonical URLs preserve `page` and `hashtag` params; drop tracking params.
+
+### Easter egg
+
+A hidden "Переключиться на русский" button dodges the cursor on hover (up to 4
+times). After it stops, clicking it iteratively removes DOM elements, then shows
+a cat GIF with a pulsing red glow. Triggers once (stored in localStorage).
+
 ## Tooling
 
 - Package manager is **bun** (never npm). Scripts: `dev`, `build`, `preview`,
