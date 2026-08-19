@@ -9,7 +9,6 @@
 	import { parseCrossref } from '$lib/types';
 	import { computePopupPosition } from '$lib/popup-position';
 	import { preloadWordOverlay } from '$lib/preload.svelte';
-	import { userStore } from '$lib/stores/userStore.svelte';
 
 	let {
 		translation,
@@ -94,10 +93,6 @@
 
 			loadingFetch = false;
 			popupWord = getCachedWord(crossRef.target)!;
-			userStore.syncLikeCounts(
-				[popupWord.id],
-				popupWord.translations.map((t) => t.id),
-			);
 
 			const rect = btn.getBoundingClientRect();
 			popupX = Math.max(8, Math.min(rect.left, window.innerWidth - 328));
