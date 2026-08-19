@@ -1,15 +1,17 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import Modal from './Modal.svelte';
 	import StressInput from './StressInput.svelte';
 	import StressBtn from './StressBtn.svelte';
 	import { importanceLevels } from '$lib/constants';
+	import type { TagData } from '$lib/types';
 
 	let {
 		word,
+		tags,
 		onWordEdited,
 	}: {
 		word: { id: string; comment: string | null; importance: { id: number | null }; tags: string[] };
+		tags: TagData[];
 		onWordEdited: () => void;
 	} = $props();
 
@@ -18,24 +20,14 @@
 	let comment = $state('');
 	let importanceId = $state<number | ''>('');
 	let selectedTagIds = $state<number[]>([]);
-	let allTags = $state<Array<{ id: number; name: string }>>([]);
 	let submitting = $state(false);
 	let error = $state('');
-
-	onMount(async () => {
-		try {
-			const res = await fetch('/api/tags');
-			allTags = await res.json();
-		} catch (e) {
-			console.error(e);
-		}
-	});
 
 	function openModal() {
 		wordId = word.id;
 		comment = word.comment ?? '';
 		importanceId = word.importance.id ?? '';
-		selectedTagIds = allTags.filter((t) => word.tags.includes(t.name)).map((t) => t.id);
+		selectedTagIds = tags.filter((t) => word.tags.includes(t.name)).map((t) => t.id);
 		error = '';
 		open = true;
 	}
@@ -116,7 +108,7 @@
 	<fieldset>
 		<legend>Тэґі</legend>
 		<div class="tag-grid">
-			{#each allTags as tag (tag.id)}
+			{#each tags as tag (tag.id)}
 				<button
 					class="pill tag-pill"
 					class:selected={selectedTagIds.includes(tag.id)}

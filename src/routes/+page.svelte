@@ -663,7 +663,7 @@
 
 	{#if !import.meta.env.PROD}
 		<div class="dev">
-			<AddEntity onWordAdded={() => fetchWords()} />
+			<AddEntity {tags} onWordAdded={() => fetchWords()} />
 			<button class="header-btn" onclick={toggleDevMode} aria-label="Toggle developer mode">
 				{devMode ? 'Dev ON' : 'Dev OFF'}
 			</button>
@@ -866,7 +866,7 @@
 								</button>
 								{#if overlays.editWord}
 									{@const EditWordC = overlays.editWord}
-									<EditWordC {word} onWordEdited={() => fetchWords()} />
+									<EditWordC {tags} {word} onWordEdited={() => fetchWords()} />
 								{/if}
 								{#if devMode}
 									<PinButton pinned={word.is_pinned} onclick={() => togglePin(word)} />

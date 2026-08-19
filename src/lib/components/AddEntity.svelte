@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import Modal from './Modal.svelte';
 	import StressInput from './StressInput.svelte';
 	import StressBtn from './StressBtn.svelte';
 	import { importanceLevels } from '$lib/constants';
+	import type { TagData } from '$lib/types';
 
-	let { onWordAdded }: { onWordAdded: () => void } = $props();
+	let { tags, onWordAdded }: { tags: TagData[]; onWordAdded: () => void } = $props();
 
 	let open = $state(false);
 	let word = $state('');
@@ -13,18 +13,8 @@
 	let importanceId = $state<number | ''>('');
 	let selectedTagIds = $state<number[]>([]);
 	let transList = $state<Array<{ translation: string; comment: string }>>([{ translation: '', comment: '' }]);
-	let tags = $state<Array<{ id: number; name: string }>>([]);
 	let submitting = $state(false);
 	let error = $state('');
-
-	onMount(async () => {
-		try {
-			const res = await fetch('/api/tags');
-			tags = await res.json();
-		} catch (e) {
-			console.error(e);
-		}
-	});
 
 	function addTranslation() {
 		transList = [...transList, { translation: '', comment: '' }];
