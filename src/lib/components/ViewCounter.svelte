@@ -7,7 +7,8 @@
 		id,
 		count = 0,
 		large = false,
-	}: { kind: 'word' | 'post'; id: string; count?: number; large?: boolean } = $props();
+		displayOnly = false,
+	}: { kind: 'word' | 'post'; id: string; count?: number; large?: boolean; displayOnly?: boolean } = $props();
 
 	function formatViews(n: number): string {
 		if (n < 1000) return String(n);
@@ -16,7 +17,9 @@
 	}
 
 	onMount(() => {
-		userStore.incrementView(kind, id, count);
+		if (!displayOnly) {
+			userStore.incrementView(kind, id, count);
+		}
 	});
 </script>
 

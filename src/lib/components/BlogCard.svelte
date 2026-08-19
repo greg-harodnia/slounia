@@ -2,6 +2,7 @@
 	import { formatDate, r } from '$lib/constants';
 	import type { Post } from '$lib/types';
 	import { fetchBlogPost } from '$lib/fetch-blog';
+	import ViewCounter from '$lib/components/ViewCounter.svelte';
 
 	let {
 		post,
@@ -44,6 +45,7 @@
 		{#if post.is_pinned}
 			<span class="badge pinned-badge">Замацаванае</span>
 		{/if}
+		<ViewCounter kind="post" id={post.slug} count={post.views} displayOnly />
 	</div>
 	<h2 class="post-card-title">{post.title}</h2>
 	{#if post.hashtags.length > 0}
@@ -93,6 +95,10 @@
 	.post-card-header time {
 		font-size: 0.8rem;
 		color: var(--c-text-muted);
+	}
+
+	.post-card-header :global(.pill) {
+		margin-left: auto;
 	}
 
 	.post-card-title {
