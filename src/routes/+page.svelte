@@ -768,6 +768,7 @@
 											{showComments}
 											searchQuery={filters.search}
 											onWordLink={openWord}
+											popupChain={[word.id]}
 										/>
 										{#if !parseCrossref(tr.translation)}
 											<LikeButton
