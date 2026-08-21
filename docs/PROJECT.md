@@ -129,9 +129,22 @@ for mobile browser chrome.
 
 ### PWA
 
-Bottom bar prompt: "Усталяваць аплікацыю — Дадайце да галоўнага экрана для
-хуткага доступу" with "Не" / "Усталяваць" buttons. Handles `safe-area-inset`
-for notch devices.
+Configured via `vite-plugin-pwa` (`generateSW`, `autoUpdate`) in
+`vite.config.ts`. `workbox.navigateFallback` is intentionally `undefined`:
+the plugin's default `'index.html'` doesn't exist in a SvelteKit SSR build,
+and the generated `NavigationRoute(createHandlerBoundToURL('index.html'))`
+would throw `non-precached-url` at service worker startup, preventing the SW
+from installing at all. Navigations are server-rendered and go to network;
+only static assets (`_app/immutable/*`, icons, manifest) are precached.
+
+Install prompt (`PwaPrompt.svelte`): bottom bar "Усталяваць аплікацыю —
+Дадайце да галоўнага экрана для зручнейшага доступу" with "Не" / "Усталяваць" buttons; handles
+`safe-area-inset` for notch devices. On `beforeinstallprompt`, the default
+banner is suppressed **only** when the custom prompt will be shown (mobile/
+tablet, not previously dismissed) — suppressing it unconditionally without
+ever calling `prompt()` makes Chrome log a "Banner not shown" warning.
+Both outcomes (accept or dismiss) persist `pwa_prompt_dismissed=1` in
+localStorage, so the prompt is offered at most once per device.
 
 ### Ban system
 

@@ -16,12 +16,16 @@
 	let dismissed = $state(typeof localStorage !== 'undefined' && localStorage.getItem('pwa_prompt_dismissed') === '1');
 
 	function handleBeforeInstall(e: Event) {
-		e.preventDefault();
-		deferredPrompt = e as BeforeInstallPromptEvent;
 		// Offer the install prompt only on mobile/tablet — desktop PWAs are
 		// less useful here (the app is designed for touch use). Skip entirely
-		// once the user has already answered.
-		showPrompt = isMobile && !dismissed;
+		// once the user has already answered. Only preventDefault when our own
+		// prompt will show; otherwise the browser's native install banner
+		// proceeds normally (suppressing it without ever calling prompt()
+		// makes Chrome log a "Banner not shown" warning).
+		if (!(isMobile && !dismissed)) return;
+		e.preventDefault();
+		deferredPrompt = e as BeforeInstallPromptEvent;
+		showPrompt = true;
 	}
 
 	async function install() {

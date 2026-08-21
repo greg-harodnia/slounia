@@ -10,6 +10,12 @@ export default defineConfig({
 			workbox: {
 				clientsClaim: true,
 				cleanupOutdatedCaches: true,
+				// The plugin defaults navigateFallback to 'index.html', but a
+				// SvelteKit SSR build has no such file, so the generated
+				// NavigationRoute would throw non-precached-url and prevent the
+				// service worker from ever installing. Navigations are SSR'd
+				// anyway; only static assets are precached.
+				navigateFallback: undefined,
 			},
 			includeAssets: ['pwa-192x192.png', 'pwa-512x512.png', 'apple-touch-icon.png'],
 			manifest: {
