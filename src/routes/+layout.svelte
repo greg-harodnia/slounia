@@ -8,7 +8,6 @@
 	import PwaPrompt from '$lib/components/PwaPrompt.svelte';
 	import { overlays, preloadChatWidget } from '$lib/preload.svelte';
 	import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, MOBILE_MAX_WIDTH } from '$lib/constants';
-	import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import { userStore } from '$lib/stores/userStore.svelte';
 	import { onMount } from 'svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
@@ -121,7 +120,6 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<link rel="preconnect" href={PUBLIC_SUPABASE_URL} />
 	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta name="mobile-web-app-capable" content="yes" />

@@ -544,10 +544,15 @@
 		theme.listen();
 
 		cacheWordList(allWords);
-		userStore.syncLikeCounts(
-			allWords.map((w) => w.id),
-			allWords.flatMap((w) => w.translations.map((t) => t.id)),
-		);
+		// Like-count refresh is cosmetic (SSR values render meanwhile), so it
+		// runs off the load critical path: with the SSR first page it is
+		// deferred to idle; on filtered links it runs once the full dictionary
+		// (the id source) has arrived.
+		const syncLikeCounts = () =>
+			userStore.syncLikeCounts(
+				allWords.map((w) => w.id),
+				allWords.flatMap((w) => w.translations.map((t) => t.id)),
+			);
 		// The SSR payload only has the first page — fetch the full dictionary
 		// once the browser is idle. Deferring past first paint keeps the heavy
 		// dictionary parse/proxy work off the critical path (it inflates LCP
@@ -562,10 +567,11 @@
 		};
 		if (data.words.length === 0) {
 			// Filtered link: nothing to render until the dictionary arrives.
-			fetchWords();
+			void fetchWords().then(syncLikeCounts);
 		} else {
 			deferIdle(() => {
 				if (!fullListLoaded) fetchWords();
+				syncLikeCounts();
 				// The welcome modal's chunk is warmed here too, so it never
 				// competes with the first paint or LCP for the main thread.
 				preloadWelcomeModal();

@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { supabase } from '$lib/server/db';
 import { apiError } from '$lib/server/utils';
+import { CACHE_TTL } from '$lib/constants';
 export const GET: RequestHandler = async ({ url }) => {
 	const wordIdsParam = url.searchParams.get('words') ?? '';
 	const translationIdsParam = url.searchParams.get('translations') ?? '';
@@ -48,5 +49,15 @@ export const GET: RequestHandler = async ({ url }) => {
 		posts[row.slug] = row.likes;
 	}
 
-	return json({ words, translations, posts });
+	// Counts are public and the response depends only on the requested ids, so
+	// it is edge-cacheable per URL; a like toggle always returns its own fresh
+	// count, so at most this shortens how often passive counts refresh.
+	return json(
+		{ words, translations, posts },
+		{
+			headers: {
+				'Cache-Control': `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL}`,
+			},
+		},
+	);
 };

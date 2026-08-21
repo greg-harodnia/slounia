@@ -266,11 +266,22 @@ The homepage HTML is identical for every visitor, so:
 stale-while-revalidate` — unless a `?ref=` is present, which forces
   `no-store` so referral clicks are always counted.
 - Because the CDN may serve counts up to 12h stale, the client re-syncs like
-  counts from `/api/likes` on mount (`userStore.syncLikeCounts`). This is
-  unbounded (all word/translation ids) and fine because the dictionary is small.
+  counts from `/api/likes` after first paint (deferred to idle alongside the
+  full-dictionary fetch, or after it on filtered links — the sync is cosmetic
+  and must not compete with the load critical path).
 - `hooks.server.ts` adds a default `Cache-Control: public, s-maxage=900` to any
   non-JSON GET page response that doesn't already set one (blog pages, etc.).
-  Never set cache headers on the `/api/*` JSON routes (they must stay dynamic).
+- Two `/api/*` GET routes are **deliberately edge-cached** with
+  `public, s-maxage=900, stale-while-revalidate` despite being JSON:
+    - `GET /api/words` (unless dev-only `include_hidden=true`): word data is
+      public and identical for every visitor; this endpoint serves the heavy
+      full-dictionary fetch (`limit=100000`, ~160 KiB) that used to dominate the
+      Lighthouse "critical request chains" report (~2.5 s per visit).
+    - `GET /api/likes`: the response depends only on the requested public ids.
+      Freshness argument: like counts are corrected by optimistic toggles (the
+      POST responses are never cached) and by the client re-sync above; new words
+      surface within 15 min via the API while the SSR page itself may lag up to
+      12 h. All other `/api/*` routes stay dynamic.
 - Per-user "liked" state is **per-device** `localStorage` maps
   (`liked_words`, `liked_translations`, `liked_posts`) plus a
   `user_token` (UUID) used to identify the visitor across requests (bans,
