@@ -1,0 +1,21 @@
+# Слоўня
+
+> Слоўня — слоўнік жывой мовы. An open Belarusian natural language dictionary with word search, translations from the official standard to the natural language, transliteration (Lacinka), stress marks, blog posts, and community suggestions.
+
+## Key pages
+
+- [Homepage](https://slounia.vercel.app/): Word search with filters (sort, order, tags), browse the full dictionary
+- [Word detail](https://slounia.vercel.app/word/): Individual word pages with translations, stress marks, Lacinka transliteration, related words
+- [Blog](https://slounia.vercel.app/blog): Articles about Belarusian language
+
+## API
+
+- [GET /api/words](https://slounia.vercel.app/api/words): Full dictionary data (JSON, ~160 KiB). Supports `search`, `sort`, `order`, `tags`, `offset`, `limit` query params
+- [GET /api/likes](https://slounia.vercel.app/api/likes): Like counts for words, translations, and blog posts
+
+## About
+
+- Belarusian language dictionary focused on living, natural usage
+- Supports both Cyrillic and Lacinka transliteration
+- Community-driven: users can suggest new words and translations
+- PWA with offline support for cached assets
