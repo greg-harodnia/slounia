@@ -161,7 +161,9 @@
 	}
 
 	.translation-item :global(.tooltip-box) {
-		overflow: hidden;
+		/* min-width: 0 instead of overflow: hidden — same flex min-size reset,
+		   but doesn't clip the dotted .has-note underline below the baseline */
+		min-width: 0;
 	}
 
 	@media (max-width: 600px) {
