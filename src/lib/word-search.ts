@@ -2,6 +2,13 @@ import { normalizeText } from '$lib/highlight';
 import { latToCyr } from '$lib/lacinka';
 import { parseCrossref, type WordData } from '$lib/types';
 
+// Strip all apostrophe variants (mirrors SQL normalize_text which strips them
+// entirely).  normalizeText keeps them as U+2019 for highlight regex, but
+// search matching must be lenient: "абяў" must find "аб'яўляць" and vice versa.
+function stripApostrophes(s: string): string {
+	return s.replace(/[ʼ'`\u2019]/g, '');
+}
+
 export interface WordQuery {
 	search: string;
 	sort: string;
@@ -19,9 +26,10 @@ function parseTerms(search: string): string[] {
 }
 
 function matchesTerm(term: string, word: WordData): boolean {
+	const stripped = stripApostrophes(term);
 	return (
-		normalizeText(word.id).includes(term) ||
-		word.translations.some((t) => normalizeText(t.translation).includes(term))
+		stripApostrophes(normalizeText(word.id)).includes(stripped) ||
+		word.translations.some((t) => stripApostrophes(normalizeText(t.translation)).includes(stripped))
 	);
 }
 
@@ -29,7 +37,10 @@ function matchesTerm(term: string, word: WordData): boolean {
 // instead of translating it, so a term found only there shouldn't rank as
 // high as a real translation.
 function hasRealTranslationMatch(word: WordData, term: string): boolean {
-	return word.translations.some((t) => !parseCrossref(t.translation) && normalizeText(t.translation).includes(term));
+	const stripped = stripApostrophes(term);
+	return word.translations.some(
+		(t) => !parseCrossref(t.translation) && stripApostrophes(normalizeText(t.translation)).includes(stripped),
+	);
 }
 
 // Approximates the SQL relevance ranking (pg_trgm similarity). Deliberately
@@ -39,9 +50,10 @@ function hasRealTranslationMatch(word: WordData, term: string): boolean {
 function relevanceScore(word: WordData, terms: string[]): number {
 	let score = 0;
 	for (const term of terms) {
-		const id = normalizeText(word.id);
-		if (id.startsWith(term)) score += 3;
-		else if (id.includes(term)) score += 2;
+		const stripped = stripApostrophes(term);
+		const id = stripApostrophes(normalizeText(word.id));
+		if (id.startsWith(stripped)) score += 3;
+		else if (id.includes(stripped)) score += 2;
 		else if (hasRealTranslationMatch(word, term)) score += 1;
 	}
 	return score;

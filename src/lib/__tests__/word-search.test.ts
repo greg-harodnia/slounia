@@ -101,6 +101,16 @@ describe('queryWords', () => {
 		expect(queryWords(gwords, baseQuery({ search: 'ґандаль' })).map((w) => w.id)).toEqual(['гандаль']);
 	});
 
+	it('is lenient about apostrophes: finds word with apostrophe when searching without', () => {
+		const words = [mkWord({ id: "аб'яўляць" }), mkWord({ id: 'дом' })];
+		expect(queryWords(words, baseQuery({ search: 'абяў' })).map((w) => w.id)).toEqual(["аб'яўляць"]);
+	});
+
+	it('is lenient about apostrophes: finds word without apostrophe when searching with', () => {
+		const words = [mkWord({ id: 'абяўляць' }), mkWord({ id: 'дом' })];
+		expect(queryWords(words, baseQuery({ search: "аб'яў" })).map((w) => w.id)).toEqual(['абяўляць']);
+	});
+
 	it('ranks word prefix matches above word substring matches above translation matches', () => {
 		const words = [
 			mkWord({ id: 'кава', translations: [{ id: 1, translation: 'напой', comment: null, likes: 0 }] }),
