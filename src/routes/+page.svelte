@@ -544,15 +544,9 @@
 
 		cacheWordList(allWords);
 		// Like-count refresh is cosmetic, so it runs after the full dictionary
-		// arrives.
-		const syncLikeCounts = () =>
-			userStore.syncLikeCounts(
-				allWords.map((w) => w.id),
-				allWords.flatMap((w) => w.translations.map((t) => t.id)),
-			);
-		// Fetch the full dictionary immediately — no SSR words, so the
-		// loading state should be short-lived.
-		void fetchWords().then(syncLikeCounts);
+		// arrives. No IDs are passed — syncLikeCounts defaults to liked-only
+		// items from the store.
+		void fetchWords().then(() => userStore.syncLikeCounts());
 
 		// The welcome modal used to open on mount and became the LCP element
 		// on cold visits (its overlay/text was the largest paint once hydration

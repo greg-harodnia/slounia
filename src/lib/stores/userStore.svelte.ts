@@ -140,16 +140,18 @@ class UserStore {
 
 	// Pre-populate word/translation/post like counts from the server so that
 	// CDN-cached pages still show fresh numbers (see +page.server.ts cache).
-	async syncLikeCounts(wordIds: string[], translationIds: number[], postSlugs: string[] = []) {
-		if (wordIds.length === 0 && translationIds.length === 0 && postSlugs.length === 0) return;
-
-		const parts: string[] = [];
-		if (wordIds.length > 0) parts.push(`words=${encodeURIComponent(wordIds.join(','))}`);
-		if (translationIds.length > 0) parts.push(`translations=${encodeURIComponent(translationIds.join(','))}`);
-		if (postSlugs.length > 0) parts.push(`posts=${encodeURIComponent(postSlugs.join(','))}`);
+	async syncLikeCounts(wordIds?: string[], translationIds?: number[], postSlugs?: string[]) {
+		const wIds = wordIds ?? Object.keys(this.words);
+		const tIds = translationIds ?? Object.keys(this.translations).map(Number);
+		const pSlugs = postSlugs ?? Object.keys(this.posts);
+		if (wIds.length === 0 && tIds.length === 0 && pSlugs.length === 0) return;
 
 		try {
-			const res = await fetch(`/api/likes?${parts.join('&')}`);
+			const res = await fetch('/api/likes', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ words: wIds, translations: tIds, posts: pSlugs }),
+			});
 			if (!res.ok) return;
 			const data = await res.json();
 			for (const [id, likes] of Object.entries(data.words ?? {})) {

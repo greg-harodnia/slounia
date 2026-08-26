@@ -3,30 +3,26 @@ import type { RequestHandler } from './$types';
 import { supabase } from '$lib/server/db';
 import { apiError } from '$lib/server/utils';
 import { CACHE_TTL } from '$lib/constants';
-export const GET: RequestHandler = async ({ url }) => {
-	const wordIdsParam = url.searchParams.get('words') ?? '';
-	const translationIdsParam = url.searchParams.get('translations') ?? '';
-	const postSlugsParam = url.searchParams.get('posts') ?? '';
+export const POST: RequestHandler = async ({ request }) => {
+	const { words: wordIds = [], translations: translationIds = [], posts: postSlugs = [] } = await request.json();
 
-	const wordIds = wordIdsParam.split(',').filter(Boolean);
-	const translationIds = translationIdsParam
-		.split(',')
-		.filter(Boolean)
-		.map(Number)
-		.filter((n) => !Number.isNaN(n));
-	const postSlugs = postSlugsParam.split(',').filter(Boolean);
+	const validWordIds = wordIds.filter(Boolean);
+	const validTranslationIds = translationIds.filter((n: unknown) => typeof n === 'number' && !Number.isNaN(n));
+	const validPostSlugs = postSlugs.filter(Boolean);
 
-	if (wordIds.length === 0 && translationIds.length === 0 && postSlugs.length === 0) {
+	if (validWordIds.length === 0 && validTranslationIds.length === 0 && validPostSlugs.length === 0) {
 		return json({ words: {}, translations: {}, posts: {} });
 	}
 
 	const [wordResult, translationResult, postResult] = await Promise.all([
-		wordIds.length > 0 ? supabase.from('words').select('id, likes').in('id', wordIds) : { data: null, error: null },
-		translationIds.length > 0
-			? supabase.from('translations').select('id, likes').in('id', translationIds)
+		validWordIds.length > 0
+			? supabase.from('words').select('id, likes').in('id', validWordIds)
 			: { data: null, error: null },
-		postSlugs.length > 0
-			? supabase.from('posts').select('slug, likes').in('slug', postSlugs)
+		validTranslationIds.length > 0
+			? supabase.from('translations').select('id, likes').in('id', validTranslationIds)
+			: { data: null, error: null },
+		validPostSlugs.length > 0
+			? supabase.from('posts').select('slug, likes').in('slug', validPostSlugs)
 			: { data: null, error: null },
 	]);
 
