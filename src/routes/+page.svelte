@@ -66,10 +66,10 @@
 		allTagNames: tags.map((t) => t.name),
 	});
 
-	// The SSR payload is an empty word list — the full dictionary is fetched
-	// from /api/words after hydration. Stay in the loading state until it
-	// arrives (or whenever an active search/filter needs the full list).
-	let fullListLoaded = $state(false);
+	// The SSR payload may contain the full dictionary. If not, the client
+	// fetches it from /api/words after hydration. Stay in the loading state
+	// until it arrives (or whenever an active search/filter needs the full list).
+	let fullListLoaded = $state(data.words.length > 0);
 	let hasActiveFilter = $derived(
 		!!filters.search ||
 			filters.showFavorites ||
@@ -543,7 +543,12 @@
 		theme.listen();
 
 		cacheWordList(allWords);
-		void fetchWords();
+		// If SSR delivered the full dictionary, skip the redundant client fetch;
+		// otherwise fetch after hydration (dev mode always re-fetches to pick
+		// up hidden words).
+		if (!fullListLoaded || !import.meta.env.PROD) {
+			void fetchWords();
+		}
 
 		// The welcome modal used to open on mount and became the LCP element
 		// on cold visits (its overlay/text was the largest paint once hydration
