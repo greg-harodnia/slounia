@@ -35,7 +35,7 @@ class UserStore {
 	}
 
 	getWordLikeCount(wordId: string, fallback: number) {
-		return this.wordLikes[wordId] ?? fallback;
+		return this.#likeCount(this.wordLikes[wordId], this.words[wordId], fallback);
 	}
 
 	toggleWordLike(wordId: string, currentLikes: number) {
@@ -51,7 +51,11 @@ class UserStore {
 	}
 
 	getTranslationLikeCount(translationId: number, fallback: number) {
-		return this.translationLikes[translationId] ?? fallback;
+		return this.#likeCount(
+			this.translationLikes[translationId],
+			this.translations[String(translationId)],
+			fallback,
+		);
 	}
 
 	toggleTranslationLike(translationId: number, currentLikes: number) {
@@ -71,7 +75,7 @@ class UserStore {
 	}
 
 	getPostLikeCount(slug: string, fallback: number) {
-		return this.postLikes[slug] ?? fallback;
+		return this.#likeCount(this.postLikes[slug], this.posts[slug], fallback);
 	}
 
 	togglePostLike(slug: string, currentLikes: number) {
@@ -173,6 +177,11 @@ class UserStore {
 
 	#viewKey(kind: 'word' | 'post', id: string) {
 		return `${kind}:${id}`;
+	}
+
+	#likeCount(stored: number | undefined, liked: boolean | undefined, fallback: number) {
+		const count = stored ?? fallback;
+		return count === 0 && liked ? 1 : count;
 	}
 
 	#persist(key: string, map: Record<string, unknown>) {
