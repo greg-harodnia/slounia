@@ -77,7 +77,7 @@
 			filters.sort !== DEFAULT_SORT ||
 			filters.order !== DEFAULT_ORDER,
 	);
-	let loading = $derived(!fullListLoaded && (data.words.length === 0 || hasActiveFilter));
+	let loading = $derived(!fullListLoaded || hasActiveFilter);
 	let listError = $state(false);
 
 	let devMode = $state(false);
@@ -543,36 +543,16 @@
 		theme.listen();
 
 		cacheWordList(allWords);
-		// Like-count refresh is cosmetic, so it runs off the load critical
-		// path: deferred to idle on the homepage, or once the full dictionary
-		// arrives on filtered links.
+		// Like-count refresh is cosmetic, so it runs after the full dictionary
+		// arrives.
 		const syncLikeCounts = () =>
 			userStore.syncLikeCounts(
 				allWords.map((w) => w.id),
 				allWords.flatMap((w) => w.translations.map((t) => t.id)),
 			);
-		// Fetch the full dictionary once the browser is idle. Deferring past
-		// first paint keeps the heavy dictionary parse/proxy work off the
-		// critical path; search/filter/sort still work as soon as it lands.
-		const deferIdle = (fn: () => void) => {
-			if ('requestIdleCallback' in window) {
-				requestIdleCallback(fn, { timeout: 2000 });
-			} else {
-				setTimeout(fn, 1000);
-			}
-		};
-		if (data.words.length === 0) {
-			// No SSR words — fetch immediately so the loading state is short-lived.
-			void fetchWords().then(syncLikeCounts);
-		} else {
-			deferIdle(() => {
-				if (!fullListLoaded) fetchWords();
-				syncLikeCounts();
-				// The welcome modal's chunk is warmed here too, so it never
-				// competes with the first paint or LCP for the main thread.
-				preloadWelcomeModal();
-			});
-		}
+		// Fetch the full dictionary immediately — no SSR words, so the
+		// loading state should be short-lived.
+		void fetchWords().then(syncLikeCounts);
 
 		// The welcome modal used to open on mount and became the LCP element
 		// on cold visits (its overlay/text was the largest paint once hydration
@@ -581,8 +561,7 @@
 		// metric. capture:true catches scrolls on the inner scroll containers.
 		// Its component is loaded lazily (preloadWelcomeModal), so nothing
 		// modal-related ships in the initial bundle; the open state renders as
-		// soon as the chunk lands, even if the user scrolls before the idle
-		// warmup fires.
+		// soon as the chunk lands.
 		const showWelcomeOnScroll = () => {
 			if (localStorage.getItem('welcome_dismissed')) {
 				window.removeEventListener('scroll', showWelcomeOnScroll, { capture: true });
