@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { fetchWordsPage } from '$lib/server/fetch-words';
 import { apiError } from '$lib/server/utils';
-import { CACHE_TTL, DEFAULT_ORDER, DEFAULT_SORT, PAGE_SIZE } from '$lib/constants';
+import { CACHE_TTL_WORDS, DEFAULT_ORDER, DEFAULT_SORT, PAGE_SIZE } from '$lib/constants';
 
 export const GET: RequestHandler = async ({ url }) => {
 	// include_hidden is a dev-only escape hatch for the dev_mode admin list;
@@ -31,7 +31,7 @@ export const GET: RequestHandler = async ({ url }) => {
 				? {}
 				: {
 						headers: {
-							'Cache-Control': `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL}`,
+							'Cache-Control': `public, s-maxage=${CACHE_TTL_WORDS}, stale-while-revalidate=${CACHE_TTL_WORDS}`,
 						},
 					},
 		);

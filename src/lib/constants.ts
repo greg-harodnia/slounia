@@ -14,9 +14,10 @@ export const CACHE_TTL_LONG = 604800; // 7 days, in seconds
 // The full dictionary is loaded at once and filtered/sorted in the browser,
 // so this is the max rows the get_words RPC may return in a single call.
 export const FULL_LIST_LIMIT = 100000;
-// The homepage HTML (the whole word list) is identical for every visitor,
+// The homepage HTML shell is identical for every visitor,
 // so Vercel may serve it from the edge cache. 12 hours, in seconds.
 export const CACHE_TTL_PAGE = 43200;
+export const CACHE_TTL_WORDS = 43200;
 export const BLOG_PAGE_SIZE = 5;
 
 export function r(path: string): string {
