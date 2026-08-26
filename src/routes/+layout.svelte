@@ -1,6 +1,8 @@
 <script lang="ts">
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
+	import manropeCyrillic from '@fontsource-variable/manrope/files/manrope-cyrillic-wght-normal.woff2';
+	import manropeLatin from '@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2';
 	import { dev } from '$app/environment';
 	import { page } from '$app/stores';
 	import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
@@ -119,6 +121,8 @@
 <PwaPrompt />
 
 <svelte:head>
+	<link rel="preload" href={manropeCyrillic} as="font" type="font/woff2" crossorigin="anonymous" />
+	<link rel="preload" href={manropeLatin} as="font" type="font/woff2" crossorigin="anonymous" />
 	<link rel="icon" href={favicon} />
 	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />
