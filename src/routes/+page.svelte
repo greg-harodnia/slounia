@@ -543,10 +543,7 @@
 		theme.listen();
 
 		cacheWordList(allWords);
-		// Like-count refresh is cosmetic, so it runs after the full dictionary
-		// arrives. No IDs are passed — syncLikeCounts defaults to liked-only
-		// items from the store.
-		void fetchWords().then(() => userStore.syncLikeCounts());
+		void fetchWords();
 
 		// The welcome modal used to open on mount and became the LCP element
 		// on cold visits (its overlay/text was the largest paint once hydration

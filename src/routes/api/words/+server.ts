@@ -21,10 +21,9 @@ export const GET: RequestHandler = async ({ url }) => {
 			includeHidden,
 		});
 		// Word data is public and identical for every visitor (per-user liked
-		// state lives in localStorage; stale like counts are re-synced by
-		// /api/likes), so the full-dictionary fetch — the heaviest client
-		// request — is served from the edge cache instead of re-running the
-		// RPC per visit. Hidden-word results stay dynamic.
+		// state lives in localStorage), so the full-dictionary fetch — the
+		// heaviest client request — is served from the edge cache instead of
+		// re-running the RPC per visit. Hidden-word results stay dynamic.
 		return json(
 			result,
 			includeHidden

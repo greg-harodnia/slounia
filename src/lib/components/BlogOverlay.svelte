@@ -7,7 +7,6 @@
 	import Pagination from '$lib/components/Pagination.svelte';
 	import { fetchBlogPost, getCachedBlogPost } from '$lib/fetch-blog';
 	import { blogStore } from '$lib/stores/blogStore.svelte';
-	import { userStore } from '$lib/stores/userStore.svelte';
 
 	let {
 		onOpenPost,
@@ -49,7 +48,6 @@
 			if (cached) {
 				currentPost = cached;
 				postError = false;
-				userStore.syncLikeCounts([], [], [initialSlug]);
 			} else {
 				loadingPost = true;
 				postError = false;
@@ -57,7 +55,6 @@
 					loadingPost = false;
 					if (status === 'ok') {
 						currentPost = getCachedBlogPost(initialSlug) ?? null;
-						userStore.syncLikeCounts([], [], [initialSlug]);
 					} else if (status === 'error') {
 						currentPost = null;
 						postError = true;

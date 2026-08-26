@@ -138,36 +138,6 @@ class UserStore {
 		}
 	}
 
-	// Pre-populate word/translation/post like counts from the server so that
-	// CDN-cached pages still show fresh numbers (see +page.server.ts cache).
-	async syncLikeCounts(wordIds?: string[], translationIds?: number[], postSlugs?: string[]) {
-		const wIds = wordIds ?? Object.keys(this.words);
-		const tIds = translationIds ?? Object.keys(this.translations).map(Number);
-		const pSlugs = postSlugs ?? Object.keys(this.posts);
-		if (wIds.length === 0 && tIds.length === 0 && pSlugs.length === 0) return;
-
-		try {
-			const res = await fetch('/api/likes', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ words: wIds, translations: tIds, posts: pSlugs }),
-			});
-			if (!res.ok) return;
-			const data = await res.json();
-			for (const [id, likes] of Object.entries(data.words ?? {})) {
-				this.wordLikes[id] = likes as number;
-			}
-			for (const [id, likes] of Object.entries(data.translations ?? {})) {
-				this.translationLikes[id] = likes as number;
-			}
-			for (const [slug, likes] of Object.entries(data.posts ?? {})) {
-				this.postLikes[slug] = likes as number;
-			}
-		} catch {
-			// non-critical; fallback values from the page will be used
-		}
-	}
-
 	getViewCount(kind: 'word' | 'post', id: string, fallback: number) {
 		return this.views[this.#viewKey(kind, id)] ?? fallback;
 	}
