@@ -66,10 +66,9 @@
 		allTagNames: tags.map((t) => t.name),
 	});
 
-	// The SSR payload only carries the first page + pinned words; the full
-	// dictionary is fetched lazily after first paint. Until it arrives, stay
-	// in the loading state whenever the view needs the whole list (an empty
-	// SSR payload or an active search/filter).
+	// The SSR payload is an empty word list — the full dictionary is fetched
+	// from /api/words after hydration. Stay in the loading state until it
+	// arrives (or whenever an active search/filter needs the full list).
 	let fullListLoaded = $state(false);
 	let hasActiveFilter = $derived(
 		!!filters.search ||
@@ -348,9 +347,9 @@
 		for (const word of list) setCachedWord(word.id, word);
 	}
 
-	// Load the full dictionary from the API. Runs after first paint (the SSR
-	// payload only has the first page) and doubles as the retry path when the
-	// server-side load failed; hidden words are included in dev builds.
+	// Load the full dictionary from the API. Runs after first paint and
+	// doubles as the retry path on fetch failure; hidden words are included
+	// in dev builds.
 	async function fetchWords() {
 		try {
 			const params = new SvelteURLSearchParams();
@@ -365,8 +364,8 @@
 			listError = false;
 		} catch (e) {
 			console.error(e);
-			// With SSR words present keep showing them (degraded, no full-text
-			// search); otherwise surface the error.
+			// If some words were already loaded keep showing them (degraded,
+			// no full-text search); otherwise surface the error.
 			if (allWords.length === 0) {
 				listError = true;
 			}
@@ -544,20 +543,17 @@
 		theme.listen();
 
 		cacheWordList(allWords);
-		// Like-count refresh is cosmetic (SSR values render meanwhile), so it
-		// runs off the load critical path: with the SSR first page it is
-		// deferred to idle; on filtered links it runs once the full dictionary
-		// (the id source) has arrived.
+		// Like-count refresh is cosmetic, so it runs off the load critical
+		// path: deferred to idle on the homepage, or once the full dictionary
+		// arrives on filtered links.
 		const syncLikeCounts = () =>
 			userStore.syncLikeCounts(
 				allWords.map((w) => w.id),
 				allWords.flatMap((w) => w.translations.map((t) => t.id)),
 			);
-		// The SSR payload only has the first page — fetch the full dictionary
-		// once the browser is idle. Deferring past first paint keeps the heavy
-		// dictionary parse/proxy work off the critical path (it inflates LCP
-		// if run right after hydration); search/filter/sort still work as soon
-		// as it lands.
+		// Fetch the full dictionary once the browser is idle. Deferring past
+		// first paint keeps the heavy dictionary parse/proxy work off the
+		// critical path; search/filter/sort still work as soon as it lands.
 		const deferIdle = (fn: () => void) => {
 			if ('requestIdleCallback' in window) {
 				requestIdleCallback(fn, { timeout: 2000 });
@@ -566,7 +562,7 @@
 			}
 		};
 		if (data.words.length === 0) {
-			// Filtered link: nothing to render until the dictionary arrives.
+			// No SSR words — fetch immediately so the loading state is short-lived.
 			void fetchWords().then(syncLikeCounts);
 		} else {
 			deferIdle(() => {
