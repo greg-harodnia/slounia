@@ -77,7 +77,7 @@
 			filters.sort !== DEFAULT_SORT ||
 			filters.order !== DEFAULT_ORDER,
 	);
-	let loading = $derived(!fullListLoaded || hasActiveFilter);
+	let loading = $derived(!fullListLoaded && hasActiveFilter);
 	let listError = $state(false);
 
 	let devMode = $state(false);
