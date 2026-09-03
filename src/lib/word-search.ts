@@ -134,20 +134,6 @@ function isAoSwap(x: string, y: string): boolean {
 	return (aVowel(x) && oVowel(y)) || (oVowel(x) && aVowel(y));
 }
 
-function sharesRoot(candidate: string, query: string): boolean {
-	const window = Math.min(candidate.length, query.length, ROOT_WINDOW);
-	if (window < MIN_ROOT_WINDOW) return false;
-	const a = candidate.slice(0, window);
-	const b = query.slice(0, window);
-	let substituted = false;
-	for (let i = 0; i < a.length; i++) {
-		if (a[i] === b[i]) continue;
-		if (!isAoSwap(a[i], b[i]) || substituted) return false;
-		substituted = true;
-	}
-	return true;
-}
-
 // Length of the longest common leading run, tolerating а↔о alternations (a vowel
 // swap doesn't stop the walk, a consonant mismatch does). Drives the similarity
 // score so a candidate that matches more of the query outranks one that merely
@@ -177,6 +163,39 @@ function components(text: string): string[] {
 		.filter(Boolean);
 }
 
+// Check if text's leading root appears anywhere inside `term` (the query). This
+// catches both leading matches ("накапленне" vs "накоплены") and prefixed
+// queries like "бекрушэнне" → "крушэнне": the word's root "крушенне" starts at
+// position 2 in the query "бекрушенне". We slide a window over `term` at every
+// position. False positives are rare because the shared root must be long enough
+// (≥MIN_ROOT_WINDOW) and pass the similarity floor.
+function rootMatchLength(text: string, term: string): number {
+	const tw = Math.min(text.length, ROOT_WINDOW);
+	if (tw < MIN_ROOT_WINDOW) return 0;
+	for (let i = 0; i <= term.length - tw; i++) {
+		let ok = true;
+		let sub = false;
+		for (let j = 0; j < tw; j++) {
+			if (term[i + j] === text[j]) continue;
+			if (!isAoSwap(term[i + j], text[j]) || sub) {
+				ok = false;
+				break;
+			}
+			sub = true;
+		}
+		if (!ok) continue;
+		let len = tw;
+		while (
+			i + len < term.length &&
+			len < text.length &&
+			(term[i + len] === text[len] || isAoSwap(term[i + len], text[len]))
+		)
+			len++;
+		return len;
+	}
+	return 0;
+}
+
 // Per-unit "similar part": a unit that shares the query's root scores the length
 // of its longest common leading run (tolerating а↔о) over the search term's
 // length, so a candidate that matches more of the query ranks higher than one
@@ -192,8 +211,9 @@ function components(text: string): string[] {
 const MIN_SIMILARITY_RATIO = 0.4;
 
 function candidateRatio(text: string, term: string): number {
-	if (!sharesRoot(text, term)) return 0;
-	const ratio = sharedRootLength(text, term) / term.length;
+	const len = rootMatchLength(text, term);
+	if (len === 0) return 0;
+	const ratio = len / term.length;
 	return ratio >= MIN_SIMILARITY_RATIO ? ratio : 0;
 }
 
@@ -321,6 +341,7 @@ export function findSimilarWords(words: WordData[], search: string): SimilarSugg
 			if (idRatio * 1.5 > best) best = idRatio * 1.5;
 		}
 		for (const t of word.translations) {
+			if (parseCrossref(t.translation)) continue;
 			const tNorm = stripApostrophes(normalizeText(t.translation));
 			for (const term of terms) {
 				const r = bestRatioAcrossUnits(tNorm, term);

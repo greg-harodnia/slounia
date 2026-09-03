@@ -295,6 +295,23 @@ describe('findSimilarWords', () => {
 		findSimilarWords(words, 'ааб');
 		expect(words).toEqual(copy);
 	});
+
+	// Crossref translations ("гл. X", "параўн. Y") are pointers, not real
+	// translations. They should NOT cause a word to appear in "did you mean"
+	// results, even though the literal matcher shows them for exact results.
+	it('skips crossref translations (гл./параўн.) when suggesting', () => {
+		const words = [
+			mkWord({
+				id: 'Дом',
+				translations: [{ id: 1, translation: 'параўн. Крушэнне', comment: null, likes: 0 }],
+			}),
+			mkWord({ id: 'Крушэнне' }),
+		];
+		const result = findSimilarWords(words, 'крушенне');
+		// "Дом" only matches via a crossref — it must not surface.
+		expect(result.map((s) => s.word.id)).not.toContain('Дом');
+		expect(result.map((s) => s.word.id)).toContain('Крушэнне');
+	});
 });
 
 describe('sortWords', () => {
@@ -303,6 +320,24 @@ describe('sortWords', () => {
 		mkWord({ id: 'а', likes: 10, created_at: '2024-01-03', importance: { id: 2, name: 'y', level: 1 } }),
 		mkWord({ id: 'в', likes: 1, created_at: null, importance: { id: 3, name: 'z', level: null } }),
 	];
+
+	// Word-boundary fallback: the target root doesn't have to be at position 0.
+	// "бекрушенне" contains "крушенне" starting at position 2 — the word's root
+	// appears inside the query, so it must be surfaced.
+	it('finds a word whose root appears inside a prefixed query', () => {
+		const words = [mkWord({ id: 'Крушэнне, крах' }), mkWord({ id: 'Дом' })];
+		const result = findSimilarWords(words, 'бекрушэнне');
+		expect(result.map((s) => s.word.id)).toContain('Крушэнне, крах');
+	});
+
+	// Words sharing a root ("працаўляць" and "працаўленне" both start with
+	// "працаўл") are genuinely related — the algorithm correctly finds them.
+	it('finds words that share a root via leading-window match', () => {
+		const words = [mkWord({ id: 'Працаўленне' }), mkWord({ id: 'Працаўляць' })];
+		const result = findSimilarWords(words, 'працаўленне');
+		expect(result.map((s) => s.word.id)).toContain('Працаўленне');
+		expect(result.map((s) => s.word.id)).toContain('Працаўляць');
+	});
 
 	it('sorts by word asc and desc with id tiebreak', () => {
 		expect(sortWords(words, 'word', 'asc').map((w) => w.id)).toEqual(['а', 'б', 'в']);
