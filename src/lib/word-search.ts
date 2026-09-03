@@ -134,22 +134,6 @@ function isAoSwap(x: string, y: string): boolean {
 	return (aVowel(x) && oVowel(y)) || (oVowel(x) && aVowel(y));
 }
 
-// Length of the longest common leading run, tolerating а↔о alternations (a vowel
-// swap doesn't stop the walk, a consonant mismatch does). Drives the similarity
-// score so a candidate that matches more of the query outranks one that merely
-// shares the root: "Прадаўжаць (…)" shares 10 of the query's first 10 chars with
-// "прадаўжаць", while "Прадастаўляць"/"прадаўшчык" share only 5–6, so the real
-// match floats to the top instead of tying on the fixed root window.
-function sharedRootLength(a: string, b: string): number {
-	const n = Math.min(a.length, b.length);
-	let len = 0;
-	for (let i = 0; i < n; i++) {
-		if (a[i] === b[i] || isAoSwap(a[i], b[i])) len++;
-		else break;
-	}
-	return len;
-}
-
 // Splits an id or translation into its comma(/slash/parenthesis)-separated units
 // so the tolerant root comparison can reach a root buried in a list — "Капіць,
 // накапліваць, зберагаць" → "накапліваць", which shares the накап-/накоп- root
@@ -163,15 +147,16 @@ function components(text: string): string[] {
 		.filter(Boolean);
 }
 
-// Check if text's leading root appears anywhere inside `term` (the query). This
-// catches both leading matches ("накапленне" vs "накоплены") and prefixed
-// queries like "бекрушэнне" → "крушэнне": the word's root "крушенне" starts at
-// position 2 in the query "бекрушенне". We slide a window over `term` at every
-// position. False positives are rare because the shared root must be long enough
-// (≥MIN_ROOT_WINDOW) and pass the similarity floor.
-function rootMatchLength(text: string, term: string): number {
+// Find the text's leading root anywhere inside `term` (the query). Returns
+// [matchLength, startInTerm] or [0, 0]. Catches both leading matches
+// ("накапленне" vs "накоплены") and prefixed queries like "бекрушэнне" →
+// "крушэнне": the word's root starts at position 2 in the query. We slide a
+// window over `term` at every position. False positives are rare because the
+// shared root must be long enough (≥MIN_ROOT_WINDOW) and pass the similarity
+// floor.
+function rootMatch(text: string, term: string): [number, number] {
 	const tw = Math.min(text.length, ROOT_WINDOW);
-	if (tw < MIN_ROOT_WINDOW) return 0;
+	if (tw < MIN_ROOT_WINDOW) return [0, 0];
 	for (let i = 0; i <= term.length - tw; i++) {
 		let ok = true;
 		let sub = false;
@@ -191,9 +176,9 @@ function rootMatchLength(text: string, term: string): number {
 			(term[i + len] === text[len] || isAoSwap(term[i + len], text[len]))
 		)
 			len++;
-		return len;
+		return [len, i];
 	}
-	return 0;
+	return [0, 0];
 }
 
 // Per-unit "similar part": a unit that shares the query's root scores the length
@@ -211,7 +196,7 @@ function rootMatchLength(text: string, term: string): number {
 const MIN_SIMILARITY_RATIO = 0.4;
 
 function candidateRatio(text: string, term: string): number {
-	const len = rootMatchLength(text, term);
+	const [len] = rootMatch(text, term);
 	if (len === 0) return 0;
 	const ratio = len / term.length;
 	return ratio >= MIN_SIMILARITY_RATIO ? ratio : 0;
@@ -264,18 +249,18 @@ export function rootRangesOf(text: string, term: string | string[]): [number, nu
 	// bestRatioAcrossUnits and findSimilarWords, avoiding a parallel split.
 	for (const comp of components(normText)) {
 		if (!comp) continue;
-		let bestR = 0;
+		let bestLen = 0;
 		for (const nt of normTerms) {
-			const cr = candidateRatio(comp, nt);
-			if (cr <= 0) continue;
-			const r = sharedRootLength(comp, nt);
-			if (r > bestR) bestR = r;
+			const [len] = rootMatch(comp, nt);
+			const ratio = len > 0 ? len / nt.length : 0;
+			if (ratio < MIN_SIMILARITY_RATIO) continue;
+			if (len > bestLen) bestLen = len;
 		}
-		if (bestR <= 0) continue;
+		if (bestLen <= 0) continue;
 		const pos = normText.indexOf(comp);
 		if (pos === -1) continue;
 		const ciStart = ciFromNorm[pos];
-		const ciEnd = ciFromNorm[pos + Math.max(0, bestR - 1)] + 1;
+		const ciEnd = ciFromNorm[pos + Math.max(0, bestLen - 1)] + 1;
 		ranges.push([ciStart, ciEnd]);
 	}
 	return ranges;
