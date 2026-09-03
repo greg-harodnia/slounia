@@ -313,12 +313,6 @@ export function similarityTerms(search: string): string[] {
 		.filter(Boolean);
 }
 
-// Legacy single-term variant: joins all terms. Used only by rootRangesOf
-// (which needs a single string for the root-range highlighter).
-export function similarityTerm(search: string): string {
-	return similarityTerms(search).join(' ');
-}
-
 // Returns every word recognizably close to an unmatched query (no fixed cap —
 // show whoever is most similar, be it 1 or 100), best match first. A match in
 // the word id is weighted higher than a match found only via a translation
