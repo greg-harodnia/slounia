@@ -1,9 +1,49 @@
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
 	return s.replace(
 		/[&<>"']/g,
 		(c) =>
 			(({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }) as Record<string, string>)[c],
 	);
+}
+
+// Wrap the characters of `text` whose (non-stress) index is in `matched` in
+// <mark>…</mark>. Stress marks (U+0301) are emitted verbatim and never counted
+// in the index space. Shared by the literal-query and root-span highlighters so
+// both produce byte-identical markup.
+function renderMarks(text: string, matched: Set<number>): string {
+	const result: string[] = [];
+	let inMark = false;
+	let ci = 0;
+	for (const ch of text) {
+		if (ch === '\u0301') {
+			result.push(ch);
+			continue;
+		}
+		const isMatch = matched.has(ci);
+		if (isMatch && !inMark) {
+			result.push('<mark>');
+			inMark = true;
+		} else if (!isMatch && inMark) {
+			result.push('</mark>');
+			inMark = false;
+		}
+		result.push(escapeHtml(ch));
+		ci++;
+	}
+	if (inMark) result.push('</mark>');
+	return result.join('');
+}
+
+// Highlights explicit index ranges (non-stress char indices into `text`) instead
+// of a substring query. Used by the "did you mean" similar words to mark the
+// exact root that caused them to surface, where the query never literally
+// appears in the word (the root differs by an а↔о alternation).
+export function highlightRanges(text: string, ranges: [number, number][]): string {
+	const matched = new Set<number>();
+	for (const [start, end] of ranges) {
+		for (let i = start; i < end; i++) matched.add(i);
+	}
+	return renderMarks(text, matched);
 }
 
 // Lossy normalizations for cross-script search matching.
@@ -82,26 +122,5 @@ export function highlightText(text: string, query: string, matchText?: string): 
 		}
 	}
 
-	const result: string[] = [];
-	let inMark = false;
-	let ci = 0;
-	for (const ch of text) {
-		if (ch === '\u0301') {
-			result.push(ch);
-			continue;
-		}
-		const isMatch = matchedInText.has(ci);
-		if (isMatch && !inMark) {
-			result.push('<mark>');
-			inMark = true;
-		} else if (!isMatch && inMark) {
-			result.push('</mark>');
-			inMark = false;
-		}
-		result.push(escapeHtml(ch));
-		ci++;
-	}
-	if (inMark) result.push('</mark>');
-
-	return result.join('');
+	return renderMarks(text, matchedInText);
 }

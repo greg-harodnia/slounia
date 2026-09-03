@@ -318,6 +318,53 @@ stale-while-revalidate` — unless a `?ref=` is present, which forces
 - `highlightText` escapes HTML and marks matched substrings; the query is
   inserted between each char so "абя" matches "аб'ява"/"абʼява", with index
   remapping when normalization changes string lengths.
+- **"Did you mean" suggestions**: when an active search yields zero literal
+  matches, the homepage replaces the (empty) results grid with the entries most
+  similar to the query, rendered in the **same table** as normal results — the
+  results counter shows the suggestion count, and the "Словы ня знойдзеныя"
+  empty state only appears when there are _neither_ literal nor similar results
+  (in `src/routes/+page.svelte`, `similarWords` feeds `displayWords`, which the
+  main grid iterates via `pagedWords`/`displayWords`). There is **no fixed cap**.
+  `findSimilarWords` (in `src/lib/word-search.ts`) qualifies an entry only when
+  any of its units **shares the query's leading root**, where the unit is either
+  the whole id/translation or a single comma/slash/parenthesis-separated
+  component of it (the component split is what lets a root buried in a list —
+  "Капіць, накапліваць, зберагаць" → "накапліваць" — be recognized). Sharing a
+  root means the leading windows (up to 5 chars, at least 4) are equal except
+  for **at most one а↔о vowel substitution** — "накапленне"/"накоплены",
+  "хапіць"/"хопіць". Restricting the tolerated edit to that one vowel pair (not
+  any substitution, and not a common contiguous suffix) is what keeps the block
+  precise: consonant-differing words ("канал"/"кавал") and the whole "-енне"
+  suffix family (Заяўленне, Прадстаўленне, Супрацьпастаўленне …) do not rise,
+  which an earlier longest-common-substring metric with a low floor let through
+  as ~30 strangers. The score is the **length of the longest common leading run
+  (tolerating the а↔о swap) over the query's length, using the whole normalized
+  query string** (not just its first word) — so a search that is nearly identical
+  to a whole multi-word id, e.g. "Прадаўжаць (працягваць), прадаўжальнікккк"
+  against the id "Прадаўжаць (працягваць), прадаўжальнік", shares ~all the
+  query's leading characters and ranks far above words that merely share its
+  root ("Прадастаўляць", "прадаўшчык"). To actually surface, a unit must clear a
+  **similarity floor of `MIN_SIMILARITY_RATIO` (0.4 = 40% of the query)**, so a
+  word that only shares a short leading root is dropped for long queries (bare
+  "прада"=5 of a 26-char query fails) but passes for short queries where the
+  root is a large share. Word-id matches are weighted above translation-only
+  matches. It only runs on the zero-results path, so it costs
+  nothing during normal typing.
+- **"Did you mean" highlighting**: on the zero-results path the suggested rows
+  highlight the exact root that caused each of them to surface, in **both the
+  word-id column and every translation that shares the root** — the same yellow
+  `<mark>` used for literal matches, but for a root the query never literally
+  contains (it differs by the а↔о alternation). `rootRangesOf` (`word-search.ts`)
+  returns the index range(s) of each component whose leading root passes the
+  same ratio/root gate as `findSimilarWords`, and `highlightRanges`
+  (`highlight.ts`) renders those ranges as `<mark>`; both share the normalized
+  term via `similarityTerm`, so the highlight lands on precisely what earned the
+  suggestion (a translation-only root is highlit in the translation, not the id).
+  The ranges are computed in the display-text space (`TranslationDisplay`'s new
+  optional `rootHighlightTerm` prop, covering the Latin view too by converting
+  the term alongside the text), with stress marks and apostrophes mapped so the
+  markup stays accurate. Literal results keep their existing substring
+  highlighting.
 
 ## Pinned word & the cron
 

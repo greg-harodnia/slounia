@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { cyrToLat, latToCyr } from '$lib/lacinka';
-	import { highlightText } from '$lib/highlight';
+	import { highlightText, highlightRanges } from '$lib/highlight';
+	import { rootRangesOf } from '$lib/word-search';
 	import { fetchWord, getCachedWord } from '$lib/fetch-word';
 	import { r } from '$lib/constants';
 	import Tooltip from './Tooltip.svelte';
@@ -16,6 +17,7 @@
 		showLatin,
 		showComments = true,
 		searchQuery = '',
+		rootHighlightTerm = null,
 		onWordLink,
 		popupChain,
 	}: {
@@ -24,6 +26,10 @@
 		showLatin?: boolean;
 		showComments?: boolean;
 		searchQuery?: string;
+		// The "did you mean" normalized query terms. When set, instead of the
+		// usual literal-substring highlight, the matched root that caused this
+		// word to surface (tolerating а↔о) is marked with <mark>.
+		rootHighlightTerm?: string[] | null;
 		onWordLink?: (wordId: string) => void;
 		popupChain?: string[];
 	} = $props();
@@ -41,6 +47,18 @@
 	// so cyrToLat produces consistent output (e vs je vs ie) that matches
 	// the cyrNorm'd query. Only used as 3rd arg to highlightText (matchText).
 	const searchForm = $derived(showLatin ? cyrToLat(cyrNorm(translation)) : undefined);
+	// Root-match ranges in displayText space, fed by "did you mean" suggestions.
+	// For Latin display the term is converted the same way displayText is, so
+	// root detection runs on two strings in the same script. rootRangesOf is
+	// script-agnostic (prefix + а↔о logic holds on both Cyrillic and Latin а/о).
+	const rootRanges = $derived(
+		rootHighlightTerm
+			? rootRangesOf(
+					displayText,
+					rootHighlightTerm.map((t) => (showLatin ? cyrToLat(t) : t)),
+				)
+			: [],
+	);
 	const note = $derived(showComments ? comment : null);
 
 	const crossRef = $derived.by(() => {
@@ -179,7 +197,9 @@
 	<Tooltip content={note}>
 		<span class="translation-text" class:has-note={note !== null}>
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-			{@html highlightText(displayText, displayQuery, searchForm)}
+			{@html rootRanges.length > 0
+				? highlightRanges(displayText, rootRanges)
+				: highlightText(displayText, displayQuery, searchForm)}
 		</span>
 	</Tooltip>
 {/if}

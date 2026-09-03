@@ -30,10 +30,10 @@
 		SITE_URL,
 		SITE_DESCRIPTION,
 	} from '$lib/constants';
-	import { highlightText } from '$lib/highlight';
+	import { highlightText, highlightRanges } from '$lib/highlight';
 	import { latToCyr } from '$lib/lacinka';
 	import { getCachedWord, setCachedWord } from '$lib/fetch-word';
-	import { queryWords } from '$lib/word-search';
+	import { queryWords, findSimilarWords, similarityTerms, rootRangesOf } from '$lib/word-search';
 	import { WordFilters } from '$lib/word-filters.svelte';
 	import { blogStore } from '$lib/stores/blogStore.svelte';
 	import { userStore } from '$lib/stores/userStore.svelte';
@@ -109,7 +109,22 @@
 		}),
 	);
 	let pinnedWords = $derived(visiblePool.filter((w) => w.is_pinned));
-	let total = $derived(visibleWords.length);
+	// "Did you mean" suggestions: computed only when an active search yields no
+	// literal results (not for the favorites-empty case). Computed over the same
+	// pool the real results come from, so hidden words are never suggested.
+	let similarWords = $derived(
+		filters.search && !filters.showFavorites && visibleWords.length === 0
+			? findSimilarWords(visiblePool, filters.search)
+			: [],
+	);
+	// "Did you mean" highlighting: the same normalized terms findSimilarWords
+	// matches against, plus the set of word ids that are suggestions. Rows in
+	// that set highlight the exact root that caused them to surface.
+	let similarTerms = $derived(similarWords.length > 0 ? similarityTerms(filters.search) : []);
+	let similarWordIds = $derived(new Set(similarWords.map((s) => s.word.id)));
+	// The counter reflects whatever grid is shown: actual results, or the number
+	// of similar suggestions when they take the place of (empty) results.
+	let total = $derived(similarWords.length > 0 ? similarWords.length : visibleWords.length);
 	let showPinned = $derived(
 		!filters.search &&
 			!filters.showFavorites &&
@@ -124,6 +139,10 @@
 	let visibleCount = $state(PAGE_SIZE);
 	let pagedWords = $derived(visibleWords.slice(0, visibleCount));
 	let hasMore = $derived(visibleCount < visibleWords.length);
+	// The rows actually rendered in the main grid. When an active search has no
+	// literal results, similar suggestions replace them (displayed in the same
+	// table, since the two never co-occur). Equivalent to `pagedWords` otherwise.
+	let displayWords = $derived(similarWords.length > 0 ? similarWords.map((s) => s.word) : pagedWords);
 	let loadMoreEl: HTMLDivElement | undefined = $state();
 
 	let queryVersion = '';
@@ -672,7 +691,10 @@
 				<p>Не ўдалося заладаваць словы. Спраўдзьце падлучэньне да інтэрнэту.</p>
 				<button class="pill retry-btn" onclick={fetchWords}>Паспрабаваць ізноў</button>
 			</div>
-		{:else if !loading && visibleWords.length === 0}
+		{:else if !loading && visibleWords.length === 0 && similarWords.length === 0}
+			<!-- "Словы ня знойдзеныя" only when there are neither literal nor similar
+			     results. Similar words (when present) render through the main
+			     `{:else}` grid via `displayWords` instead of a separate block. -->
 			<div class="empty">{filters.showFavorites ? 'Няма ўпадабаньняў' : 'Словы ня знойдзеныя'}</div>
 		{:else}
 			{#if showPinned && pinnedWords.length > 0}
@@ -780,7 +802,7 @@
 					<div role="columnheader">Пераклад</div>
 					<div role="columnheader">Лайкі</div>
 				</div>
-				{#each pagedWords as word (word.id)}
+				{#each displayWords as word (word.id)}
 					<div class="grid-row" role="row">
 						{#if word.created_at && Date.now() - new Date(word.created_at).getTime() < 7 * 24 * 60 * 60 * 1000}
 							<span class="new-badge">Новае</span>
@@ -806,7 +828,9 @@
 							>
 							<Tooltip content={showComments ? word.comment : null}>
 								<span class="word-text" class:has-note={showComments && word.comment !== null}
-									>{@html highlightText(word.id, latToCyr(filters.search))}</span
+									>{@html similarWordIds.has(word.id)
+										? highlightRanges(word.id, rootRangesOf(word.id, similarTerms))
+										: highlightText(word.id, latToCyr(filters.search))}</span
 								>
 							</Tooltip>
 							{#if devMode}
@@ -891,6 +915,7 @@
 										showLatin={settings.showLatin}
 										{showComments}
 										searchQuery={filters.search}
+										rootHighlightTerm={similarWordIds.has(word.id) ? similarTerms : null}
 										onWordLink={openWord}
 										popupChain={[word.id]}
 									/>

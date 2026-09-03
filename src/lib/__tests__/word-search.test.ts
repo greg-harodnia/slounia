@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { queryWords, sortWords } from '../word-search';
+import { queryWords, sortWords, findSimilarWords, rootRangesOf } from '../word-search';
+import { highlightRanges } from '../highlight';
 import type { WordData } from '../types';
 
 function mkWord(partial: Partial<WordData> & { id: string }): WordData {
@@ -139,6 +140,163 @@ describe('queryWords', () => {
 	});
 });
 
+describe('findSimilarWords', () => {
+	it('returns nothing for an empty or whitespace query', () => {
+		expect(findSimilarWords([mkWord({ id: 'кава' })], '')).toEqual([]);
+		expect(findSimilarWords([mkWord({ id: 'кава' })], '   ')).toEqual([]);
+	});
+
+	it('suggests words with a shared run of characters even without a literal substring match', () => {
+		const words = [
+			mkWord({ id: 'кава' }),
+			mkWord({ id: 'кавальня' }),
+			mkWord({ id: 'дом' }),
+			mkWord({ id: 'канал' }),
+		];
+		const result = findSimilarWords(words, 'кавал').map((s) => s.word.id);
+		expect(result).toContain('кава');
+		expect(result).toContain('кавальня');
+		expect(result).not.toContain('дом');
+		// "канал" only shares a 2-char run ("ка"), below the floor.
+		expect(result).not.toContain('канал');
+	});
+
+	it('ranks a word-id match above a translation-only match', () => {
+		const words = [
+			mkWord({ id: 'кава', translations: [{ id: 1, translation: 'кавалёк', comment: null, likes: 0 }] }),
+			mkWord({ id: 'далёка', translations: [{ id: 2, translation: 'некавалёк', comment: null, likes: 0 }] }),
+		];
+		const result = findSimilarWords(words, 'кавали');
+		// The word whose id is similar ("кава") outranks the one matching only
+		// via a translation ("далёка" → "некавалёк").
+		expect(result[0].word.id).toBe('кава');
+	});
+
+	it('filters out words with no real shared run of characters', () => {
+		const words = [mkWord({ id: 'накапленне' }), mkWord({ id: 'ўваход' }), mkWord({ id: 'замок' })];
+		const result = findSimilarWords(words, 'накоплены');
+		expect(result.map((s) => s.word.id)).toContain('накапленне');
+		expect(result.map((s) => s.word.id)).not.toContain('замок');
+	});
+
+	// Regression: only root-sharing words are "did you mean". "Накапленне" shares
+	// the накап-/накоп- root; "Схоплена" shares only a long mid/suffix run
+	// ("плены") and "Аддалены (прыметнік)" a short suffix run ("-лены") — neither
+	// has the root in common, so both must be excluded.
+	it('keeps only a root-overlap word, drops mid/suffix-overlap words', () => {
+		const words = [
+			mkWord({ id: 'Накапленне, зберажэнне' }),
+			mkWord({ id: 'Схоплена' }),
+			mkWord({ id: 'Аддалены (прыметнік)' }),
+		];
+		const result = findSimilarWords(words, 'накоплены');
+		const ids = result.map((s) => s.word.id);
+		expect(ids).toEqual(['Накапленне, зберажэнне']);
+	});
+
+	// Regression: an unrelated word only sharing a stray character or two
+	// with the query must not be surfaced.
+	it('does not suggest an unrelated word that only shares a short overlap', () => {
+		const words = [mkWord({ id: 'Ніводны' }), mkWord({ id: 'Накапленне' })];
+		const result = findSimilarWords(words, 'накоплены');
+		expect(result.map((s) => s.word.id)).not.toContain('Ніводны');
+		expect(result.map((s) => s.word.id)).toContain('Накапленне');
+	});
+
+	// Regression: a candidate matching more of the query must rank above one that
+	// merely shares the root. All three share the "прада" root, but the exact
+	// "прадаўжаць" (the query's first term, modulo the typo'd suffix) matches all
+	// its leading chars, so it must float to the top rather than tie on the root.
+	it('ranks a near-identical match above words that only share the root', () => {
+		const words = [
+			mkWord({ id: 'Прадастаўляць' }),
+			mkWord({ id: 'Прадаўжаць (працягваць), прадаўжальнік' }),
+			mkWord({ id: 'Перакладчык, падпісчык, прадаўшчык' }),
+		];
+		const result = findSimilarWords(words, 'Прадаўжаць (працягваць), прадаўжальнікккк');
+		expect(result[0].word.id).toBe('Прадаўжаць (працягваць), прадаўжальнік');
+	});
+
+	// The query is split into terms; each is compared independently. Words that
+	// share a root with ANY term surface — so "прадаўшчык" (root "прадаў" matches
+	// the first term) appears, but ranks below the near-identical match.
+	it('finds words sharing a root with any term, not just the first', () => {
+		const words = [
+			mkWord({ id: 'Прадастаўляць' }),
+			mkWord({ id: 'Прадаўжаць (працягваць), прадаўжальнік' }),
+			mkWord({ id: 'Перакладчык, падпісчык, прадаўшчык' }),
+		];
+		const result = findSimilarWords(words, 'Прадаўжаць (працягваць), прадаўжальнікккк');
+		expect(result.map((s) => s.word.id)).toContain('Перакладчык, падпісчык, прадаўшчык');
+	});
+
+	// Term splitting: "тэст, крушэнне" must find "Крушэнне, крах" via the second
+	// term, just as "крушэнне, тэст" finds it via the first.
+	it('finds a word when the matching term is not first in the query', () => {
+		const words = [mkWord({ id: 'Крушэнне, крах' }), mkWord({ id: 'Дом' })];
+		const resultA = findSimilarWords(words, 'крушэнне, тэст');
+		const resultB = findSimilarWords(words, 'тэст, крушэнне');
+		expect(resultA.map((s) => s.word.id)).toContain('Крушэнне, крах');
+		expect(resultB.map((s) => s.word.id)).toContain('Крушэнне, крах');
+	});
+
+	// Regression: entries whose id is a comma-separated list ("Капіць,
+	// накапліваць, зберагаць") are recognized when any single component shares the
+	// query's root ("накапліваць" shares the накап-/накоп- root with "накоплены").
+	it('suggests a multi-word id when any component shares the root with the query', () => {
+		const words = [
+			mkWord({ id: 'Капіць, накапліваць, зберагаць' }),
+			mkWord({ id: 'Ніводны' }),
+			mkWord({ id: 'Далягляд, вобласьць' }),
+		];
+		const result = findSimilarWords(words, 'накоплены');
+		expect(result.map((s) => s.word.id)).toContain('Капіць, накапліваць, зберагаць');
+		expect(result.map((s) => s.word.id)).not.toContain('Ніводны');
+		expect(result.map((s) => s.word.id)).not.toContain('Далягляд, вобласьць');
+	});
+
+	// Regression (the main noise bug): on real data, "накоплены" surfaced ~30
+	// strangers that merely shared a common suffix ("-лен"/"-плен") — e.g.
+	// "Маленькі" shares "лен", "Азлоблены" shares "плены". None share the query's
+	// root, so they must be excluded. Meanwhile the genuinely similar "накоплены"
+	// → "накапліваць" pairing shares the накап-/накоп- root (differing only at the
+	// а/о vowel), which the tolerant root comparison must catch even when the root
+	// is buried in a comma-separated id.
+	it('surfaces a word whose buried component shares the root, but excludes suffix-sharers', () => {
+		const words = [
+			mkWord({ id: 'Капіць, накапліваць, зберагаць' }),
+			mkWord({ id: 'Накапленне, зберажэнне' }),
+			mkWord({ id: 'Маленькі' }),
+			mkWord({ id: 'Азлоблены' }),
+		];
+		const result = findSimilarWords(words, 'накоплены');
+		const ids = result.map((s) => s.word.id);
+		expect(ids).toContain('Капіць, накапліваць, зберагаць');
+		expect(ids).toContain('Накапленне, зберажэнне');
+		expect(ids).not.toContain('Маленькі');
+		expect(ids).not.toContain('Азлоблены');
+	});
+
+	it('returns all similar words, with no fixed cap', () => {
+		const words = [
+			mkWord({ id: 'накапленне' }),
+			mkWord({ id: 'накапліваць' }),
+			mkWord({ id: 'накапіць' }),
+			mkWord({ id: 'накапляць' }),
+		];
+		const result = findSimilarWords(words, 'накап');
+		// All four share a long run with the query; none is dropped by a limit.
+		expect(result.length).toBe(4);
+	});
+
+	it('does not mutate the input array', () => {
+		const words = [mkWord({ id: 'ааа' }), mkWord({ id: 'ааb' })];
+		const copy = [...words];
+		findSimilarWords(words, 'ааб');
+		expect(words).toEqual(copy);
+	});
+});
+
 describe('sortWords', () => {
 	const words = [
 		mkWord({ id: 'б', likes: 5, created_at: '2024-01-02', importance: { id: 1, name: 'x', level: 2 } }),
@@ -176,5 +334,51 @@ describe('sortWords', () => {
 		const copy = [...words];
 		sortWords(words, 'likes', 'desc');
 		expect(words).toEqual(copy);
+	});
+});
+
+describe('rootRangesOf + highlightRanges', () => {
+	// "накапліваць" shares the накап-/накоп- root (а↔о) with "накоплены" —
+	// the exact component that makes this id a "did you mean" suggestion.
+	it('points at the buried component whose root matched', () => {
+		const ranges = rootRangesOf('Капіць, накапліваць, зберагаць', 'накоплены');
+		expect(ranges.length).toBe(1);
+		expect('Капіць, накапліваць, зберагаць'.slice(...ranges[0])).toBe('накапліваць'.slice(0, 6));
+	});
+
+	it('renders only the matched root, not the whole component', () => {
+		const html = highlightRanges(
+			'Капіць, накапліваць, зберагаць',
+			rootRangesOf('Капіць, накапліваць, зберагаць', 'накоплены'),
+		);
+		expect(html).toBe('Капіць, <mark>накапл</mark>іваць, зберагаць');
+	});
+
+	it('returns nothing when no component shares the root', () => {
+		expect(rootRangesOf('Азлоблены', 'накоплены')).toEqual([]);
+		expect(highlightRanges('Азлоблены', [])).toBe('Азлоблены');
+	});
+
+	it('handles stress marks without disturbing the range mapping', () => {
+		const text = 'лі́тара'; // stress on і
+		const ranges = rootRangesOf(text, 'літар');
+		expect(ranges.length).toBe(1);
+		const html = highlightRanges(text, ranges);
+		expect(html).toBe('<mark>лі́тар</mark>а');
+	});
+
+	it('keeps an apostrophe inside the marked root', () => {
+		const html = highlightRanges('аб’ява, накапліваць', rootRangesOf('аб’ява, накапліваць', 'накоплены'));
+		expect(html).toContain('<mark>накапл</mark>іваць');
+	});
+
+	// The root can live in a translation rather than the id: "накапліваць" only
+	// matches "накоплены" through the translation's накап-/накоп- root, so the
+	// highlight must land inside the translation (the very thing that caused the
+	// suggestion to surface), not the id.
+	it('highlights the root in the translation when the id does not share it', () => {
+		expect(rootRangesOf('Зберажэнне', 'накоплены')).toEqual([]);
+		const html = highlightRanges('накапліваць, накоплены', rootRangesOf('накапліваць, накоплены', 'накоплены'));
+		expect(html).toBe('<mark>накапл</mark>іваць, <mark>накоплены</mark>');
 	});
 });
