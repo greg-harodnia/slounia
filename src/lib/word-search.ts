@@ -240,12 +240,10 @@ export function rootRangesOf(text: string, term: string | string[]): [number, nu
 	// comparison runs on two strings normalized in the same way.
 	const normTerms = terms.map(normalizeText);
 
-	// Align each normalized/apostrophe-stripped char to the char index used by
-	// renderMarks/highlightRanges, which counts every non-stress char (stress
-	// marks add no width, apostrophes still count). normalizeText's
-	// replacements are 1:1 per char, so both sides align positionally once the
-	// apostrophe/stress/space bookkeeping is consistent.
-	const normToCi: number[] = [];
+	// Map each normalized char index back to the char index used by
+	// renderMarks/highlightRanges (every non-stress char). This lets us
+	// convert a range in normalized space to the original text's index space.
+	const ciFromNorm: number[] = [];
 	{
 		let ci = 0;
 		for (let oi = 0; oi < text.length; oi++) {
@@ -255,43 +253,31 @@ export function rootRangesOf(text: string, term: string | string[]): [number, nu
 				ci++;
 				continue;
 			}
-			normToCi.push(ci);
+			ciFromNorm.push(ci);
 			ci++;
 		}
 	}
 
+	const normText = normChars.join('');
 	const ranges: [number, number][] = [];
-	const sepRe = /[(),/;:&–—-]+/;
-	let seg: string[] = [];
-	let segStart = 0;
-	const flush = (start: number, chars: string[]): void => {
-		const joined = chars.join('');
-		const trimmed = joined.trim();
-		if (!trimmed) return;
+	// Reuse components() for separator-based splitting — same logic used by
+	// bestRatioAcrossUnits and findSimilarWords, avoiding a parallel split.
+	for (const comp of components(normText)) {
+		if (!comp) continue;
 		let bestR = 0;
 		for (const nt of normTerms) {
-			const cr = candidateRatio(trimmed, nt);
+			const cr = candidateRatio(comp, nt);
 			if (cr <= 0) continue;
-			const r = sharedRootLength(trimmed, nt);
+			const r = sharedRootLength(comp, nt);
 			if (r > bestR) bestR = r;
 		}
-		if (bestR <= 0) return;
-		const s = start + (joined.length - joined.trimStart().length);
-		const ciStart = normToCi[s];
-		const ciEnd = normToCi[s + Math.max(0, bestR - 1)] + 1;
+		if (bestR <= 0) continue;
+		const pos = normText.indexOf(comp);
+		if (pos === -1) continue;
+		const ciStart = ciFromNorm[pos];
+		const ciEnd = ciFromNorm[pos + Math.max(0, bestR - 1)] + 1;
 		ranges.push([ciStart, ciEnd]);
-	};
-	for (let i = 0; i < normChars.length; i++) {
-		const c = normChars[i];
-		if (sepRe.test(c)) {
-			flush(segStart, seg);
-			seg = [];
-			segStart = i + 1;
-		} else {
-			seg.push(c);
-		}
 	}
-	flush(segStart, seg);
 	return ranges;
 }
 
