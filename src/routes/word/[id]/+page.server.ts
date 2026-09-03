@@ -1,4 +1,4 @@
-import { error as kitError } from '@sveltejs/kit';
+import { redirect as kitRedirect } from '@sveltejs/kit';
 import type { WordData } from '$lib/types';
 
 export async function load({ params }) {
@@ -9,7 +9,7 @@ export async function load({ params }) {
 	const { data, error } = await client.rpc('get_word_by_id', { word_id: params.id });
 
 	if (error || !data) {
-		throw kitError(404, 'Word not found');
+		throw kitRedirect(302, `/?search=${encodeURIComponent(params.id)}`);
 	}
 
 	return { word: data as WordData };
