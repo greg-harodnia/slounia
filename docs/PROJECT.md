@@ -369,9 +369,12 @@ stale-while-revalidate` — unless a `?ref=` is present, which forces
 ## Pinned word & the cron
 
 - `vercel.json` schedules `GET /api/cron/rotate-pinned-word` weekly
-  (Sunday 00:00 UTC). It unpins every word, then pins one random word with
-  `importance_id = 5` (the worst level, 💀 / Паўсюдны жах). The "word of the
-  week" section on the homepage is derived client-side from `is_pinned`.
+  (Sunday 00:00 UTC). It unpins every word, then pins **two** random words
+  drawn together (Fisher–Yates, first two) from the two worst importance
+  levels — `importance_id` 5 (💀 / Паўсюдны жах) and 4 (Жах). So a week may
+  show two level-5, one level-5 + one level-4, or two level-4 words; if the
+  pool has a single candidate, only one is pinned. The "word of the week"
+  section on the homepage is derived client-side from `is_pinned`.
 - Pinned words are ordinary words (never hidden), returned by the normal
   `get_words` call with `include_hidden=false`.
 - **Security note**: the cron checks only spoofable headers (`vercel-cron`,

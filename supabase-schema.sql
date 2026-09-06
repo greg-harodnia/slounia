@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS importance (
 
 -- IMPORTANT: these ids are pinned explicitly and MUST stay in sync with
 -- src/lib/constants.ts (importanceLevels) and the rotate-pinned-word cron
--- (which filters words by importance_id = 5). Relying on SERIAL insertion
--- order would silently assign different ids.
+-- (which draws words from importance ids 4 and 5, the two worst levels).
+-- Relying on SERIAL insertion order would silently assign different ids.
 INSERT INTO importance (id, name, level) VALUES
 	(8, 'Сынонімы', -2),
 	(7, 'Трасянка', -1),
