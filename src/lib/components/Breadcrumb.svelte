@@ -5,7 +5,7 @@
 
 	const labels: Record<string, string> = {
 		'/': 'Галоўная',
-		'/blog': 'Блёґ',
+		'/blog': 'Блоґ',
 		'/suggest': 'Запрапанаваць слова',
 	};
 

@@ -54,21 +54,21 @@
 </script>
 
 <svelte:head>
-	<title>Блёґ — {SITE_NAME}</title>
+	<title>Блоґ — {SITE_NAME}</title>
 	<meta name="description" content={description} />
-	<meta property="og:title" content="Блёґ — {SITE_NAME}" />
+	<meta property="og:title" content="Блоґ — {SITE_NAME}" />
 	<meta property="og:description" content={description} />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="{SITE_URL}/blog" />
 	<meta property="og:image" content="{SITE_URL}/pwa-512x512.png" />
-	<meta name="twitter:title" content="Блёґ — {SITE_NAME}" />
+	<meta name="twitter:title" content="Блоґ — {SITE_NAME}" />
 	<meta name="twitter:description" content={description} />
 	<meta name="twitter:image" content="{SITE_URL}/pwa-512x512.png" />
 </svelte:head>
 
 <div class="page-wrapper page-full">
-	<div class="breadcrumb-wrap"><Breadcrumb items={[{ href: '/' }, { label: 'Блёґ' }]} /><ToDict /></div>
-	<h1 class="shrink-0">Блёґ</h1>
+	<div class="breadcrumb-wrap"><Breadcrumb items={[{ href: '/' }, { label: 'Блоґ' }]} /><ToDict /></div>
+	<h1 class="shrink-0">Блоґ</h1>
 
 	<button
 		class="tag-chip tag-chip--block pill tag-pill"
@@ -89,7 +89,7 @@
 	{:else if blogStore.error}
 		<div class="empty">
 			<div>
-				<p>Не ўдалося заладаваць блёґ.</p>
+				<p>Не ўдалося заладаваць блоґ.</p>
 				<button class="pill" onclick={() => blogStore.fetchPage(blogStore.currentPage)}>
 					Паспрабаваць ізноў
 				</button>

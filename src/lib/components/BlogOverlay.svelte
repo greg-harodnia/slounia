@@ -24,11 +24,11 @@
 		if (currentPost) {
 			return [
 				{ label: 'Галоўная', onclick: onclose } as Crumb,
-				{ label: 'Блёґ', onclick: onBackToBlog } as Crumb,
+				{ label: 'Блоґ', onclick: onBackToBlog } as Crumb,
 				{ label: currentPost.title },
 			];
 		}
-		return [{ label: 'Галоўная', onclick: onclose } as Crumb, { label: 'Блёґ' }];
+		return [{ label: 'Галоўная', onclick: onclose } as Crumb, { label: 'Блоґ' }];
 	});
 
 	function handlePageChange(page: number) {
@@ -88,7 +88,7 @@
 		<p class="empty">Не ўдалося заладаваць допіс. Спраўдзьце падлучэньне да інтэрнэту.</p>
 	{:else}
 		<div class="blog-list">
-			<h1 class="page-title">Блёґ</h1>
+			<h1 class="page-title">Блоґ</h1>
 
 			<button
 				class="tag-chip tag-chip--block pill tag-pill"
@@ -103,7 +103,7 @@
 			{:else if blogStore.error}
 				<div class="empty">
 					<div>
-						<p>Не ўдалося заладаваць блёґ.</p>
+						<p>Не ўдалося заладаваць блоґ.</p>
 						<button class="pill" onclick={() => blogStore.fetchPage(blogStore.currentPage)}>
 							Паспрабаваць ізноў
 						</button>
