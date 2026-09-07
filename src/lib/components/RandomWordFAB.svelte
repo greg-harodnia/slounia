@@ -179,6 +179,12 @@
 		transform: translate(-50%, -50%);
 		z-index: 10000;
 		width: 320px;
+		display: flex;
+		flex-direction: column;
+		/* Cap the height so very tall word cards scroll instead of running off
+		   the viewport. The extra vh-based term guarantees the centered popup's
+		   top edge clears the mobile arrows docked at the top corners. */
+		max-height: min(80vh, calc(100vh - 7.5rem));
 		background: var(--c-bg);
 		border: 1px solid var(--c-border);
 		border-radius: 8px;
@@ -199,6 +205,7 @@
 
 	.rw-popup-head {
 		display: flex;
+		flex-shrink: 0;
 		align-items: center;
 		gap: 0.35rem;
 		padding: 0.5rem 0.75rem;
@@ -215,7 +222,9 @@
 		position: fixed;
 		top: 50%;
 		transform: translateY(-50%);
-		z-index: 10000;
+		/* Above the popup so the arrows still show even where a near-full-width
+		   popup overlaps them on small screens. */
+		z-index: 10001;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -270,6 +279,12 @@
 	.rw-popup :global(.word-card) {
 		box-shadow: none;
 		padding: 1rem;
+		/* The card is the only scrollable area of the popup; the header stays
+		   put. min-height: 0 lets it shrink inside the flex column, and
+		   overscroll-behavior keeps the scroll from chaining to the page. */
+		min-height: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
 	}
 
 	.rw-popup :global(.word-title) {
