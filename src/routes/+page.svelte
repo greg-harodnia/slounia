@@ -14,6 +14,7 @@
 		preloadWelcomeModal,
 	} from '$lib/preload.svelte';
 	import TranslationDisplay from '$lib/components/TranslationDisplay.svelte';
+	import RandomWordFAB from '$lib/components/RandomWordFAB.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import LikeButton from '$lib/components/LikeButton.svelte';
 	import ImportanceBadge from '$lib/components/ImportanceBadge.svelte';
@@ -992,6 +993,7 @@
 			>
 		</button>
 	{/if}
+	<RandomWordFAB {allWords} onWordLink={openWord} />
 </div>
 
 {#if showWelcome && overlays.welcome}
