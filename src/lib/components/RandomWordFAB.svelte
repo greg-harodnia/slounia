@@ -142,7 +142,9 @@
 				<span class="rw-title">Выпадковае слова</span>
 				<button class="rw-close" aria-label="Закрыць" onclick={() => (rwOpen = false)}>&times;</button>
 			</div>
-			<WordDetailContent word={rwCurrent} onWordLink={handleWordLink} />
+			<div class="rw-body">
+				<WordDetailContent word={rwCurrent} onWordLink={handleWordLink} />
+			</div>
 		</div>
 	</div>
 {/if}
@@ -222,6 +224,18 @@
 		border-bottom: 1px solid var(--c-border);
 	}
 
+	.rw-body {
+		/* The popup's single scroll container for the whole word card (title,
+		   meta, translations, footer). A lone scroller means the mouse wheel
+		   works anywhere over the card, while overscroll-behavior keeps the
+		   scroll from chaining to the page underneath. The popup header above
+		   stays pinned (sibling, not part of the scroller). */
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
 	.rw-title {
 		font-size: 0.8rem;
 		font-weight: 600;
@@ -289,12 +303,18 @@
 	.rw-popup :global(.word-card) {
 		box-shadow: none;
 		padding: 1rem;
-		/* The card is the only scrollable area of the popup; the header stays
-		   put. min-height: 0 lets it shrink inside the flex column, and
-		   overscroll-behavior keeps the scroll from chaining to the page. */
-		min-height: 0;
-		overflow-y: auto;
-		overscroll-behavior: contain;
+		/* The card must not be its own scroll container (a scroll container with
+		   no overflow swallows wheel events and blocks chaining). Content size,
+		   overflow visible; .rw-body scrolls it. */
+		max-height: none;
+		overflow: visible;
+	}
+
+	.rw-popup :global(.translations-scroll) {
+		/* Neutralize WordDetailContent's internal scroller so the popup has
+		   exactly one scroll container and titles/footers scroll along. */
+		flex: none;
+		overflow: visible;
 	}
 
 	.rw-popup :global(.word-title) {
