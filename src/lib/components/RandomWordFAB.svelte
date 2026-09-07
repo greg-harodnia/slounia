@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
 	import WordDetailContent from './WordDetailContent.svelte';
 	import type { WordData } from '$lib/types';
 
@@ -83,15 +82,9 @@
 		rwOpen = false;
 		onWordLink(id, data);
 	}
-
-	onMount(() => {
-		window.addEventListener('keydown', handleKeydown);
-	});
-
-	onDestroy(() => {
-		window.removeEventListener('keydown', handleKeydown);
-	});
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <button class="rw-fab" aria-label="Выпадковае слова" onclick={toggleRandomWord}>
 	<svg
