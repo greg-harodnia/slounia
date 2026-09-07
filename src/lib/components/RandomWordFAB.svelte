@@ -130,18 +130,20 @@
 			stroke-linejoin="round"><path d="M9 18l6-6-6-6" /></svg
 		>
 	</button>
-	<div
-		class="rw-popup"
-		role="group"
-		aria-label="Выпадковае слова"
-		ontouchstart={rwTouchStart}
-		ontouchend={rwTouchEnd}
-	>
-		<div class="rw-popup-head">
-			<span class="rw-title">Выпадковае слова</span>
-			<button class="rw-close" aria-label="Закрыць" onclick={() => (rwOpen = false)}>&times;</button>
+	<div class="rw-popup-wrap">
+		<div
+			class="rw-popup"
+			role="group"
+			aria-label="Выпадковае слова"
+			ontouchstart={rwTouchStart}
+			ontouchend={rwTouchEnd}
+		>
+			<div class="rw-popup-head">
+				<span class="rw-title">Выпадковае слова</span>
+				<button class="rw-close" aria-label="Закрыць" onclick={() => (rwOpen = false)}>&times;</button>
+			</div>
+			<WordDetailContent word={rwCurrent} onWordLink={handleWordLink} />
 		</div>
-		<WordDetailContent word={rwCurrent} onWordLink={handleWordLink} />
 	</div>
 {/if}
 
@@ -172,18 +174,28 @@
 		transform: scale(1.05);
 	}
 
-	.rw-popup {
+	.rw-popup-wrap {
 		position: fixed;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		z-index: 10000;
-		width: 320px;
+		pointer-events: none;
+		/* Centering must NOT use transform/perspective/filter here: any of those
+		   on this fixed wrapper (or the popup) becomes the containing block for
+		   the nested position:fixed crossref popups (TranslationDisplay),
+		   displacing them from the hovered link to the screen corner. Flex
+		   centering keeps fixed descendants viewport-relative. */
+	}
+
+	.rw-popup {
+		pointer-events: auto;
 		display: flex;
 		flex-direction: column;
+		width: 320px;
 		/* Cap the height so very tall word cards scroll instead of running off
-		   the viewport. The extra vh-based term guarantees the centered popup's
-		   top edge clears the mobile arrows docked at the top corners. */
+		   the viewport. */
 		max-height: min(80vh, calc(100vh - 7.5rem));
 		background: var(--c-bg);
 		border: 1px solid var(--c-border);
@@ -195,11 +207,9 @@
 	@keyframes rw-popup-in {
 		from {
 			opacity: 0;
-			transform: translate(-50%, calc(-50% + 8px));
 		}
 		to {
 			opacity: 1;
-			transform: translate(-50%, -50%);
 		}
 	}
 
