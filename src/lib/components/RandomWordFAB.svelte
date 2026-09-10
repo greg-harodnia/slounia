@@ -106,30 +106,6 @@
 	</svg>
 </button>
 {#if rwOpen && rwCurrent}
-	<button class="rw-nav rw-nav-left" aria-label="Папярэдняе слова" disabled={rwIndex === 0} onclick={rwPrev}>
-		<svg
-			viewBox="0 0 24 24"
-			width="20"
-			height="20"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2.5"
-			stroke-linecap="round"
-			stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg
-		>
-	</button>
-	<button class="rw-nav rw-nav-right" aria-label="Наступнае слова" onclick={rwNext}>
-		<svg
-			viewBox="0 0 24 24"
-			width="20"
-			height="20"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2.5"
-			stroke-linecap="round"
-			stroke-linejoin="round"><path d="M9 18l6-6-6-6" /></svg
-		>
-	</button>
 	<div class="rw-popup-wrap">
 		<div
 			class="rw-popup"
@@ -146,6 +122,30 @@
 				<WordDetailContent word={rwCurrent} onWordLink={handleWordLink} />
 			</div>
 		</div>
+		<button class="rw-nav rw-nav-left" aria-label="Папярэдняе слова" disabled={rwIndex === 0} onclick={rwPrev}>
+			<svg
+				viewBox="0 0 24 24"
+				width="20"
+				height="20"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg
+			>
+		</button>
+		<button class="rw-nav rw-nav-right" aria-label="Наступнае слова" onclick={rwNext}>
+			<svg
+				viewBox="0 0 24 24"
+				width="20"
+				height="20"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"><path d="M9 18l6-6-6-6" /></svg
+			>
+		</button>
 	</div>
 {/if}
 
@@ -246,8 +246,11 @@
 		position: fixed;
 		top: 50%;
 		transform: translateY(-50%);
-		/* Above the popup so the arrows still show even where a near-full-width
-		   popup overlaps them on small screens. */
+		/* Nested inside .rw-popup-wrap, which is pointer-events: none — restore
+		   interactivity. The wrap is the stacking context here, so 10001 beats
+		   the popup but stays below floating overlays like tooltips/crossref
+		   popups (10002), keeping them readable when they overlap the arrows. */
+		pointer-events: auto;
 		z-index: 10001;
 		display: flex;
 		align-items: center;

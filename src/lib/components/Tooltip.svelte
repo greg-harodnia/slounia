@@ -105,7 +105,7 @@
 
 	.tooltip {
 		position: fixed;
-		z-index: 9999;
+		z-index: 10002;
 		background: var(--c-tooltip-bg, var(--c-text));
 		color: var(--c-tooltip-text, var(--c-bg));
 		padding: 0.35rem 0.75rem;

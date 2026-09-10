@@ -236,7 +236,7 @@
 
 	.word-popup {
 		position: fixed;
-		z-index: 10000;
+		z-index: 10002;
 		width: 320px;
 		overflow-y: auto;
 		background: var(--c-bg);
