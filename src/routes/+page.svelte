@@ -175,6 +175,13 @@
 		// margin is only applied once the user has scrolled (see hasScrolled);
 		// re-running this effect re-observes the sentinel with the wider window,
 		// so growth kicks in as soon as the first scroll happens.
+		//
+		// Re-subscribing on every visibleCount change also keeps the observer's
+		// state in sync with the sentinel's position after the list shrank: when
+		// a sort/filter reset drops back to PAGE_SIZE while the user is scrolled
+		// down, the fresh observation reports the sentinel as intersecting and
+		// growth resumes immediately instead of waiting for another scroll edge.
+		void visibleCount;
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0]?.isIntersecting) {
