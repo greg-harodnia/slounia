@@ -145,6 +145,11 @@
 	// table, since the two never co-occur). Equivalent to `pagedWords` otherwise.
 	let displayWords = $derived(similarWords.length > 0 ? similarWords.map((s) => s.word) : pagedWords);
 	let loadMoreEl: HTMLDivElement | undefined = $state();
+	// Gate for the pre-render margin below: until the user has actually
+	// scrolled, the list must not grow on its own. SSR only renders PAGE_SIZE
+	// rows, so without this the sentinel would sit inside the extended window
+	// and the observer would keep appending rows on load ("self-updating" page).
+	let hasScrolled = $state(false);
 
 	let queryVersion = '';
 	$effect(() => {
@@ -166,14 +171,17 @@
 		const el = loadMoreEl;
 		if (!el || !hasMore) return;
 		// Pre-render rows before they reach the viewport so momentum scrolling
-		// doesn't hit a wall of freshly-inserted DOM mid-fling.
+		// doesn't hit a wall of freshly-inserted DOM mid-fling. The bottom
+		// margin is only applied once the user has scrolled (see hasScrolled);
+		// re-running this effect re-observes the sentinel with the wider window,
+		// so growth kicks in as soon as the first scroll happens.
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0]?.isIntersecting) {
 					visibleCount += PAGE_SIZE;
 				}
 			},
-			{ root: appEl ?? null, rootMargin: `0px 0px ${SCROLL_PREFETCH_MARGIN}px 0px` },
+			{ root: appEl ?? null, rootMargin: `0px 0px ${hasScrolled ? SCROLL_PREFETCH_MARGIN : 0}px 0px` },
 		);
 		observer.observe(el);
 		return () => observer.disconnect();
@@ -537,6 +545,9 @@
 		let lastScrollY = 0;
 
 		const onScroll = () => {
+			// Any scroll (window capture also catches the inner .table-wrap / .app
+			// scrollers) flips the gate that arms the pre-render margin.
+			hasScrolled = true;
 			const st = el.scrollTop;
 			const delta = lastScrollY - st;
 			lastScrollY = st;
