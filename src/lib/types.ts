@@ -49,6 +49,18 @@ export interface Post {
 	updated_at: string;
 }
 
+// Lightweight shape used by list feeds (blog index + API). Deliberately omits
+// the heavy `content` column; the card only renders what's listed here.
+export interface PostSummary {
+	id: number;
+	slug: string;
+	title: string;
+	hashtags: string[];
+	is_pinned: boolean;
+	views: number;
+	published_at: string;
+}
+
 export type SuggestionStatus = 'pending' | 'approved' | 'rejected' | 'agreed';
 
 export interface Suggestion {

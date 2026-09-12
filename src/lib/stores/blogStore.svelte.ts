@@ -1,10 +1,10 @@
-import type { Post } from '$lib/types';
+import type { PostSummary } from '$lib/types';
 import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 const PAGE_SIZE = 5;
 
 class BlogStore {
-	posts = $state<Post[]>([]);
+	posts = $state<PostSummary[]>([]);
 	total = $state(0);
 	loading = $state(false);
 	error = $state(false);

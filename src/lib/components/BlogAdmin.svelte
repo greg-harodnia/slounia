@@ -1,12 +1,12 @@
 <script lang="ts">
 	import Modal from './Modal.svelte';
-	import type { Post } from '$lib/types';
+	import type { Post, PostSummary } from '$lib/types';
 
 	let {
 		posts,
 		onChange,
 	}: {
-		posts: Post[];
+		posts: PostSummary[];
 		onChange: () => void;
 	} = $props();
 
@@ -139,14 +139,22 @@
 		editing = null;
 	}
 
-	function editPost(post: Post) {
-		editing = post;
-		slug = post.slug;
-		title = post.title;
-		content = toPlain(post.content);
-		hashtagsStr = (post.hashtags || []).join(', ');
-		isPinned = post.is_pinned;
-		publishedAt = post.published_at.slice(0, 16);
+	async function editPost(post: PostSummary) {
+		// The list feed only carries the summary, so load the full post (with
+		// content) before opening the editor.
+		const res = await fetch(`/api/blog/${post.slug}`);
+		if (!res.ok) {
+			error = 'Не ўдалося заладаваць запіс';
+			return;
+		}
+		const full = (await res.json()) as Post;
+		editing = full;
+		slug = full.slug;
+		title = full.title;
+		content = toPlain(full.content);
+		hashtagsStr = (full.hashtags || []).join(', ');
+		isPinned = full.is_pinned;
+		publishedAt = full.published_at.slice(0, 16);
 		error = '';
 		open = true;
 	}
@@ -210,7 +218,7 @@
 		}
 	}
 
-	async function deletePost(post: Post) {
+	async function deletePost(post: PostSummary) {
 		if (!confirm(`Delete "${post.title}"?`)) return;
 		try {
 			const res = await fetch(`/api/blog/${post.slug}/edit`, { method: 'DELETE' });

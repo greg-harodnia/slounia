@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatDate, r } from '$lib/constants';
-	import type { Post } from '$lib/types';
+	import type { PostSummary } from '$lib/types';
 	import { fetchBlogPost } from '$lib/fetch-blog';
 	import ViewCounter from '$lib/components/ViewCounter.svelte';
 
@@ -9,7 +9,7 @@
 		href,
 		onclick: clickHandler,
 	}: {
-		post: Post;
+		post: PostSummary;
 		href?: string;
 		onclick?: (slug: string) => void;
 	} = $props();
