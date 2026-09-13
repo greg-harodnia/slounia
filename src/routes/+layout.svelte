@@ -98,7 +98,23 @@
 		// explicitly here (dynamic import keeps it client-only).
 		if (pwaInfo) {
 			void import('virtual:pwa-register').then(({ registerSW }) => {
-				registerSW({ immediate: true });
+				registerSW({
+					immediate: true,
+					// Periodically check for SW updates even when the PWA stays
+					// in RAM. Without this, standalone PWA windows that aren't
+					// navigated may never pick up a new build. The browser also
+					// does its own ~24 h check, but 12 h keeps things fresher.
+					onRegisteredSW(_url, registration) {
+						if (registration) {
+							setInterval(
+								() => {
+									registration.update();
+								},
+								12 * 60 * 60 * 1000,
+							);
+						}
+					},
+				});
 			});
 		}
 
