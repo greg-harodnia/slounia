@@ -8,9 +8,12 @@ export default defineConfig({
 		VitePWA({
 			registerType: 'autoUpdate',
 			workbox: {
-				// Do NOT add clientsClaim here — with autoUpdate, the new SW activates
-				// via skipWaiting and clientsClaim would immediately take over all open
-				// tabs, causing a soft reload that resets scroll position and app state.
+				// Do NOT add clientsClaim here — the new SW is activated via
+				// skipWaiting (autoUpdate). clientsClaim isn't what reloads open
+				// tabs; that reload comes from the plugin's own `activated`
+				// listener, which is neutralised via onNeedReload in +layout.svelte.
+				// clientsClaim would additionally force the new SW to take over all
+				// open tabs, defeating the "update applies on next launch" approach.
 				cleanupOutdatedCaches: true,
 				// The plugin defaults navigateFallback to 'index.html', but a
 				// SvelteKit SSR build has no such file, so the generated

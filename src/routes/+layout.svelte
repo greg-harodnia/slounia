@@ -100,6 +100,14 @@
 			void import('virtual:pwa-register').then(({ registerSW }) => {
 				registerSW({
 					immediate: true,
+					// A fresh deploy makes the browser install + activate a newer
+					// sw.js a few seconds after launch. In autoUpdate mode the
+					// plugin then calls window.location.reload() on the `activated`
+					// event (its own client-side code, independent of clientsClaim),
+					// resetting the user's scroll/UI state mid-session. Deferring
+					// instead keeps the current session untouched: the already
+					// active new SW takes control on the next launch.
+					onNeedReload: () => {},
 					// Periodically check for SW updates even when the PWA stays
 					// in RAM. Without this, standalone PWA windows that aren't
 					// navigated may never pick up a new build. The browser also
