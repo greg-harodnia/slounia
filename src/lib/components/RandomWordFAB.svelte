@@ -339,7 +339,7 @@
 		}
 
 		.rw-popup {
-			width: min(320px, calc(100vw - 1.5rem));
+			width: min(300px, calc(100vw - 2.75rem));
 		}
 	}
 </style>
