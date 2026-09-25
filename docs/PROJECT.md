@@ -87,8 +87,8 @@ standalone page (`/word/{id}`) for direct links and SEO.
 - **Form**: word (required), translation (required), comment (optional, for
   explaining the calque). Submit creates a `pending` suggestion.
 - **Suggestion list**: all public suggestions shown as cards with status badges:
-  У чаканьні (pending), Ухваленае (approved, green), Адкінутае (rejected, red),
-  Ухваленае, але без публікацыі (agreed, yellow).
+  У чаканьні (pending), Ухвалёнае (approved, green), Адкінутае (rejected, red),
+  Ухвалёнае, але без публікацыі (agreed, yellow).
 - **Own suggestions**: identified by `user_token`; only the author (or dev mode)
   sees the delete button.
 
@@ -436,3 +436,13 @@ stale-while-revalidate` — unless a `?ref=` is present, which forces
   `lacinka`, `highlight`/normalize, `assist-core`, `assist`, `userStore`,
   markdown helpers. When behaviour of search/transliteration changes, extend
   these suites — they pin the lossy normalization decisions.
+
+## Local development
+
+- Run locally with `bun run dev`. The system Node.js (v20) has no native
+  WebSocket, which supabase-js requires for its realtime client — this used to
+  crash the dev server before `db.ts` passed a `ws` fallback as
+  `realtime.transport`. The fallback is only active when `globalThis.WebSocket`
+  is missing, so the Vercel runtime (nodejs24.x, native WebSocket) still creates
+  the client exactly as before. `ws`/`@types/ws` are dependencies solely for
+  this local fallback.

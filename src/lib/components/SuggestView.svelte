@@ -13,9 +13,9 @@
 
 	const statusMeta: Record<SuggestionStatus, { label: string; className: string }> = {
 		pending: { label: 'У чаканьні', className: 'status-pending' },
-		approved: { label: 'Ухваленае', className: 'status-approved' },
+		approved: { label: 'Ухвалёнае', className: 'status-approved' },
 		rejected: { label: 'Адкінутае', className: 'status-rejected' },
-		agreed: { label: 'Ухваленае, але без публікацыі', className: 'status-agreed' },
+		agreed: { label: 'Ухвалёнае, але без публікацыі', className: 'status-agreed' },
 	};
 
 	// userToken is set asynchronously (userStore.load() runs after this
