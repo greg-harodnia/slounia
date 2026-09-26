@@ -439,10 +439,29 @@ stale-while-revalidate` — unless a `?ref=` is present, which forces
 
 ## Local development
 
-- Run locally with `bun run dev`. The system Node.js (v20) has no native
-  WebSocket, which supabase-js requires for its realtime client — this used to
-  crash the dev server before `db.ts` passed a `ws` fallback as
-  `realtime.transport`. The fallback is only active when `globalThis.WebSocket`
-  is missing, so the Vercel runtime (nodejs24.x, native WebSocket) still creates
-  the client exactly as before. `ws`/`@types/ws` are dependencies solely for
-  this local fallback.
+- **Requires Node >= 22** (pinned to `24` in `.node-version`; Vercel runs this app
+  on `nodejs24.x`). `bun` is the package manager and task runner, but
+  `bun run dev` / `bun run build` execute `node_modules/.bin/vite`, whose shebang is
+  `#!/usr/bin/env node` — so the **Node on `PATH` runs the app**, not bun's runtime.
+  Local setup uses [fnm](https://github.com/Schniz/fnm) with `--use-on-cd`, which
+  reads `.node-version`; if `node -v` reports < 22 the version manager isn't active
+  in the current shell.
+- **Why >= 22 is mandatory:** `src/lib/server/db.ts` creates the Supabase client at
+  module top level, and `@supabase/supabase-js` >= 2.106 always constructs a
+  `RealtimeClient`, which eagerly resolves a WebSocket implementation
+  (`@supabase/realtime-js` → `WebSocketFactory.getWebSocketConstructor`). Node < 22
+  has no global `WebSocket`, so it throws
+  `Node.js 20 detected without native WebSocket support`, and because the throw
+  happens during module evaluation it takes down everything: `bun run dev` returns
+  HTTP 500 on every SSR page and `bun run build` dies right after
+  "rendering chunks…" (Vite imports the built server chunk in a worker thread).
+- The server never uses realtime (REST only — there are no `.channel()` calls
+  anywhere in `src/`), so that client is constructed but unused and the crash is
+  purely a side effect. `bun --bun run build` is a working one-off escape hatch
+  (bun's runtime has a native `WebSocket`), but don't rely on it.
+- This section previously claimed `db.ts` passes a `ws` fallback as
+  `realtime.transport` and that `ws`/`@types/ws` are dependencies. **That was
+  wrong** — no such code or dependency ever existed in git history (only two commits
+  ever touched `db.ts`). The Node version is the only fix.
+- CI (`.github/workflows/ci.yml`) runs `check`/`test`/`lint`/`format:check` with bun
+  only and never runs `build`, which is why the Node 20 crash went unnoticed.
