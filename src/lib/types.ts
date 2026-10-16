@@ -68,6 +68,7 @@ export interface Suggestion {
 	word: string;
 	translation: string;
 	comment: string | null;
+	admin_comment: string | null;
 	status: SuggestionStatus;
 	is_mine: boolean;
 	published_at: string;

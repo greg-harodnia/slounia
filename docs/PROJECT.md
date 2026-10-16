@@ -91,6 +91,10 @@ standalone page (`/word/{id}`) for direct links and SEO.
   Ухвалёнае, але без публікацыі (agreed, yellow).
 - **Own suggestions**: identified by `user_token`; only the author (or dev mode)
   sees the delete button.
+- **Admin comment**: a single moderation note per suggestion, written/edited/
+  cleared by an admin (dev mode) via `PUT`/`DELETE /api/suggestions/[id]/comment`.
+  It is public (shown on the card to every viewer) and explains the decision on
+  the proposal.
 
 ### Contact form
 
@@ -207,8 +211,9 @@ Run in `supabase-schema.sql`: a single Postgres schema with RLS.
 - `importance(id, name, level)` — quality levels, see the contract below.
 - `posts(id, slug, title, content, hashtags[], is_pinned, published_at, created_at, updated_at, likes, views)`
   — blog posts; `content` is Markdown.
-- `suggestions(id, word, translation, comment, status, user_token, published_at, created_at)`
-  — public word suggestions (`pending | approved | rejected | agreed`).
+- `suggestions(id, word, translation, comment, admin_comment, status, user_token, published_at, created_at)`
+  — public word suggestions (`pending | approved | rejected | agreed`);
+  `admin_comment` is an admin-written public moderation note.
 - `messages(id, name, telegram, message, user_token, reply, ip_address, created_at)`
   — contact-form submissions.
 - `banned_users(id, user_token, name, telegram, reason, ip_address, message_id, banned_by, created_at)`.
@@ -391,8 +396,9 @@ stale-while-revalidate` — unless a `?ref=` is present, which forces
   sitemap). In dev they remain visible so `BlogAdmin` can edit/delete them.
 - All admin/blog-modification and admin REST endpoints (`/api/blog/create`,
   `[slug]/edit`, `[slug]/like` is public, upload-image, `/api/banned`,
-  `/api/suggestions/[id]/resolve`, messages reply, etc.) call `requireDev()`,
-  which returns 404 in production. There is intentionally no admin UI in prod.
+  `/api/suggestions/[id]/resolve`, `/api/suggestions/[id]/comment`, messages
+  reply, etc.) call `requireDev()`, which returns 404 in production. There is
+  intentionally no admin UI in prod.
 - Posts render Markdown (`marked`). Blog image uploads go to the public storage
   bucket `blog-images` via the service client (dev-only).
 - The client overlay fetches `/api/blog/[slug]` and memoizes per slug in an

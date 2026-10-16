@@ -415,6 +415,7 @@ CREATE TABLE IF NOT EXISTS suggestions (
     word TEXT NOT NULL,
     translation TEXT NOT NULL,
     comment TEXT,
+    admin_comment TEXT,
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'agreed')),
     user_token TEXT,
     published_at TIMESTAMPTZ DEFAULT NOW(),

@@ -11,6 +11,10 @@
 	let submitting = $state(false);
 	let submitError = $state('');
 
+	// Per-suggestion admin comment drafts, keyed by suggestion id (dev mode only).
+	let adminDraft = $state<Record<number, string>>({});
+	let adminSaving = $state<Record<number, boolean>>({});
+
 	const statusMeta: Record<SuggestionStatus, { label: string; className: string }> = {
 		pending: { label: 'У чаканьні', className: 'status-pending' },
 		approved: { label: 'Ухвалёнае', className: 'status-approved' },
@@ -77,6 +81,47 @@
 			}
 		} catch (e) {
 			console.error(e);
+		}
+	}
+
+	async function saveAdminComment(suggestion: Suggestion) {
+		const text = (adminDraft[suggestion.id] ?? suggestion.admin_comment ?? '').trim();
+		if (!text) return;
+		adminSaving = { ...adminSaving, [suggestion.id]: true };
+		try {
+			const res = await fetch(`/api/suggestions/${suggestion.id}/comment`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ comment: text }),
+			});
+			if (res.ok) {
+				suggestion.admin_comment = text;
+				adminDraft = { ...adminDraft, [suggestion.id]: text };
+			} else {
+				console.error('Save admin comment failed', res.status);
+			}
+		} catch (e) {
+			console.error(e);
+		} finally {
+			adminSaving = { ...adminSaving, [suggestion.id]: false };
+		}
+	}
+
+	async function deleteAdminComment(suggestion: Suggestion) {
+		if (!confirm('Выдаліць камэнтар адміністратара?')) return;
+		adminSaving = { ...adminSaving, [suggestion.id]: true };
+		try {
+			const res = await fetch(`/api/suggestions/${suggestion.id}/comment`, { method: 'DELETE' });
+			if (res.ok) {
+				suggestion.admin_comment = null;
+				adminDraft = { ...adminDraft, [suggestion.id]: '' };
+			} else {
+				console.error('Delete admin comment failed', res.status);
+			}
+		} catch (e) {
+			console.error(e);
+		} finally {
+			adminSaving = { ...adminSaving, [suggestion.id]: false };
 		}
 	}
 
@@ -188,6 +233,12 @@
 					{#if suggestion.comment}
 						<div class="suggestion-comment">{suggestion.comment}</div>
 					{/if}
+					{#if suggestion.admin_comment}
+						<div class="admin-comment">
+							<span class="admin-comment-label">Камэнтар адміністратара</span>
+							{suggestion.admin_comment}
+						</div>
+					{/if}
 					{#if devMode}
 						<div class="resolve-row">
 							<button
@@ -205,6 +256,42 @@
 							<button class="resolve-btn resolve-agreed" onclick={() => resolve(suggestion, 'agreed')}>
 								Пагадзіцца
 							</button>
+						</div>
+						<div class="admin-comment-form">
+							<label class="admin-comment-label" for="admin-comment-{suggestion.id}">
+								Камэнтар адміністратара
+							</label>
+							<textarea
+								id="admin-comment-{suggestion.id}"
+								rows="2"
+								placeholder="Прычына ўхваленьня/адхіленьня ці іншая нататка..."
+								value={adminDraft[suggestion.id] ?? suggestion.admin_comment ?? ''}
+								oninput={(e) => {
+									adminDraft = { ...adminDraft, [suggestion.id]: e.currentTarget.value };
+								}}></textarea>
+							<div class="admin-comment-actions">
+								{#if suggestion.admin_comment}
+									<button
+										class="resolve-btn resolve-rejected"
+										onclick={() => deleteAdminComment(suggestion)}
+										disabled={adminSaving[suggestion.id]}
+									>
+										Выдаліць
+									</button>
+								{/if}
+								<button
+									class="resolve-btn resolve-approved"
+									onclick={() => saveAdminComment(suggestion)}
+									disabled={adminSaving[suggestion.id] ||
+										!(adminDraft[suggestion.id] ?? suggestion.admin_comment ?? '').trim()}
+								>
+									{adminSaving[suggestion.id]
+										? '...'
+										: suggestion.admin_comment
+											? 'Захаваць'
+											: 'Дадаць'}
+								</button>
+							</div>
 						</div>
 					{/if}
 				</article>
@@ -444,6 +531,59 @@
 		overflow-wrap: break-word;
 	}
 
+	.admin-comment {
+		margin-top: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		border-radius: var(--radius-sm);
+		background: var(--c-primary-light);
+		border-left: 3px solid var(--c-primary);
+		font-size: 0.85rem;
+		color: var(--c-text);
+		white-space: pre-wrap;
+		overflow-wrap: break-word;
+	}
+
+	.admin-comment-label {
+		display: block;
+		font-size: 0.7rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		color: var(--c-primary);
+		margin-bottom: 0.15rem;
+	}
+
+	.admin-comment-form {
+		margin-top: 0.75rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.admin-comment-form textarea {
+		padding: 0.5rem 0.7rem;
+		border: 1.5px solid var(--c-border);
+		border-radius: var(--radius-sm);
+		font-size: 0.85rem;
+		font-family: inherit;
+		background: var(--c-surface);
+		color: var(--c-text);
+		outline: none;
+		resize: vertical;
+		min-height: 50px;
+		transition: border-color 0.15s;
+	}
+	.admin-comment-form textarea:focus {
+		border-color: var(--c-primary);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-primary) 20%, transparent);
+	}
+
+	.admin-comment-actions {
+		display: flex;
+		gap: 0.5rem;
+		justify-content: flex-end;
+	}
+
 	.resolve-row {
 		display: flex;
 		gap: 0.5rem;
@@ -464,6 +604,10 @@
 	}
 	.resolve-btn:hover {
 		opacity: 0.85;
+	}
+	.resolve-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 	.resolve-approved {
 		background: var(--c-importance-1);
