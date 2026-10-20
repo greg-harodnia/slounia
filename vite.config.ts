@@ -50,4 +50,11 @@ export default defineConfig({
 			},
 		}),
 	],
+	// Same explicit loopback host as distro-picker so the two dev servers
+	// contend for one address; Vite then auto-increments the port (5173 → 5174)
+	// instead of both quietly sharing 5173 across IPv4/IPv6 — under Bun, a
+	// `localhost` listener falls back to the other family rather than erroring.
+	server: {
+		host: '127.0.0.1',
+	},
 });

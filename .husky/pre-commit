@@ -1,1 +1,11 @@
-bunx lint-staged
+# bunx is missing inside the VSCodium flatpak sandbox (host /usr/bin is not
+# mounted there), so fall back to host-spawn, which ships with the flatpak and
+# executes the command on the host.
+if command -v bunx >/dev/null 2>&1; then
+	bunx lint-staged
+elif command -v host-spawn >/dev/null 2>&1; then
+	host-spawn bunx lint-staged
+else
+	echo "bunx not found and host-spawn unavailable; cannot lint staged files" >&2
+	exit 1
+fi
