@@ -1,5 +1,6 @@
 function addAttribute(attrs: string, name: string, value: string): string {
-	if (new RegExp(`\\b${name}\\s*=`, 'i').test(attrs)) return attrs;
+	// Match only a real attribute: `data-loading=` must not count as `loading=`.
+	if (new RegExp(`(?:^|\\s)${name}\\s*=`, 'i').test(attrs)) return attrs;
 	return `${attrs} ${name}="${value}"`;
 }
 
@@ -10,7 +11,9 @@ function addAttribute(attrs: string, name: string, value: string): string {
 export function decorateBlogImages(html: string): string {
 	let first = true;
 
-	return html.replace(/<img\b([^>]*)>/gi, (_match, attrs: string) => {
+	// Attribute values may contain `>` (e.g. `alt="a > b"`), so skip over
+	// quoted strings instead of stopping at the first `>`.
+	return html.replace(/<img\b((?:[^>"']|"[^"]*"|'[^']*')*)>/gi, (_match, attrs: string) => {
 		const selfClosing = /\/\s*$/.test(attrs);
 		let next = attrs.replace(/\/\s*$/, '').trimEnd();
 		next = addAttribute(next, 'decoding', 'async');

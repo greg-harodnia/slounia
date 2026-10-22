@@ -436,12 +436,12 @@ stale-while-revalidate` — unless a `?ref=` is present, which forces
 - `og:url` and JSON-LD `url` values percent-encode dynamic IDs/slugs; sitemap
   entries use the same encoding.
 - Images inside blog HTML are decorated at render time: the first gets
-  `fetchpriority="high"` (likely LCP), later ones `loading="lazy"`; all get
-  `decoding="async"`.
+  `fetchpriority="high"` (likely LCP), later ones `loading="lazy"`; missing
+  `decoding` hints become `decoding="async"` (existing hints are preserved).
 
 ## Testing
 
-- Vitest (`bun run test`). ~9 files / 188 tests covering `word-search`,
+- Vitest (`bun run test`). ~9 files / 190 tests covering `word-search`,
   `lacinka`, `highlight`/normalize, `assist-core`, `assist`, `userStore`,
   markdown/blog-image helpers. When behaviour of search/transliteration
   changes, extend these suites — they pin the lossy normalization decisions.

@@ -20,6 +20,18 @@ describe('decorateBlogImages', () => {
 		);
 	});
 
+	it('handles attribute values containing >', () => {
+		expect(decorateBlogImages('<img src="a.png" alt="a > b">')).toBe(
+			'<img src="a.png" alt="a > b" decoding="async" fetchpriority="high">',
+		);
+	});
+
+	it('does not confuse data-* attributes with real hints', () => {
+		expect(decorateBlogImages('<img src="a.png"><img src="b.png" data-loading="x">')).toBe(
+			'<img src="a.png" decoding="async" fetchpriority="high"><img src="b.png" data-loading="x" decoding="async" loading="lazy">',
+		);
+	});
+
 	it('preserves self-closing syntax', () => {
 		expect(decorateBlogImages('<img src="a.png" />')).toBe(
 			'<img src="a.png" decoding="async" fetchpriority="high" />',

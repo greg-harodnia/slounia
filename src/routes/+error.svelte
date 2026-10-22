@@ -4,11 +4,12 @@
 
 	const isNotFound = $derived($page.status === 404);
 	const title = $derived(isNotFound ? 'Старонка ня знойдзеная' : 'Памылка');
+	const description = $derived(isNotFound ? 'Старонка ня знойдзеная.' : 'Нешта пайшло ня так.');
 </script>
 
 <svelte:head>
 	<title>{title}</title>
-	<meta name="description" content="Старонка ня знойдзеная." />
+	<meta name="description" content={description} />
 	<meta name="robots" content="noindex" />
 </svelte:head>
 

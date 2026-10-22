@@ -36,7 +36,7 @@ export async function GET() {
 
 	for (const post of posts) {
 		pages.push({
-			loc: `${SITE_URL}/blog/${post.slug}`,
+			loc: `${SITE_URL}/blog/${encodeURIComponent(post.slug)}`,
 			priority: '0.7',
 			changefreq: 'monthly',
 			lastmod: post.updated_at || post.published_at || undefined,
