@@ -548,17 +548,31 @@
 		const controls = el.querySelector<HTMLElement>('.controls');
 		if (!controls) return;
 
+		// The controls height only changes on resize/zoom. Measure it outside the
+		// scroll path (a ResizeObserver callback runs after layout, so it never
+		// forces a reflow) instead of calling getBoundingClientRect on every
+		// scroll event, which mixed layout reads with the transform write below
+		// and caused a forced reflow each frame.
+		let h = controls.getBoundingClientRect().height;
+		const resizeObserver =
+			typeof ResizeObserver === 'undefined'
+				? null
+				: new ResizeObserver(() => {
+						h = controls.getBoundingClientRect().height;
+					});
+		resizeObserver?.observe(controls);
+
 		let translate = 0;
 		let lastScrollY = 0;
+		let frame = 0;
 
-		const onScroll = () => {
-			// Any scroll (window capture also catches the inner .table-wrap / .app
-			// scrollers) flips the gate that arms the pre-render margin.
-			hasScrolled = true;
+		// Single read-then-write pass per frame: scroll events can fire many times
+		// between paints, so coalescing them keeps layout to at most one per frame.
+		const update = () => {
+			frame = 0;
 			const st = el.scrollTop;
 			const delta = lastScrollY - st;
 			lastScrollY = st;
-			const h = controls.getBoundingClientRect().height;
 
 			if (st <= h) {
 				translate = 0;
@@ -572,8 +586,19 @@
 			showScrollTop = st > h && translate === 0;
 		};
 
+		const onScroll = () => {
+			// Any scroll (window capture also catches the inner .table-wrap / .app
+			// scrollers) flips the gate that arms the pre-render margin.
+			hasScrolled = true;
+			if (!frame) frame = requestAnimationFrame(update);
+		};
+
 		window.addEventListener('scroll', onScroll, { passive: true, capture: true });
-		return () => window.removeEventListener('scroll', onScroll, { capture: true });
+		return () => {
+			window.removeEventListener('scroll', onScroll, { capture: true });
+			resizeObserver?.disconnect();
+			if (frame) cancelAnimationFrame(frame);
+		};
 	});
 
 	onMount(() => {
