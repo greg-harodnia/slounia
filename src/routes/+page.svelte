@@ -548,29 +548,33 @@
 		const controls = el.querySelector<HTMLElement>('.controls');
 		if (!controls) return;
 
-		// The controls height only changes on resize/zoom. Measure it outside the
-		// scroll path (a ResizeObserver callback runs after layout, so it never
-		// forces a reflow) instead of calling getBoundingClientRect on every
-		// scroll event, which mixed layout reads with the transform write below
-		// and caused a forced reflow each frame.
-		let h = controls.getBoundingClientRect().height;
+		// The controls height only changes on resize/zoom. Measure it from the
+		// ResizeObserver entry (its callback runs after layout, so reading there
+		// never forces a reflow) instead of measuring synchronously when the
+		// effect runs — that happened right after hydration/theme DOM mutations
+		// and was itself reported as a forced reflow.
+		let h = 0;
+		const measure = (entry?: ResizeObserverEntry) => {
+			const box = entry?.borderBoxSize?.[0];
+			h = box ? box.blockSize : controls.getBoundingClientRect().height;
+		};
 		const resizeObserver =
-			typeof ResizeObserver === 'undefined'
-				? null
-				: new ResizeObserver(() => {
-						h = controls.getBoundingClientRect().height;
-					});
-		resizeObserver?.observe(controls);
+			typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(([entry]) => measure(entry));
+		if (resizeObserver) resizeObserver.observe(controls);
+		else requestAnimationFrame(() => measure());
 
 		let translate = 0;
 		let lastScrollY = 0;
+		let pendingScrollY = 0;
 		let frame = 0;
 
-		// Single read-then-write pass per frame: scroll events can fire many times
-		// between paints, so coalescing them keeps layout to at most one per frame.
+		// Read scroll position in the scroll handler (layout is clean while scroll
+		// events are dispatched) and only write the transform in rAF. Keeping reads
+		// and writes in separate tasks means no geometry query ever follows a style
+		// mutation, which is exactly what caused the forced reflow on mobile.
 		const update = () => {
 			frame = 0;
-			const st = el.scrollTop;
+			const st = pendingScrollY;
 			const delta = lastScrollY - st;
 			lastScrollY = st;
 
@@ -590,6 +594,7 @@
 			// Any scroll (window capture also catches the inner .table-wrap / .app
 			// scrollers) flips the gate that arms the pre-render margin.
 			hasScrolled = true;
+			pendingScrollY = el.scrollTop;
 			if (!frame) frame = requestAnimationFrame(update);
 		};
 
