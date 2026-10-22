@@ -150,12 +150,6 @@ ever calling `prompt()` makes Chrome log a "Banner not shown" warning.
 Both outcomes (accept or dismiss) persist `pwa_prompt_dismissed=1` in
 localStorage, so the prompt is offered at most once per device.
 
-### Ban system
-
-Server-side: ban list loaded every 60s; banned `user_token` or IP → API gets
-403 JSON, pages get a fullscreen "Доступ забаранёны" overlay with the reason.
-No navigation possible while banned.
-
 ### Likes & views
 
 - **Likes** (words, translations, blog posts): optimistic toggle, per-device
@@ -216,7 +210,6 @@ Run in `supabase-schema.sql`: a single Postgres schema with RLS.
   `admin_comment` is an admin-written public moderation note.
 - `messages(id, name, telegram, message, user_token, reply, ip_address, created_at)`
   — contact-form submissions.
-- `banned_users(id, user_token, name, telegram, reason, ip_address, message_id, banned_by, created_at)`.
 - `referrals(code, clicks, created_at)` — `?ref=` link tracking.
 
 ### IMPORTANT CONTRACT: importance ids ↔ levels
@@ -272,8 +265,8 @@ environment agrees:
 - `anon` may always SELECT public content: `importance`, `tags`, `posts`,
   `suggestions`, and `words`/`word_tags`/`translations` **excluding** hidden
   words (`hidden = true` are invisible to anon by RLS).
-- Everything else (writes, admin reads, `banned_users` which has **no** anon
-  policy) goes through `getServiceClient()` (service-role key, bypasses RLS).
+- Everything else (writes and admin reads) goes through `getServiceClient()`
+  (service-role key, bypasses RLS).
 - All writes are server-side only; the public anon client is used for reads.
 
 ## Cache & client state model
@@ -302,8 +295,8 @@ stale-while-revalidate` — unless a `?ref=` is present, which forces
       12 h. All other `/api/*` routes stay dynamic.
 - Per-user "liked" state is **per-device** `localStorage` maps
   (`liked_words`, `liked_translations`, `liked_posts`) plus a
-  `user_token` (UUID) used to identify the visitor across requests (bans,
-  suggestions "is_mine"). Likes are optimistic with rollback; the count shown is
+  `user_token` (UUID) used to identify the visitor across requests
+  (suggestions "is_mine"). Likes are optimistic with rollback; the count shown is
   the server-confirmed number.
 - Views are a **prod-only** metric: `/api/views` returns `views: null` in dev
   and `userStore.incrementView` skips entirely unless `import.meta.env.PROD`;
@@ -395,7 +388,7 @@ stale-while-revalidate` — unless a `?ref=` is present, which forces
   from every public surface (feed, blog detail SSR, `/api/blog/[slug]`,
   sitemap). In dev they remain visible so `BlogAdmin` can edit/delete them.
 - All admin/blog-modification and admin REST endpoints (`/api/blog/create`,
-  `[slug]/edit`, `[slug]/like` is public, upload-image, `/api/banned`,
+  `[slug]/edit`, `[slug]/like` is public, upload-image,
   `/api/suggestions/[id]/resolve`, `/api/suggestions/[id]/comment`, messages
   reply, etc.) call `requireDev()`, which returns 404 in production. There is
   intentionally no admin UI in prod.
@@ -404,17 +397,13 @@ stale-while-revalidate` — unless a `?ref=` is present, which forces
 - The client overlay fetches `/api/blog/[slug]` and memoizes per slug in an
   in-memory `Map` (`fetch-blog.ts`).
 
-## Suggestions, contact & bans
+## Suggestions & contact
 
 - Anyone can submit a suggestion (`/api/suggestions`); statuses flow
   pending → approved/rejected/agreed by an admin (dev-only endpoint). Public
   listing shows all; `is_mine` marks the viewer's own via `user_token`.
 - The contact form writes to `messages`, optionally carries a `user_token`
-  and `ip_address`, and supports admin replies (dev-only). Banned people
-  are matched by `user_token`, `name`, `telegram` and/or `ip_address`.
-- `hooks.server.ts` loads the ban list every 60s into memory and blocks banned
-  visitors: API calls get 403 JSON, pages get `locals.banned`/`banReason` to
-  render a blocked screen. Ban refresh is lazy (only on traffic).
+  and `ip_address`, and supports admin replies (dev-only).
 
 ## AI support agent (`/api/assist`)
 

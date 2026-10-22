@@ -24,22 +24,6 @@ export const POST: RequestHandler = async (event) => {
 		// client address unavailable
 	}
 
-	const orFilters = [`name.eq.${nameTrimmed}`];
-	if (telegramTrimmed) orFilters.push(`telegram.eq.${telegramTrimmed}`);
-	if (userToken) orFilters.push(`user_token.eq.${userToken}`);
-	if (ipAddress) orFilters.push(`ip_address.eq.${ipAddress}`);
-
-	const { data: banned } = await supabase.from('banned_users').select('id, reason').or(orFilters.join(',')).limit(1);
-
-	if (banned && banned.length > 0) {
-		return json(
-			{
-				error: banned[0].reason || 'Доступ забаранёны.',
-			},
-			{ status: 403 },
-		);
-	}
-
 	const { error } = await supabase.from('messages').insert({
 		name: nameTrimmed,
 		telegram: telegramTrimmed,

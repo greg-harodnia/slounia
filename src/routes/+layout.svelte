@@ -16,10 +16,8 @@
 	injectSpeedInsights();
 	injectAnalytics({ mode: dev ? 'development' : 'production' });
 
-	let { children, data } = $props();
+	let { children } = $props();
 
-	let isBanned = $derived(data.banned);
-	let banReason = $derived(data.banReason || '');
 	let chatRequested = $state(false);
 	// Chat helper is desktop-only (MOBILE_MAX_WIDTH breakpoint). Starts false so
 	// the FAB isn't in SSR HTML that would flash on mobile before onMount corrects it.
@@ -172,62 +170,29 @@
 	{/if}
 </svelte:head>
 
-{#if isBanned}
-	<div class="ban-overlay">
-		<div class="ban-card">
-			<h1>Доступ забаранёны</h1>
-			<p class="ban-message">{banReason || ''}</p>
-		</div>
-	</div>
-{:else}
-	<main>
-		{@render children()}
-	</main>
-	{#if overlays.chat}
-		{@const ChatWidgetC = overlays.chat}
-		<ChatWidgetC open={chatRequested} />
-	{:else if isDesktop}
-		<button
-			class="chat-fab"
-			aria-label="Адкрыць памочніка"
-			onmouseenter={preloadChatWidget}
-			onfocus={preloadChatWidget}
-			ontouchstart={preloadChatWidget}
-			onclick={() => {
-				chatRequested = true;
-				preloadChatWidget();
-			}}
-		>
-			{@html svgChat}
-		</button>
-	{/if}
+<main>
+	{@render children()}
+</main>
+{#if overlays.chat}
+	{@const ChatWidgetC = overlays.chat}
+	<ChatWidgetC open={chatRequested} />
+{:else if isDesktop}
+	<button
+		class="chat-fab"
+		aria-label="Адкрыць памочніка"
+		onmouseenter={preloadChatWidget}
+		onfocus={preloadChatWidget}
+		ontouchstart={preloadChatWidget}
+		onclick={() => {
+			chatRequested = true;
+			preloadChatWidget();
+		}}
+	>
+		{@html svgChat}
+	</button>
 {/if}
 
 <style>
-	.ban-overlay {
-		position: fixed;
-		inset: 0;
-		z-index: 9999;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: var(--c-bg, #f5f5f5);
-	}
-	.ban-card {
-		max-width: 480px;
-		padding: 2rem;
-		text-align: center;
-	}
-	.ban-card h1 {
-		font-size: 1.5rem;
-		margin-bottom: 1rem;
-	}
-	.ban-message {
-		font-size: 1rem;
-		color: var(--c-text-muted, #666);
-		line-height: 1.6;
-	}
-
 	.chat-fab {
 		position: fixed;
 		right: 1rem;

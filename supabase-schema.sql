@@ -69,23 +69,6 @@ CREATE TABLE IF NOT EXISTS referrals (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS banned_users (
-    id SERIAL PRIMARY KEY,
-    user_token TEXT,
-    name TEXT,
-    telegram TEXT,
-    reason TEXT,
-    ip_address TEXT,
-    message_id INTEGER REFERENCES messages(id) ON DELETE SET NULL,
-    banned_by TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_banned_users_user_token ON banned_users(user_token);
-CREATE INDEX IF NOT EXISTS idx_banned_users_name ON banned_users(name);
-CREATE INDEX IF NOT EXISTS idx_banned_users_telegram ON banned_users(telegram);
-CREATE INDEX IF NOT EXISTS idx_banned_users_ip ON banned_users(ip_address);
-
 CREATE OR REPLACE FUNCTION increment_word_likes(word_id TEXT)
 RETURNS INTEGER
 LANGUAGE plpgsql AS $$
@@ -483,7 +466,6 @@ ALTER TABLE translations  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE referrals     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages      ENABLE ROW LEVEL SECURITY;
-ALTER TABLE banned_users  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE suggestions   ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS anon_read_importance  ON importance;

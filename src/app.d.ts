@@ -5,14 +5,8 @@
 declare global {
 	namespace App {
 		// interface Error {}
-		interface Locals {
-			banned?: boolean;
-			banReason?: string | null;
-		}
-		interface PageData {
-			banned?: boolean;
-			banReason?: string | null;
-		}
+		// interface Locals {}
+		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}
 	}
