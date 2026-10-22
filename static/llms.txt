@@ -10,8 +10,7 @@
 
 ## API
 
-- [GET /api/words](https://slounia.vercel.app/api/words): Full dictionary data (JSON, ~160 KiB). Supports `search`, `sort`, `order`, `tags`, `offset`, `limit` query params
-- [GET /api/likes](https://slounia.vercel.app/api/likes): Like counts for words, translations, and blog posts
+- [GET /api/words](https://slounia.vercel.app/api/words): Full dictionary data (JSON). Supports `search`, `sort`, `order`, `tags`, `offset`, `limit` query params
 
 ## About
 

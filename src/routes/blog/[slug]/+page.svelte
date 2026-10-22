@@ -15,6 +15,8 @@
 			.slice(0, 160),
 	);
 
+	const postUrl = $derived(`${SITE_URL}/blog/${encodeURIComponent(post.slug)}`);
+
 	const blogLd = $derived(
 		JSON.stringify({
 			'@context': 'https://schema.org',
@@ -22,7 +24,7 @@
 			headline: post.title,
 			datePublished: post.published_at,
 			dateModified: post.updated_at || post.published_at,
-			url: `${SITE_URL}/blog/${post.slug}`,
+			url: postUrl,
 			image: `${SITE_URL}/pwa-512x512.png`,
 			inLanguage: ['be', 'be-tarask'],
 			author: {
@@ -47,7 +49,7 @@
 	<meta property="og:title" content="{post.title} — {SITE_NAME}" />
 	<meta property="og:description" content={excerpt || post.title} />
 	<meta property="og:type" content="article" />
-	<meta property="og:url" content="{SITE_URL}/blog/{post.slug}" />
+	<meta property="og:url" content={postUrl} />
 	<meta property="og:image" content="{SITE_URL}/pwa-512x512.png" />
 	<meta property="article:published_time" content={post.published_at} />
 	<meta name="twitter:title" content="{post.title} — {SITE_NAME}" />

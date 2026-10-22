@@ -3,10 +3,12 @@
 	import type { Post } from '$lib/types';
 	import BlogLikeButton from '$lib/components/BlogLikeButton.svelte';
 	import ViewCounter from '$lib/components/ViewCounter.svelte';
+	import { decorateBlogImages } from '$lib/blog-content';
 
 	let { post }: { post: Post } = $props();
 
 	const published = $derived(formatDate(post.published_at));
+	const renderedContent = $derived(decorateBlogImages(post.content));
 </script>
 
 <article class="post card">
@@ -29,7 +31,7 @@
 
 	<div class="post-content">
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-		{@html post.content}
+		{@html renderedContent}
 	</div>
 
 	<footer class="post-footer">

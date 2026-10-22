@@ -142,13 +142,10 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta name="mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 	<meta name="author" content="Слоўня" />
-	<title>{SITE_NAME}</title>
-	<meta name="description" content={SITE_DESCRIPTION} />
 
 	<meta property="og:site_name" content={SITE_NAME} />
 	<meta property="og:locale" content="be_BY" />
@@ -157,11 +154,13 @@
 	<meta property="og:image:height" content="512" />
 	<meta name="twitter:card" content="summary_large_image" />
 
-	<link rel="canonical" href={canonicalUrl} />
 	{@html webManifest}
-	<link rel="alternate" hreflang="be" href={canonicalUrl} />
-	<link rel="alternate" hreflang="be-tarask" href={canonicalUrl} />
-	<link rel="alternate" hreflang="x-default" href={canonicalUrl} />
+	{#if $page.status !== 404}
+		<link rel="canonical" href={canonicalUrl} />
+		<link rel="alternate" hreflang="be" href={canonicalUrl} />
+		<link rel="alternate" hreflang="be-tarask" href={canonicalUrl} />
+		<link rel="alternate" hreflang="x-default" href={canonicalUrl} />
+	{/if}
 
 	{@html ldWebsiteHtml}
 	{@html ldOrganizationHtml}

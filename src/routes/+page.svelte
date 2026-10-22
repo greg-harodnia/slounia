@@ -654,6 +654,7 @@
 
 <svelte:head>
 	<title>{SITE_NAME}</title>
+	<meta name="description" content={SITE_DESCRIPTION} />
 	<meta property="og:title" content={SITE_NAME} />
 	<meta property="og:description" content={SITE_DESCRIPTION} />
 	<meta property="og:type" content="website" />

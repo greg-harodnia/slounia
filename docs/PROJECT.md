@@ -422,17 +422,29 @@ stale-while-revalidate` — unless a `?ref=` is present, which forces
 
 - SSR for homepage, blog list/detail, word detail. `sitemap.xml` lists homepage,
   `/blog`, all non-hidden words and all published (not scheduled) posts; served
-  with `max-age=604800`. Canonical params, breadcrumbs JSON-LD and consistent
-  meta live in the layout/components.
+  with `public, max-age=604800, s-maxage=604800`. Canonical params, breadcrumbs
+  JSON-LD and consistent meta live in the layout/components.
 - Keeping `hidden=true` words and future posts out of the sitemap, canonical
   URLs, and the public HTML is an explicit SEO requirement.
+- Unknown word IDs intentionally redirect to `/?search={id}` so users land on
+  search results. This is a product decision; the redirect target canonicalizes
+  to `/`, so it is not indexed as separate content.
+- Unknown routes get a custom `+error.svelte` (`noindex`); the layout omits
+  canonical/hreflang links on `404` responses.
+- Every route owns its `<title>` and `<meta name="description">`; the layout
+  deliberately sets no defaults, because they would duplicate the page tags.
+- `og:url` and JSON-LD `url` values percent-encode dynamic IDs/slugs; sitemap
+  entries use the same encoding.
+- Images inside blog HTML are decorated at render time: the first gets
+  `fetchpriority="high"` (likely LCP), later ones `loading="lazy"`; all get
+  `decoding="async"`.
 
 ## Testing
 
-- Vitest (`bun run test`). ~8 files / 159 tests covering `word-search`,
+- Vitest (`bun run test`). ~9 files / 188 tests covering `word-search`,
   `lacinka`, `highlight`/normalize, `assist-core`, `assist`, `userStore`,
-  markdown helpers. When behaviour of search/transliteration changes, extend
-  these suites — they pin the lossy normalization decisions.
+  markdown/blog-image helpers. When behaviour of search/transliteration
+  changes, extend these suites — they pin the lossy normalization decisions.
 
 ## Local development
 

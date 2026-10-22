@@ -9,6 +9,8 @@ export async function load({ params }) {
 	const { data, error } = await client.rpc('get_word_by_id', { word_id: params.id });
 
 	if (error || !data) {
+		// Intentional UX: an unknown word lands on search results for that ID.
+		// The target canonicalizes to `/`, so it isn't indexed as separate content.
 		throw kitRedirect(302, `/?search=${encodeURIComponent(params.id)}`);
 	}
 

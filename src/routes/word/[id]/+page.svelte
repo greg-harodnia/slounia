@@ -13,6 +13,8 @@
 		settings.load();
 	});
 
+	const wordUrl = $derived(`${SITE_URL}/word/${encodeURIComponent(word.id)}`);
+
 	const wordLd = $derived(
 		JSON.stringify({
 			'@context': 'https://schema.org',
@@ -20,7 +22,7 @@
 			name: word.id,
 			description: word.translations.map((t) => t.translation).join(', '),
 			inLanguage: ['be', 'be-tarask'],
-			url: `${SITE_URL}/word/${word.id}`,
+			url: wordUrl,
 		}),
 	);
 	const wordLdHtml = $derived('<script type="application/ld+json">' + wordLd + '<' + '/script>');
@@ -36,7 +38,7 @@
 	<meta property="og:description" content={word.translations.map((t) => t.translation).join(', ')} />
 	<meta property="og:image" content="{SITE_URL}/pwa-512x512.png" />
 	<meta property="og:type" content="website" />
-	<meta property="og:url" content="{SITE_URL}/word/{word.id}" />
+	<meta property="og:url" content={wordUrl} />
 	<meta name="twitter:title" content="{word.id} — {SITE_NAME}" />
 	<meta name="twitter:description" content={word.translations.map((t) => t.translation).join(', ')} />
 	<meta name="twitter:image" content="{SITE_URL}/pwa-512x512.png" />

@@ -60,7 +60,7 @@ ${pages
 	return new Response(xml, {
 		headers: {
 			'Content-Type': 'application/xml',
-			'Cache-Control': 'max-age=604800',
+			'Cache-Control': 'public, max-age=604800, s-maxage=604800',
 		},
 	});
 }
