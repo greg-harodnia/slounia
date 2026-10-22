@@ -8,6 +8,10 @@ export default defineConfig({
 		VitePWA({
 			registerType: 'autoUpdate',
 			workbox: {
+				// Default globPatterns covers js/css/html only, so the Manrope
+				// woff2 subsets would not be precached and offline installs would
+				// fall back to a system font. Include them explicitly.
+				globPatterns: ['**/*.{js,css,html,woff,woff2}'],
 				// Do NOT add clientsClaim here — the new SW is activated via
 				// skipWaiting (autoUpdate). clientsClaim isn't what reloads open
 				// tabs; that reload comes from the plugin's own `activated`

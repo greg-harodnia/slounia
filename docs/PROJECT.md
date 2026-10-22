@@ -140,6 +140,8 @@ and the generated `NavigationRoute(createHandlerBoundToURL('index.html'))`
 would throw `non-precached-url` at service worker startup, preventing the SW
 from installing at all. Navigations are server-rendered and go to network;
 only static assets (`_app/immutable/*`, icons, manifest) are precached.
+`workbox.globPatterns` explicitly includes `woff2`/`woff` because the default
+Workbox glob omits fonts, which would leave offline installs without Manrope.
 
 Install prompt (`PwaPrompt.svelte`): bottom bar "Усталяваць аплікацыю —
 Дадайце да галоўнага экрана для зручнейшага доступу" with "Не" / "Усталяваць" buttons; handles
