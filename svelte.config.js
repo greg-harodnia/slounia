@@ -20,7 +20,9 @@ const config = {
 		// requests), so the initial render waits on zero stylesheet fetches. The
 		// HTML is CDN-cached with stale-while-revalidate, so the extra ~24 KB
 		// of inlined CSS is served from the edge, not re-fetched.
-		inlineStyleThreshold: 16000,
+		// 24000 covers the homepage CSS (2.VhDf-sDM.css, ~18 KB raw) which grew
+		// past the old 16000 threshold and became the only render-blocking link.
+		inlineStyleThreshold: 24000,
 	},
 };
 
