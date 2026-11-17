@@ -5,28 +5,24 @@
 
 	interface Props {
 		showFavorites: boolean;
-		showComments: boolean;
 		onReset: () => void;
 		onOpenBlog: () => void;
 		onPreloadBlog: () => void;
 		onOpenSuggest: () => void;
 		onPreloadSuggest: () => void;
 		onToggleFavorites: () => void;
-		onToggleComments: () => void;
 		onToggleLatin: () => void;
 		onToggleTheme: () => void;
 	}
 
 	let {
 		showFavorites,
-		showComments,
 		onReset,
 		onOpenBlog,
 		onPreloadBlog,
 		onOpenSuggest,
 		onPreloadSuggest,
 		onToggleFavorites,
-		onToggleComments,
 		onToggleLatin,
 		onToggleTheme,
 	}: Props = $props();
@@ -112,23 +108,6 @@
 					d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
 				/></svg
 			>
-		</button>
-		<button class="header-btn btn-icon" onclick={onToggleComments} aria-label="Toggle comments">
-			<svg
-				viewBox="0 0 24 24"
-				width="16"
-				height="16"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-				{#if !showComments}
-					<line x1="4" y1="4" x2="20" y2="20" />
-				{/if}
-			</svg>
 		</button>
 		<button class="header-btn btn-icon" onclick={onToggleLatin} aria-label="Перамыкач паміж лацінкай і кірыліцай">
 			<svg

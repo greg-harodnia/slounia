@@ -15,7 +15,6 @@
 		translation,
 		comment,
 		showLatin,
-		showComments = true,
 		searchQuery = '',
 		rootHighlightTerm = null,
 		onWordLink,
@@ -24,7 +23,6 @@
 		translation: string;
 		comment: string | null;
 		showLatin?: boolean;
-		showComments?: boolean;
 		searchQuery?: string;
 		// The "did you mean" normalized query terms. When set, instead of the
 		// usual literal-substring highlight, the matched root that caused this
@@ -59,8 +57,6 @@
 				)
 			: [],
 	);
-	const note = $derived(showComments ? comment : null);
-
 	const crossRef = $derived.by(() => {
 		const m = parseCrossref(translation);
 		return m ? { prefix: m[1].toLowerCase() + '. ', target: m[2].trim() } : null;
@@ -152,8 +148,8 @@
 </script>
 
 {#if crossRef}
-	<Tooltip content={note}>
-		<span class="translation-text" class:has-note={note !== null}>
+	<Tooltip content={comment}>
+		<span class="translation-text" class:has-note={comment !== null}>
 			<span class="crossref-prefix">{crossRef.prefix}</span>
 			{#if onWordLink}
 				<button
@@ -194,8 +190,8 @@
 		</div>
 	{/if}
 {:else}
-	<Tooltip content={note}>
-		<span class="translation-text" class:has-note={note !== null}>
+	<Tooltip content={comment}>
+		<span class="translation-text" class:has-note={comment !== null}>
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			{@html rootRanges.length > 0
 				? highlightRanges(displayText, rootRanges)

@@ -90,7 +90,6 @@
 	let tableWrapEl: HTMLDivElement | undefined = $state();
 	let showScrollTop = $state(false);
 	let searchInput: HTMLInputElement | undefined = $state();
-	let showComments = $state(true);
 
 	// Local search/filter/sort over the full dictionary. Everything is derived
 	// from allWords + the filter state, so mutating the underlying word objects
@@ -319,7 +318,6 @@
 	function loadSettings() {
 		try {
 			devMode = !import.meta.env.PROD && localStorage.getItem('dev_mode') === 'true';
-			showComments = localStorage.getItem('show_comments') !== 'false';
 			theme.load();
 			settings.load();
 		} catch (e) {
@@ -342,11 +340,6 @@
 			preloadTranslationForm();
 		}
 	});
-
-	function toggleComments() {
-		showComments = !showComments;
-		localStorage.setItem('show_comments', String(showComments));
-	}
 
 	async function togglePin(word: WordData) {
 		if (!devMode) return;
@@ -695,14 +688,12 @@
 <div class="app" bind:this={appEl}>
 	<AppHeader
 		showFavorites={filters.showFavorites}
-		{showComments}
 		onReset={resetAll}
 		onOpenBlog={openBlog}
 		onPreloadBlog={preloadBlogList}
 		onOpenSuggest={openSuggest}
 		onPreloadSuggest={preloadSuggestOverlay}
 		onToggleFavorites={() => filters.toggleShowFavorites()}
-		onToggleComments={toggleComments}
 		onToggleLatin={() => settings.toggleLatin()}
 		onToggleTheme={() => theme.toggle()}
 	/>
@@ -792,8 +783,8 @@
 										/><line x1="10" y1="14" x2="21" y2="3" /></svg
 									></button
 								>
-								<Tooltip content={showComments ? word.comment : null}>
-									<span class="word-text" class:has-note={showComments && word.comment !== null}
+								<Tooltip content={word.comment}>
+									<span class="word-text" class:has-note={word.comment !== null}
 										>{@html highlightText(word.id, latToCyr(filters.search))}</span
 									>
 								</Tooltip>
@@ -814,7 +805,6 @@
 											translation={tr.translation}
 											comment={tr.comment}
 											showLatin={settings.showLatin}
-											{showComments}
 											searchQuery={filters.search}
 											onWordLink={openWord}
 											popupChain={[word.id]}
@@ -876,8 +866,8 @@
 									/><line x1="10" y1="14" x2="21" y2="3" /></svg
 								></button
 							>
-							<Tooltip content={showComments ? word.comment : null}>
-								<span class="word-text" class:has-note={showComments && word.comment !== null}
+							<Tooltip content={word.comment}>
+								<span class="word-text" class:has-note={word.comment !== null}
 									>{@html similarWordIds.has(word.id)
 										? highlightRanges(word.id, rootRangesOf(word.id, similarTerms))
 										: highlightText(word.id, latToCyr(filters.search))}</span
@@ -963,7 +953,6 @@
 										translation={tr.translation}
 										comment={tr.comment}
 										showLatin={settings.showLatin}
-										{showComments}
 										searchQuery={filters.search}
 										rootHighlightTerm={similarWordIds.has(word.id) ? similarTerms : null}
 										onWordLink={openWord}
